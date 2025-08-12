@@ -1,0 +1,348 @@
+/* Keep only global/shared styles here. Remove all index-specific styles (hero, categories, products, stats, fade-in, loading, etc.) */
+
+:root {
+    --primary-color: #000000;
+    --secondary-color: #ffffff;
+    --accent-color: #f8f9fa;
+    --gold-color: #000000;
+    --text-dark: #000000;
+    --text-light: #666666;
+    --gradient-primary: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    --gradient-gold: linear-gradient(135deg, #000000 0%, #333333 100%);
+    --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 20px 60px rgba(0, 0, 0, 0.15);
+    --border-color: #e0e0e0;
+    --hover-color: #f5f5f5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Tajawal', 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+    overflow-x: hidden;
+    background: #ffffff;
+}
+
+/* Modern Glassmorphism Effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Advanced Navbar */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 2px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.navbar.scrolled {
+    background: rgba(255, 255, 255, 0.98);
+    padding: 0.5rem 0;
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-color) !important;
+    letter-spacing: 2px;
+}
+
+.nav-link {
+    color: var(--text-dark) !important;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.3s ease;
+    margin: 0 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+    background-color: var(--hover-color);
+}
+
+.nav-link.active {
+    background-color: var(--primary-color);
+    color: var(--secondary-color) !important;
+}
+
+.nav-link.active:hover {
+    background-color: #333333;
+    color: var(--secondary-color) !important;
+}
+
+/* Icon links in Navbar */
+.nav-icon {
+    color: var(--text-dark) !important;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    position: relative;
+    line-height: 1;
+}
+
+.nav-icon:hover {
+    color: var(--primary-color) !important;
+    background-color: var(--hover-color);
+}
+
+.nav-icon.dropdown-toggle::after {
+    display: none;
+}
+
+.navbar .dropdown-menu {
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+    padding: 0.5rem 0;
+    margin-top: 10px !important;
+    background-color: var(--secondary-color);
+}
+
+.navbar .dropdown-item {
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: var(--hover-color);
+    color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.navbar .dropdown-item:active {
+    background-color: var(--accent-color);
+}
+
+/* Modern Buttons */
+.btn-modern {
+    padding: 15px 40px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-primary-modern {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    color: var(--secondary-color);
+    background: #333333;
+}
+
+.btn-outline-modern {
+    background: transparent;
+    color: white;
+    border: 2px solid var(--secondary-color);
+}
+
+.btn-outline-modern:hover {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+/* Modern Footer */
+.footer {
+    background: #000000;
+    color: white;
+    padding: 60px 0 20px;
+}
+
+.footer-section h5 {
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.footer-link {
+    color: #ccc;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.footer-link:hover {
+    color: var(--secondary-color);
+    transform: translateX(5px);
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-link {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+}
+
+/* Shopping Cart Icon */
+.cart-icon {
+    position: relative;
+}
+
+.cart-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modern Form Styles */
+.form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    padding: 15px 20px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+/* Modern Card Styles */
+.value-card, .team-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.value-card:hover, .team-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-medium);
+}
+
+.value-icon, .feature-icon, .service-icon {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.value-icon:hover, .feature-icon:hover, .service-icon:hover {
+    background: #333333;
+}
+
+/* Contact Page Specific */
+.contact-info {
+    background: var(--gradient-primary);
+}
+
+.contact-item {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.contact-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.contact-icon {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+}
+
+.social-link-contact {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+}
+
+.social-link-contact:hover {
+    background: #333333;
+    color: var(--secondary-color);
+}
+
+/* FAQ Styles */
+.faq-header {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+}
+
+.faq-header:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.faq-question {
+    color: var(--primary-color);
+}
+
+.faq-icon {
+    color: var(--primary-color);
+}
+
+/* Submit Button */
+.submit-btn {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.submit-btn:hover {
+    background: #333333;
+    color: var(--secondary-color);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+a{
+    text-decoration: none;
+}

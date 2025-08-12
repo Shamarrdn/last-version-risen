@@ -1,0 +1,187 @@
+:root {
+    --primary-color: #000000;
+    --secondary-color: #d4af37;
+    --accent-color: #1d4ed8;
+    --text-color: #1f2937;
+    --text-light: #6b7280;
+    --background-light: #f3f4f6;
+    --white: #ffffff;
+    --border-color: #e5e7eb;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --gradient-primary: linear-gradient(135deg, #000000 0%, #d4af37 100%);
+}
+
+.policy-container {
+    background-color: var(--background-light);
+    min-height: 100vh;
+    padding: 4rem 0;
+}
+
+.policy-content {
+    background: var(--white);
+    padding: 3rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.policy-title {
+    color: var(--text-color);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.policy-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.policy-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.policy-section h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.policy-section h2::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: var(--primary-color);
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+}
+
+.policy-section p {
+    color: var(--text-color);
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    font-size: 1rem;
+}
+
+.policy-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.policy-section li {
+    color: var(--text-color);
+    padding: 0.75rem 2rem 0.75rem 0;
+    position: relative;
+    line-height: 1.6;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.policy-section li::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 1rem;
+    width: 6px;
+    height: 6px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+}
+
+.contact-info {
+    background-color: var(--primary-color);
+    margin: 2rem -3rem -3rem -3rem;
+    padding: 2rem 3rem;
+    color: var(--white);
+}
+
+.contact-info h2 {
+    color: var(--white);
+}
+
+.contact-info h2::before {
+    background-color: var(--white);
+}
+
+.contact-info p,
+.contact-info li {
+    color: var(--white);
+}
+
+.contact-info li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.contact-info li::before {
+    display: none;
+}
+
+.contact-info i {
+    font-size: 1.25rem;
+    color: var(--white);
+}
+
+@media (max-width: 768px) {
+    .policy-container {
+        padding: 2rem 1rem;
+    }
+
+    .policy-content {
+        padding: 2rem;
+    }
+
+    .policy-title {
+        font-size: 1.75rem;
+    }
+
+    .contact-info {
+        margin: 2rem -2rem -2rem -2rem;
+        padding: 2rem;
+    }
+}
+
+@media print {
+    .policy-container {
+        background: var(--white);
+        padding: 0;
+    }
+
+    .policy-content {
+        box-shadow: none;
+        max-width: 100%;
+    }
+
+    .contact-info {
+        background: none;
+        margin: 2rem 0 0 0;
+        padding: 0;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .contact-info h2,
+    .contact-info p,
+    .contact-info li,
+    .contact-info i {
+        color: var(--text-color);
+    }
+}

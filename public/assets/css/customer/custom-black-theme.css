@@ -1,0 +1,433 @@
+/* Custom override to change blue elements to black/white theme */
+
+/* Button overrides */
+.btn-primary,
+.btn-outline-primary:hover,
+.add-to-cart-btn,
+.size-option.active,
+.color-option.active,
+.badge.bg-primary,
+.alert-primary,
+.text-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* Fix the specific blue "Add to Cart" button from the screenshot */
+button[onclick="addToCart()"],
+button[class*="btn-primary"],
+a[class*="btn-primary"],
+.btn[class*="btn-primary"],
+[class*="أضف إلى السلة"] {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Fix blue information alert box */
+.alert-info,
+div[class*="alert-info"] {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    color: #333333 !important;
+}
+
+.alert-info i,
+div[class*="alert-info"] i {
+    color: var(--primary-color) !important;
+}
+
+/* Override all blue bootstrap components */
+.bg-primary,
+.badge.bg-primary,
+.bg-info,
+.alert-info,
+.btn-info,
+.text-info,
+.text-primary,
+[class*="text-primary"],
+[class*="bg-primary"] {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Fix the add to cart button */
+.container button.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Quantity selector buttons */
+.quantity-selector .btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.quantity-selector .btn-outline-primary:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* Badge overrides */
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+/* Fix blue links in breadcrumb */
+.breadcrumb-item a {
+    color: var(--primary-color) !important;
+}
+
+/* Blue icons to black */
+.text-primary,
+.fa-info-circle,
+.modal-body .fa-user-lock {
+    color: white !important;
+}
+
+/* Fix specific blue elements in product page */
+.quantity-options .quantity-option.available:hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.quantity-options .quantity-option.available.active {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.quantity-option i,
+.quantity-price {
+    color: var(--primary-color) !important;
+}
+
+.highlight {
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+@keyframes highlight-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5) !important;
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0) !important;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0) !important;
+    }
+}
+
+/* Fix the big blue "Add to Cart" button */
+.btn-lg.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* تحسينات إضافية للتصميم المتجاوب */
+
+/* إصلاح زر أضف إلى السلة بشكل خاص */
+button[class*="btn-primary"],
+button.btn.btn-primary,
+.btn-lg.btn-primary,
+button.btn-lg.btn-primary {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: white !important;
+}
+
+/* إصلاح زر أضف إلى السلة الكبير والأزرق */
+button.btn-primary.btn-lg.w-100 {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: white !important;
+}
+
+/* إصلاح مشكلة الفراغات في الحاويات */
+.container-fluid {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+    width: 100%;
+}
+
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+/* تحسين الفراغات في موبايل */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
+    .row > * {
+        padding-right: 0.25rem;
+        padding-left: 0.25rem;
+    }
+
+    .mx-1 {
+        margin-right: 0.15rem !important;
+        margin-left: 0.15rem !important;
+    }
+
+    /* إصلاح مشكلة زر إضافة إلى السلة */
+    button.btn.btn-primary.btn-lg.w-100 {
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        padding: 0.5rem;
+    }
+}
+
+/* إصلاح لمشكلة تعدي الشاشة الصغيرة */
+@media (max-width: 576px) {
+    html, body {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+
+    .container-fluid,
+    .container {
+        max-width: 100vw;
+        padding-right: 0.25rem;
+        padding-left: 0.25rem;
+    }
+
+    .product-gallery,
+    .product-info {
+        margin-right: 0.25rem !important;
+        margin-left: 0.25rem !important;
+    }
+
+    .breadcrumb {
+        padding-right: 0.25rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* تحسين مظهر خصومات الكميات */
+.quantity-discounts {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.quantity-discounts h5 {
+    color: var(--primary-color) !important;
+}
+
+.quantity-discounts h5 i {
+    color: var(--primary-color) !important;
+}
+
+.quantity-discounts .table-light {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.quantity-discounts .badge.bg-success {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.quantity-discounts small {
+    color: #333333 !important;
+}
+
+.quantity-discounts small i {
+    color: var(--primary-color) !important;
+}
+
+.quantity-discounts .table-bordered {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+.quantity-discounts th,
+.quantity-discounts td {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* تحسينات لعناصر الألوان المتاحة */
+.colors-section .section-title {
+    color: var(--primary-color) !important;
+}
+
+.colors-section .section-title i {
+    color: var(--primary-color) !important;
+}
+
+.color-item.available {
+    border-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.color-item.available:hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.color-item.available .color-status i {
+    color: var(--primary-color) !important;
+}
+
+/* تحسينات لعناصر المقاسات المتاحة */
+.available-sizes h5 {
+    color: var(--primary-color) !important;
+}
+
+.size-option {
+    border-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.size-option:not(.disabled):hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.size-option.active {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.size-option .badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+/* إصلاح عنوان وصف المنتج */
+.product-description h5 {
+    color: var(--primary-color) !important;
+}
+
+.product-description h5 i {
+    color: var(--primary-color) !important;
+}
+
+/* تحسين مظهر زر الكمية */
+.quantity-selector .input-group button {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+.quantity-selector .input-group button:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.quantity-selector .input-group input {
+    border-color: var(--primary-color) !important;
+}
+
+/* إصلاح لجميع العناوين في صفحة المنتج */
+.section-title,
+.section-title i {
+    color: var(--primary-color) !important;
+}
+
+/* تحسين مظهر شارة المخزون */
+.stock-info .stock-badge {
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+.stock-info .stock-badge.in-stock {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    color: var(--primary-color) !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.stock-info .stock-badge.in-stock i {
+    color: var(--primary-color) !important;
+}
+
+.stock-info .stock-badge.out-of-stock {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545 !important;
+    border: 1px solid rgba(220, 53, 69, 0.2) !important;
+}
+
+/* تحسين دليل الميزات */
+.features-guide .alert-info {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.features-guide .alert-heading {
+    color: var(--primary-color) !important;
+}
+
+.features-guide .alert-heading i {
+    color: var(--primary-color) !important;
+}
+
+.features-guide .features-list li i {
+    color: var(--primary-color) !important;
+}
+
+/* تحسين اللون الأسود في نص الكوبونات */
+.coupon-code, .coupon-value {
+    color: #333333 !important;
+}
+
+/* تحسين لون الكوبون */
+.coupon-item {
+    border-color: rgba(0, 0, 0, 0.3) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.coupon-item:hover {
+    border-color: var(--primary-color) !important;
+}
+
+.coupon-item .copy-btn {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.coupon-item .copy-btn i {
+    color: white !important;
+}
+
+.coupon-item .copy-btn:hover {
+    background-color: #333333 !important;
+}
+
+/* تحسين لون النص بالإشعارات والمكونات الأخرى */
+.alert-info,
+.features-guide,
+.quantity-discounts,
+.product-category,
+.product-description,
+.available-sizes,
+.colors-section,
+.custom-color-section,
+.custom-size-input,
+.quantity-selector {
+    color: #333 !important;
+}
+
+/* تحسين لون الأيقونات في جميع الأماكن */
+.section-title i,
+.alert-heading i,
+.features-list i,
+.available-coupons h5 i,
+.available-coupons small i,
+.quantity-discounts h5 i,
+.quantity-discounts small i {
+    color: var(--primary-color) !important;
+}
+
+/* Override success (green) elements */
+.text-success,
+.text-success i {
+    color: var(--primary-color) !important;
+}
+
+.bg-success,
+.badge.bg-success {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}

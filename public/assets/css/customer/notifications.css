@@ -1,0 +1,471 @@
+:root {
+    --primary-color: #000000;
+    --secondary-color: #000000;
+    --success-color: #d4af37;
+    --warning-color: #F39C12;
+    --danger-color: #FF4D4D;
+    --processing-color: #3498DB;
+    --background-color: #F0F4FF;
+    --glass-background: rgba(255, 255, 255, 0.75);
+    --glass-background-dark: rgba(255, 255, 255, 0.65);
+    --glass-border: 1px solid rgba(0, 0, 0, 0.25);
+    --card-shadow: none;
+    --text-color: #1E2A38;
+    --text-light: #2C3E50;
+    --text-muted: #4A5F6E;
+    --heading-color: #1E2A38;
+}
+
+body {
+    background: linear-gradient(135deg, var(--background-color), #fff);
+    min-height: 100vh;
+    font-family: 'Tajawal', sans-serif;
+}
+
+/* Container */
+.notifications-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0.75rem;
+}
+
+/* Page Title */
+.header-container {
+    background: var(--glass-background);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 2rem 0;
+    margin-bottom: 2.5rem;
+    box-shadow: none;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    position: relative;
+    display: inline-block;
+}
+
+.page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 0;
+    width: 60%;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+/* Mark All as Read Button */
+.btn-outline-primary {
+    color: var(--primary-color);
+    border: 2.5px solid var(--primary-color);
+    background: var(--glass-background);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: #000000;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Notification Item */
+.notification-item {
+    background: var(--glass-background);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 0.75rem;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.notification-item:hover {
+    border-color: rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+.notification-item.unread {
+    background: rgba(0, 0, 0, 0.05);
+    border-right: 4px solid var(--primary-color);
+    border: 2px solid var(--primary-color);
+    border-right-width: 4px;
+}
+
+/* Notification Icon */
+.notification-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.75rem;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    box-shadow: none;
+}
+
+/* Notification Content */
+.notification-item h5 {
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.notification-item p {
+    color: var(--text-light);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+    font-size: 1rem;
+}
+
+/* Notification Time */
+.notification-time {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.08);
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    width: fit-content;
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.notification-time:hover {
+    border-color: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--glass-background);
+    backdrop-filter: blur(8px);
+    border-radius: 30px;
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    margin-top: 2rem;
+    transition: all 0.3s ease;
+}
+
+.empty-state:hover {
+    border-color: rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: var(--primary-color);
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state h3 {
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    direction: ltr;
+}
+
+.page-item {
+    margin: 0 2px;
+}
+
+.page-item.disabled .page-link {
+    background: var(--glass-background-dark);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.page-link {
+    background: var(--glass-background);
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.page-link:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.page-item.active .page-link {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* تحسين مظهر الأسهم */
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+}
+
+/* تحسين المظهر على الشاشات المختلفة */
+@media (max-width: 1200px) {
+    .notifications-container {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 992px) {
+    .page-title {
+        font-size: 1.75rem;
+    }
+
+    .notification-item h5 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .notifications-container {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .notification-item {
+        padding: 1rem;
+        border-radius: 15px;
+        width: 100%;
+        max-width: 100%;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        border-radius: 10px;
+        margin: 0 auto;
+    }
+
+    .notification-item h5 {
+        font-size: 1.1rem;
+        text-align: center;
+    }
+
+    .notification-item p {
+        font-size: 0.95rem;
+        text-align: center;
+    }
+
+    .btn-outline-primary {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch !important;
+    }
+
+    .d-flex.justify-content-between.align-items-center form {
+        width: 100%;
+    }
+
+    .d-flex.justify-content-between.align-items-center button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .notification-item {
+        padding: 1rem;
+        border-radius: 15px;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+
+    .notification-time {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+
+    .empty-state-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.4rem;
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link {
+        min-width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .btn-sm.btn-outline-primary {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .notification-item .d-flex.gap-3 {
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+
+    .notification-icon {
+        margin: 0 auto;
+        width: 50px;
+        height: 50px;
+    }
+
+    .notification-item h5 {
+        text-align: center;
+    }
+
+    .notification-item p {
+        text-align: center;
+    }
+
+    .notification-time {
+        margin: 0 auto;
+    }
+
+    .d-flex.justify-content-between.align-items-start {
+        flex-direction: column;
+        align-items: center !important;
+        gap: 1rem;
+    }
+
+    .d-flex.justify-content-between.align-items-start form {
+        width: 100%;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Mark as Read Button */
+.btn-sm.btn-outline-primary {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    background: var(--glass-background);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-sm.btn-outline-primary:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Add shadow to make cards stand out more */
+.notification-item {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}

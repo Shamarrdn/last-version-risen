@@ -1,0 +1,965 @@
+:root {
+    --primary-color: #000000;
+    --secondary-color: #000000;
+    --background-color: #F0F4FF;
+    --glass-background: rgba(255, 255, 255, 0.85);
+    --glass-background-dark: rgba(255, 255, 255, 0.75);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.65);
+    --card-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    --text-color: #1E2A38;
+    --text-light: #2C3E50;
+    --text-muted: #516B8B;
+    --heading-color: #051937;
+    --danger-color: #FF4D4D;
+    --success-color: #d4af37;
+    --warning-color: #F39C12;
+    --info-color: #3498DB;
+    --secondary-bg: #747d8c;
+    --primary-border-color: rgba(0, 0, 0, 0.2);
+    --primary-border-color-light: rgba(0, 0, 0, 0.15);
+    --primary-border-color-lighter: rgba(0, 0, 0, 0.1);
+    --primary-border-color-darker: rgba(0, 0, 0, 0.3);
+    --primary-shadow-color: rgba(0, 0, 0, 0.1);
+    --primary-shadow-color-darker: rgba(0, 0, 0, 0.3);
+    --primary-bg-color: rgba(0, 0, 0, 0.05);
+    --primary-bg-color-hover: rgba(0, 0, 0, 0.1);
+    --black-color: #000;
+    --white-color: #fff;
+    --border-muted: rgba(0, 0, 0, 0.2);
+}
+
+body {
+    background: linear-gradient(135deg, #F0F4FF 0%, #E6EBFF 100%);
+    min-height: 100vh;
+    font-family: 'Tajawal', sans-serif;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Glassmorphism Effects */
+.glass-effect {
+    background: var(--glass-background);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 10px;
+    border: var(--glass-border);
+    box-shadow: var(--card-shadow);
+}
+
+/* Welcome Section */
+.welcome-section {
+    background: var(--glass-background);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--primary-border-color);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 2rem;
+}
+
+.welcome-section h1 {
+    color: var(--heading-color);
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+    letter-spacing: -0.5px;
+}
+
+.welcome-section p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.welcome-section .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 50px;
+    background: var(--primary-color);
+    color: var(--white-color);
+    font-weight: 500;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: var(--glass-background);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 2px solid var(--primary-border-color);
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: none;
+    background: var(--glass-background);
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: var(--glass-background);
+    border: 1px solid var(--primary-border-color-light);
+}
+
+.dashboard-card:hover .card-icon {
+    transform: none;
+}
+
+.orders .card-icon {
+    background: var(--primary-bg-color);
+    color: var(--primary-color);
+}
+
+.appointments .card-icon {
+    background: var(--primary-bg-color);
+    color: var(--success-color);
+}
+
+.cart .card-icon {
+    background: var(--primary-bg-color);
+    color: var(--danger-color);
+}
+
+.notifications .card-icon {
+    background: var(--primary-bg-color);
+    color: var(--warning-color);
+}
+
+.card-info {
+    flex-grow: 1;
+}
+
+.card-info h3 {
+    font-size: 1.8rem;
+    margin: 0;
+    font-weight: 800;
+    color: var(--heading-color);
+    letter-spacing: -0.5px;
+}
+
+.card-info p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.card-arrow {
+    position: absolute;
+    left: 1.5rem;
+    opacity: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--glass-background);
+    border: var(--glass-border);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover .card-arrow {
+    background: var(--primary-color);
+}
+
+.card-arrow i {
+    font-size: 1rem;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover .card-arrow i {
+    color: var(--white-color);
+    transform: translateX(-3px);
+}
+
+/* Section Cards */
+.section-card {
+    background: var(--glass-background);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--primary-border-color);
+    box-shadow: var(--card-shadow);
+    height: 100%;
+}
+
+.section-card h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--heading-color);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.3px;
+}
+
+/* Table Styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 700;
+    color: var(--heading-color);
+    border-bottom: var(--glass-border);
+    padding: 1rem;
+    background: var(--glass-background);
+    letter-spacing: 0.3px;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem;
+    color: var(--text-color);
+    border-bottom: var(--glass-border);
+    font-weight: 500;
+}
+
+.table tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background: var(--glass-background);
+}
+
+/* Appointment Cards */
+.appointments-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.appointment-card {
+    background: var(--glass-background);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 2px solid var(--primary-border-color);
+    transition: none;
+}
+
+.appointment-card:hover {
+    transform: none;
+    background: var(--glass-background);
+    box-shadow: var(--card-shadow);
+}
+
+.appointment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.appointment-body h5 {
+    margin-bottom: 1rem;
+    color: var(--heading-color);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.3px;
+}
+
+.appointment-body .location {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.appointment-footer {
+    margin-top: 1.5rem;
+    text-align: end;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 500;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: var(--black-color);
+    font-weight: 600;
+}
+
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+    color: var(--white-color);
+    font-weight: 600;
+}
+
+.badge.bg-danger {
+    background-color: var(--danger-color) !important;
+    color: var(--white-color);
+    font-weight: 600;
+}
+
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+    color: var(--white-color);
+    font-weight: 600;
+}
+
+.badge.bg-secondary {
+    background-color: var(--secondary-bg) !important;
+    color: var(--white-color);
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: none;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    letter-spacing: 0.3px;
+}
+
+.btn:hover {
+    transform: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border: none;
+    color: var(--white-color);
+}
+
+.btn-primary:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: var(--white-color);
+    transform: translateY(-2px);
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .dashboard-card {
+        padding: 1.5rem;
+    }
+
+    .card-info h3 {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .welcome-section {
+        text-align: center;
+    }
+
+    .welcome-section .badge {
+        margin-top: 1rem;
+    }
+
+    .section-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .table-responsive {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .welcome-section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-section h1 {
+        font-size: 1.4rem;
+    }
+
+    .dashboard-card {
+        padding: 1.25rem;
+        height: 100%;
+        margin-bottom: 0;
+    }
+
+    .card-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+
+    .card-info h3 {
+        font-size: 1.4rem;
+    }
+
+    .card-info p {
+        font-size: 0.9rem;
+    }
+
+    .section-card {
+        padding: 1.25rem;
+        height: 100%;
+        margin-bottom: 0;
+    }
+
+    .section-card h2 {
+        font-size: 1.3rem;
+    }
+
+    .appointments-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .table td, .table th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .welcome-section {
+        padding: 1rem;
+    }
+
+    .welcome-section h1 {
+        font-size: 1.2rem;
+    }
+
+    .welcome-section p {
+        font-size: 0.9rem;
+    }
+
+    .dashboard-card {
+        padding: 1rem;
+    }
+
+    .card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .card-info h3 {
+        font-size: 1.2rem;
+    }
+
+    .section-card {
+        padding: 1rem;
+    }
+
+    .section-card h2 {
+        font-size: 1.2rem;
+    }
+
+    .appointment-card {
+        padding: 1rem;
+    }
+
+    .list-group-item {
+        padding: 0.75rem;
+    }
+
+    .btn-group {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 0.75rem;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+
+    /* Full width cards on mobile */
+    .card, .section-card {
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .card:last-child, .section-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-header {
+        padding: 1rem;
+    }
+}
+
+/* Fix for very small devices */
+@media (max-width: 360px) {
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .welcome-section {
+        padding: 0.75rem;
+    }
+
+    .dashboard-card {
+        padding: 0.75rem;
+    }
+
+    .card-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    .card-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    /* Adjust spacing for very small screens */
+    .card, .section-card {
+        margin-bottom: 0.75rem;
+    }
+
+    .card-body, .card-header {
+        padding: 0.75rem;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--glass-background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dashboard-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Additional Text Styles */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-dark {
+    color: var(--heading-color) !important;
+}
+
+/* Addresses Section */
+.card {
+    border: 2px solid var(--primary-border-color);
+    box-shadow: var(--card-shadow);
+    border-radius: 12px;
+    transition: none;
+    background: var(--glass-background);
+}
+
+.card:hover {
+    box-shadow: var(--card-shadow);
+    transform: none;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-muted);
+    padding: 1.25rem;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--heading-color);
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* List Group Styles */
+.list-group {
+    margin: 0;
+}
+
+.list-group-item {
+    border: 1px solid var(--primary-border-color);
+    margin-bottom: 0.5rem;
+    border-radius: 8px !important;
+    transition: none;
+    background: var(--glass-background);
+}
+
+.list-group-item:last-child {
+    margin-bottom: 0;
+}
+
+.list-group-item.active {
+    background-color: var(--glass-background);
+    border-color: var(--glass-border);
+}
+
+.list-group-item:hover {
+    background-color: var(--glass-background);
+}
+
+/* Address Content */
+.list-group-item p {
+    color: var(--text-color);
+    margin: 0;
+}
+
+.list-group-item small {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: var(--black-color);
+}
+
+/* Button Group */
+.btn-group {
+    gap: 0.25rem;
+}
+
+.btn-group .btn {
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+}
+
+.btn-outline-warning {
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--warning-color);
+    color: var(--black-color);
+}
+
+.btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--danger-color);
+    color: var(--white-color);
+}
+
+/* Icons */
+.fa-map-marker-alt {
+    color: var(--danger-color);
+}
+
+.fa-calendar-alt {
+    color: var(--text-muted);
+}
+
+/* Add Address Button */
+.btn-primary.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: all 0.2s ease;
+}
+
+.btn-primary.btn-sm:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .card-header {
+        padding: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* User Guide Styles */
+.user-guide-section {
+    transition: all 0.3s ease;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+.user-guide-section.show {
+    max-height: 1000px;
+    opacity: 1;
+    margin-bottom: 2rem;
+}
+
+.user-guide-section .card {
+    background: linear-gradient(135deg, var(--glass-background), var(--glass-background-dark));
+    border: 2px solid var(--primary-border-color-light);
+    box-shadow: 0 4px 15px var(--primary-shadow-color);
+}
+
+.guide-item {
+    padding: 1rem;
+    border-radius: 10px;
+    background: var(--primary-bg-color);
+    border: 1px solid var(--primary-border-color-light);
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.guide-item:hover {
+    background: var(--primary-bg-color-hover);
+    transform: translateY(-2px);
+}
+
+.guide-item h6 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.guide-item ul {
+    padding-right: 1.2rem;
+    margin-bottom: 0;
+}
+
+.guide-item li {
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.guide-item li:last-child {
+    margin-bottom: 0;
+}
+
+.guide-toggle-btn {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 1000;
+    background: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px var(--primary-shadow-color-darker);
+    transition: all 0.3s ease;
+}
+
+.guide-toggle-btn:hover {
+    transform: scale(1.1);
+    background: var(--secondary-color);
+}
+
+.guide-toggle-btn i {
+    transition: all 0.3s ease;
+}
+
+.guide-toggle-btn.active i {
+    transform: rotate(180deg);
+}
+
+/* Guide Hint Styles */
+.guide-hint .alert {
+    background: var(--primary-bg-color);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+}
+
+.guide-hint .alert i.fa-lightbulb {
+    font-size: 1.2rem;
+    animation: glow 2s infinite;
+}
+
+.guide-hint .alert i.fa-question-circle {
+    font-size: 1.1rem;
+    background: var(--white-color);
+    border-radius: 50%;
+    padding: 2px;
+}
+
+@keyframes glow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Phone Number Styles */
+.phone-number {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-color);
+}
+
+/* Primary Badge Styles */
+.primary-badge {
+    background-color: var(--warning-color) !important;
+    color: var(--black-color) !important;
+    font-weight: 600;
+    padding: 0.4em 0.8em;
+    border-radius: 50px;
+    display: inline-block;
+}
+
+/* Active List Item with Primary Phone */
+.list-group-item.active {
+    background-color: var(--primary-bg-color) !important;
+    border-color: var(--primary-border-color-darker) !important;
+}
+
+.list-group-item.active .phone-number {
+    color: var(--primary-color);
+    font-weight: 700;
+}
