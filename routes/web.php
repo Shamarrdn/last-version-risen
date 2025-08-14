@@ -30,7 +30,8 @@ use App\Http\Controllers\Admin\{
     UserManagementController,
     RoleManagementController,
     CouponController,
-    QuantityDiscountController
+    QuantityDiscountController,
+    SizesColorsController
 };
 
 // Additional Controllers
@@ -166,6 +167,22 @@ Route::middleware([
                 Route::resource('quantity-discounts', QuantityDiscountController::class);
             });
 
+            // Sizes & Colors Management
+            Route::prefix('sizes-colors')->name('sizes-colors.')->group(function () {
+                Route::get('/', [SizesColorsController::class, 'superadminIndex'])->name('index');
+                Route::post('/sizes', [SizesColorsController::class, 'storeSize'])->name('sizes.store');
+                Route::put('/sizes/{id}', [SizesColorsController::class, 'updateSize'])->name('sizes.update');
+                Route::delete('/sizes/{id}', [SizesColorsController::class, 'destroySize'])->name('sizes.destroy');
+                Route::get('/sizes/{id}', [SizesColorsController::class, 'getSize'])->name('sizes.show');
+                Route::get('/sizes', [SizesColorsController::class, 'getSizes'])->name('sizes.list');
+                
+                Route::post('/colors', [SizesColorsController::class, 'storeColor'])->name('colors.store');
+                Route::put('/colors/{id}', [SizesColorsController::class, 'updateColor'])->name('colors.update');
+                Route::delete('/colors/{id}', [SizesColorsController::class, 'destroyColor'])->name('colors.destroy');
+                Route::get('/colors/{id}', [SizesColorsController::class, 'getColor'])->name('colors.show');
+                Route::get('/colors', [SizesColorsController::class, 'getColors'])->name('colors.list');
+            });
+
             // Orders Management
             Route::middleware(['permission:manage orders'])->group(function () {
                 Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
@@ -256,6 +273,22 @@ Route::middleware([
 
             // Quantity Discounts Routes
             Route::resource('quantity-discounts', QuantityDiscountController::class);
+
+            // Sizes & Colors Management
+            Route::prefix('sizes-colors')->name('sizes-colors.')->group(function () {
+                Route::get('/', [SizesColorsController::class, 'index'])->name('index');
+                Route::post('/sizes', [SizesColorsController::class, 'storeSize'])->name('sizes.store');
+                Route::put('/sizes/{id}', [SizesColorsController::class, 'updateSize'])->name('sizes.update');
+                Route::delete('/sizes/{id}', [SizesColorsController::class, 'destroySize'])->name('sizes.destroy');
+                Route::get('/sizes/{id}', [SizesColorsController::class, 'getSize'])->name('sizes.show');
+                Route::get('/sizes', [SizesColorsController::class, 'getSizes'])->name('sizes.list');
+                
+                Route::post('/colors', [SizesColorsController::class, 'storeColor'])->name('colors.store');
+                Route::put('/colors/{id}', [SizesColorsController::class, 'updateColor'])->name('colors.update');
+                Route::delete('/colors/{id}', [SizesColorsController::class, 'destroyColor'])->name('colors.destroy');
+                Route::get('/colors/{id}', [SizesColorsController::class, 'getColor'])->name('colors.show');
+                Route::get('/colors', [SizesColorsController::class, 'getColors'])->name('colors.list');
+            });
 
             // مسار صفحة المخزون
             Route::get('/products/inventory/status', [AdminProductController::class, 'inventory'])->name('products.inventory');

@@ -271,8 +271,8 @@ class OrderController extends Controller
         if ($newStatus === Order::ORDER_STATUS_COMPLETED && $oldStatus !== Order::ORDER_STATUS_COMPLETED) {
             if ($order->payment_status === Order::PAYMENT_STATUS_PAID) {
                 foreach ($order->items as $item) {
-                    $product = $item->product;
-                    $product->consumeStock($item->quantity);
+                    // تحديث المخزون حسب النظام الجديد
+                    $this->updateProductStock($item, 'consume');
                 }
             }
         }
@@ -280,7 +280,8 @@ class OrderController extends Controller
         if ($oldStatus === Order::ORDER_STATUS_COMPLETED && $newStatus !== Order::ORDER_STATUS_COMPLETED) {
             if ($order->payment_status === Order::PAYMENT_STATUS_PAID) {
                 foreach ($order->items as $item) {
-                    $item->product->returnStock($item->quantity);
+                    // إرجاع المخزون حسب النظام الجديد
+                    $this->updateProductStock($item, 'return');
                 }
             }
         }
@@ -392,8 +393,7 @@ class OrderController extends Controller
             $order->order_status === Order::ORDER_STATUS_COMPLETED) {
 
             foreach ($order->items as $item) {
-                $product = $item->product;
-                $product->consumeStock($item->quantity);
+                $this->updateProductStock($item, 'consume');
             }
         }
 
@@ -403,7 +403,7 @@ class OrderController extends Controller
             $order->order_status === Order::ORDER_STATUS_COMPLETED) {
 
             foreach ($order->items as $item) {
-                $item->product->returnStock($item->quantity);
+                $this->updateProductStock($item, 'return');
             }
         }
 
@@ -922,5 +922,51 @@ class OrderController extends Controller
             'message' => 'حدث خطأ أثناء إلغاء استلام الطلب'
         ], 500);
     }
+  }
+
+  /**
+   * تحديث مخزون المنتج حسب النظام الجديد
+   */
+  private function updateProductStock($orderItem, $action)
+  {
+      try {
+          $product = $orderItem->product;
+          $quantity = $orderItem->quantity;
+          $sizeId = $orderItem->size_id;
+          $colorId = $orderItem->color_id;
+
+          // إذا كان المنتج يستخدم النظام الجديد (مقاسات وألوان)
+          if ($sizeId && $colorId) {
+              $productSize = \DB::table('product_sizes')
+                  ->where('product_id', $product->id)
+                  ->where('size_id', $sizeId)
+                  ->where('color_id', $colorId)
+                  ->first();
+
+              if ($productSize) {
+                  if ($action === 'consume') {
+                      $newStock = max(0, $productSize->stock - $quantity);
+                      \DB::table('product_sizes')
+                          ->where('id', $productSize->id)
+                          ->update(['stock' => $newStock]);
+                  } elseif ($action === 'return') {
+                      $newStock = $productSize->stock + $quantity;
+                      \DB::table('product_sizes')
+                          ->where('id', $productSize->id)
+                          ->update(['stock' => $newStock]);
+                  }
+              }
+          } else {
+              // النظام القديم (مخزون عام)
+              if ($action === 'consume') {
+                  $product->consumeStock($quantity);
+              } elseif ($action === 'return') {
+                  $product->returnStock($quantity);
+              }
+          }
+      } catch (\Exception $e) {
+          Log::error('Error updating product stock: ' . $e->getMessage());
+          throw $e;
+      }
   }
 }

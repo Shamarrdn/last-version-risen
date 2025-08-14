@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار التصميم المبسط للمقاسات والألوان</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .link-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .link-button:hover {
+            background-color: #218838;
+            color: white;
+            text-decoration: none;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+        .design-preview {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .design-preview.active {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        .size-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .size-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+        }
+        .size-number {
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        .size-select {
+            width: 200px;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .colors-section {
+            margin-top: 15px;
+            padding-right: 20px;
+            border-right: 3px solid #007bff;
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .color-select {
+            width: 150px;
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        .color-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+        }
+        .input-group-sm {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .input-group-sm label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+        .input-group-sm input {
+            width: 80px;
+            padding: 4px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .add-color-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            margin-top: 10px;
+        }
+        .add-size-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار التصميم المبسط للمقاسات والألوان</h1>
+    
+    <div class="test-section">
+        <h2>معاينة التصميم الجديد</h2>
+        <div class="design-preview active">
+            <div class="size-header">
+                <div class="size-title">
+                    <span class="size-number">1</span>
+                    <i class="fas fa-ruler"></i>
+                    المقاس 1
+                </div>
+                <button class="size-remove-btn" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.875rem;">
+                    <i class="fas fa-times me-1"></i>
+                    حذف المقاس
+                </button>
+            </div>
+            
+            <select class="size-select">
+                <option value="">اختر المقاس...</option>
+                <option value="1" selected>XL</option>
+                <option value="2">2XL</option>
+                <option value="3">L</option>
+            </select>
+            
+            <div class="colors-section">
+                <h6 class="mb-3" style="color: #007bff; font-weight: 600;">
+                    <i class="fas fa-palette me-2"></i>
+                    الألوان المتاحة
+                </h6>
+                
+                <div class="color-item">
+                    <select class="color-select">
+                        <option value="">اختر اللون...</option>
+                        <option value="1" selected>أحمر</option>
+                        <option value="2">أزرق</option>
+                        <option value="3">أخضر</option>
+                    </select>
+                    
+                    <div class="color-inputs">
+                        <div class="input-group-sm">
+                            <label>عدد القطع:</label>
+                            <input type="number" placeholder="50" min="0" value="50">
+                        </div>
+                        <div class="input-group-sm">
+                            <label>السعر (اختياري):</label>
+                            <input type="number" placeholder="150" step="0.01" min="0" value="150">
+                        </div>
+                    </div>
+                    
+                    <button class="color-remove-btn" style="background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="color-item">
+                    <select class="color-select">
+                        <option value="">اختر اللون...</option>
+                        <option value="1">أحمر</option>
+                        <option value="2" selected>أزرق</option>
+                        <option value="3">أخضر</option>
+                    </select>
+                    
+                    <div class="color-inputs">
+                        <div class="input-group-sm">
+                            <label>عدد القطع:</label>
+                            <input type="number" placeholder="30" min="0" value="30">
+                        </div>
+                        <div class="input-group-sm">
+                            <label>السعر (اختياري):</label>
+                            <input type="number" placeholder="160" step="0.01" min="0" value="160">
+                        </div>
+                    </div>
+                    
+                    <button class="color-remove-btn" style="background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <button class="add-color-btn">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة لون آخر
+                </button>
+            </div>
+        </div>
+        
+        <button class="add-size-btn">
+            <i class="fas fa-plus me-2"></i>
+            إضافة مقاس جديد
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>الميزات الجديدة</h2>
+        <ul class="feature-list">
+            <li>مستطيل واحد لكل مقاس (parent)</li>
+            <li>دروب داون لاختيار المقاس</li>
+            <li>indent للألوان (شريط أزرق على اليمين)</li>
+            <li>دروب داون للألوان مع عدد القطع والسعر بجانب كل لون</li>
+            <li>زر "إضافة لون آخر" لكل مقاس</li>
+            <li>زر "إضافة مقاس جديد" لإنشاء parent جديد</li>
+            <li>تصميم بسيط وواضح</li>
+            <li>سهولة في الاستخدام</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار الصفحة</h2>
+        <p>اضغط على الرابط التالي لاختبار التصميم الجديد:</p>
+        
+        <a href="/admin/products/create" class="link-button" target="_blank">اختبار صفحة إنشاء منتج جديد</a>
+        
+        <div id="testResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>تعليمات الاختبار</h2>
+        <ol>
+            <li>انتقل إلى صفحة إنشاء منتج جديد</li>
+            <li>اضغط على "إضافة مقاس جديد"</li>
+            <li>اختر المقاس من الدروب داون</li>
+            <li>اضغط على "إضافة لون آخر"</li>
+            <li>اختر اللون من الدروب داون</li>
+            <li>املأ عدد القطع والسعر</li>
+            <li>أضف ألوان إضافية للمقاس</li>
+            <li>أضف مقاسات إضافية</li>
+            <li>احفظ المنتج</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>النتائج المتوقعة</h2>
+        <ul class="feature-list">
+            <li>تصميم بسيط وواضح</li>
+            <li>سهولة في إضافة المقاسات والألوان</li>
+            <li>تنظيم منطقي للمعلومات</li>
+            <li>واجهة مستخدم محسنة</li>
+            <li>تجربة مستخدم أفضل</li>
+        </ul>
+    </div>
+
+    <script>
+        // اختبار تلقائي عند تحميل الصفحة
+        window.addEventListener('load', function() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '✅ تم تحميل صفحة الاختبار بنجاح\nاضغط على الرابط أعلاه لاختبار التصميم الجديد';
+        });
+    </script>
+</body>
+</html>

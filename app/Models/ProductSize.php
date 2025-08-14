@@ -4,32 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductSize extends Model
 {
     use HasFactory;
 
+    protected $table = 'size_options';
+
     protected $fillable = [
-        'product_id',
-        'size',
-        'price',
-        'is_available'
+        'name',
+        'description',
     ];
 
-    protected $casts = [
-        'is_available' => 'boolean',
-        'price' => 'decimal:2'
-    ];
-
-    public function product(): BelongsTo
+    public function products()
     {
-        return $this->belongsTo(Product::class);
-    }
-
-    // إذا لم يتم تعيين سعر للمقاس، نستخدم سعر المنتج
-    public function getPriceAttribute($value)
-    {
-        return $value ?? null;
+        return $this->hasMany(Product::class);
     }
 }

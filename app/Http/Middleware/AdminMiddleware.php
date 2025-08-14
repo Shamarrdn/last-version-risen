@@ -16,8 +16,8 @@ class AdminMiddleware
 
         $user = Auth::user();
         
-        // تحقق من أن المستخدم لديه دور admin أو superadmin
-        if (!$user->hasRole(['admin', 'superadmin'])) {
+        // تحقق من أن المستخدم لديه دور admin فقط (وليس superadmin)
+        if (!$user->hasRole('admin') || $user->hasRole('superadmin')) {
             return redirect('/dashboard');
         }
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار بسيط</title>
+</head>
+<body>
+    <h1>اختبار API بسيط</h1>
+    
+    <h2>إضافة لون جديد</h2>
+    <form id="addColorForm">
+        <input type="text" id="colorName" placeholder="اسم اللون" required><br><br>
+        <input type="color" id="colorCode" required><br><br>
+        <textarea id="colorDescription" placeholder="الوصف (اختياري)"></textarea><br><br>
+        <button type="submit">إضافة لون</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('addColorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('colorName').value);
+            formData.append('code', document.getElementById('colorCode').value);
+            formData.append('description', document.getElementById('colorDescription').value);
+            formData.append('_token', '{{ csrf_token() }}');
+            
+            fetch('/superadmin/sizes-colors/colors', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                document.getElementById('result').innerHTML = '<pre>' + data + '</pre>';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            });
+        });
+    </script>
+</body>
+</html>
+

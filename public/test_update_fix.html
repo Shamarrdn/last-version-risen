@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تحديث المقاسات والألوان</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .size-list, .color-list {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .size-item, .color-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .size-item:last-child, .color-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار تحديث المقاسات والألوان</h1>
+    
+    <div class="test-section">
+        <h2>البيانات الموجودة</h2>
+        <button onclick="loadSizes()">تحميل المقاسات</button>
+        <button onclick="loadColors()">تحميل الألوان</button>
+        <div id="dataResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار تحديث مقاس</h2>
+        <form id="updateSizeForm">
+            <div class="form-group">
+                <label for="updateSizeId">معرف المقاس:</label>
+                <input type="number" id="updateSizeId" name="id" placeholder="أدخل معرف المقاس" required>
+            </div>
+            <div class="form-group">
+                <label for="updateSizeName">اسم المقاس الجديد:</label>
+                <input type="text" id="updateSizeName" name="name" placeholder="مثال: M" required>
+            </div>
+            <div class="form-group">
+                <label for="updateSizeDescription">الوصف الجديد (اختياري):</label>
+                <textarea id="updateSizeDescription" name="description" placeholder="مثال: مقاس متوسط" rows="3"></textarea>
+            </div>
+            <button type="submit">تحديث المقاس</button>
+        </form>
+        <div id="updateSizeResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار تحديث لون</h2>
+        <form id="updateColorForm">
+            <div class="form-group">
+                <label for="updateColorId">معرف اللون:</label>
+                <input type="number" id="updateColorId" name="id" placeholder="أدخل معرف اللون" required>
+            </div>
+            <div class="form-group">
+                <label for="updateColorName">اسم اللون الجديد:</label>
+                <input type="text" id="updateColorName" name="name" placeholder="مثال: أحمر" required>
+            </div>
+            <div class="form-group">
+                <label for="updateColorCode">كود اللون الجديد:</label>
+                <input type="color" id="updateColorCode" name="code" required>
+            </div>
+            <div class="form-group">
+                <label for="updateColorDescription">الوصف الجديد (اختياري):</label>
+                <textarea id="updateColorDescription" name="description" placeholder="مثال: لون أحمر غامق" rows="3"></textarea>
+            </div>
+            <button type="submit">تحديث اللون</button>
+        </form>
+        <div id="updateColorResult" class="result"></div>
+    </div>
+
+    <script>
+        // الحصول على CSRF token
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        // تحميل المقاسات
+        function loadSizes() {
+            fetch('/superadmin/sizes-colors/sizes')
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('dataResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    let html = '<h3>المقاسات الموجودة:</h3><div class="size-list">';
+                    data.sizes.forEach(size => {
+                        html += `<div class="size-item">
+                            <span><strong>ID:</strong> ${size.id} | <strong>الاسم:</strong> ${size.name} | <strong>الوصف:</strong> ${size.description || 'لا يوجد'}</span>
+                            <button onclick="fillSizeForm(${size.id}, '${size.name}', '${size.description || ''}')">اختيار للتحديث</button>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('dataResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        // تحميل الألوان
+        function loadColors() {
+            fetch('/superadmin/sizes-colors/colors')
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('dataResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    let html = '<h3>الألوان الموجودة:</h3><div class="color-list">';
+                    data.colors.forEach(color => {
+                        html += `<div class="color-item">
+                            <span><strong>ID:</strong> ${color.id} | <strong>الاسم:</strong> ${color.name} | <strong>الكود:</strong> ${color.code} | <strong>الوصف:</strong> ${color.description || 'لا يوجد'}</span>
+                            <button onclick="fillColorForm(${color.id}, '${color.name}', '${color.code}', '${color.description || ''}')">اختيار للتحديث</button>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('dataResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        // ملء نموذج تحديث المقاس
+        function fillSizeForm(id, name, description) {
+            document.getElementById('updateSizeId').value = id;
+            document.getElementById('updateSizeName').value = name;
+            document.getElementById('updateSizeDescription').value = description;
+        }
+
+        // ملء نموذج تحديث اللون
+        function fillColorForm(id, name, code, description) {
+            document.getElementById('updateColorId').value = id;
+            document.getElementById('updateColorName').value = name;
+            document.getElementById('updateColorCode').value = code;
+            document.getElementById('updateColorDescription').value = description;
+        }
+
+        // اختبار تحديث مقاس
+        document.getElementById('updateSizeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const sizeId = document.getElementById('updateSizeId').value;
+            const sizeName = document.getElementById('updateSizeName').value.trim();
+            
+            if (!sizeId || !sizeName) {
+                alert('يرجى إدخال معرف المقاس واسم المقاس');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            formData.append('_token', getCSRFToken());
+            
+            fetch(`/superadmin/sizes-colors/sizes/${sizeId}`, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('updateSizeResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + data.message + '\nالبيانات: ' + JSON.stringify(data.size, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    let errorText = '❌ فشل: ' + data.message;
+                    if (data.errors) {
+                        errorText += '\n\nالتفاصيل:\n' + JSON.stringify(data.errors, null, 2);
+                    }
+                    resultDiv.textContent = errorText;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('updateSizeResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        });
+
+        // اختبار تحديث لون
+        document.getElementById('updateColorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const colorId = document.getElementById('updateColorId').value;
+            const colorName = document.getElementById('updateColorName').value.trim();
+            const colorCode = document.getElementById('updateColorCode').value;
+            
+            if (!colorId || !colorName || !colorCode) {
+                alert('يرجى إدخال معرف اللون واسم اللون وكود اللون');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            formData.append('_token', getCSRFToken());
+            
+            fetch(`/superadmin/sizes-colors/colors/${colorId}`, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('updateColorResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + data.message + '\nالبيانات: ' + JSON.stringify(data.color, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    let errorText = '❌ فشل: ' + data.message;
+                    if (data.errors) {
+                        errorText += '\n\nالتفاصيل:\n' + JSON.stringify(data.errors, null, 2);
+                    }
+                    resultDiv.textContent = errorText;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('updateColorResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

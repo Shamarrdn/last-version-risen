@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إصلاح المقاسات والألوان</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار إصلاح المقاسات والألوان</h1>
+    
+    <div class="test-section">
+        <h2>اختبار إضافة مقاس جديد</h2>
+        <form id="testSizeForm">
+            <div class="form-group">
+                <label for="sizeName">اسم المقاس:</label>
+                <input type="text" id="sizeName" name="name" placeholder="مثال: M" required>
+            </div>
+            <div class="form-group">
+                <label for="sizeDescription">الوصف (اختياري):</label>
+                <textarea id="sizeDescription" name="description" placeholder="مثال: مقاس متوسط" rows="3"></textarea>
+            </div>
+            <button type="submit">إضافة المقاس</button>
+            <button type="button" onclick="testDuplicateSize()">اختبار المقاس المكرر</button>
+        </form>
+        <div id="sizeResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار إضافة لون جديد</h2>
+        <form id="testColorForm">
+            <div class="form-group">
+                <label for="colorName">اسم اللون:</label>
+                <input type="text" id="colorName" name="name" placeholder="مثال: أحمر" required>
+            </div>
+            <div class="form-group">
+                <label for="colorCode">كود اللون:</label>
+                <input type="color" id="colorCode" name="code" required>
+            </div>
+            <div class="form-group">
+                <label for="colorDescription">الوصف (اختياري):</label>
+                <textarea id="colorDescription" name="description" placeholder="مثال: لون أحمر غامق" rows="3"></textarea>
+            </div>
+            <button type="submit">إضافة اللون</button>
+            <button type="button" onclick="testDuplicateColor()">اختبار اللون المكرر</button>
+        </form>
+        <div id="colorResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار الحصول على المقاسات والألوان</h2>
+        <button onclick="getSizes()">عرض المقاسات</button>
+        <button onclick="getColors()">عرض الألوان</button>
+        <div id="listResult" class="result"></div>
+    </div>
+
+    <script>
+        // الحصول على CSRF token
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+
+        // اختبار إضافة مقاس
+        document.getElementById('testSizeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('_token', getCSRFToken());
+            
+            fetch('/superadmin/sizes-colors/sizes', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('sizeResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + data.message + '\nالبيانات: ' + JSON.stringify(data.size, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    let errorText = '❌ فشل: ' + data.message;
+                    if (data.errors) {
+                        errorText += '\n\nالتفاصيل:\n' + JSON.stringify(data.errors, null, 2);
+                    }
+                    resultDiv.textContent = errorText;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('sizeResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        });
+
+        // اختبار إضافة لون
+        document.getElementById('testColorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('_token', getCSRFToken());
+            
+            fetch('/superadmin/sizes-colors/colors', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('colorResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + data.message + '\nالبيانات: ' + JSON.stringify(data.color, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    let errorText = '❌ فشل: ' + data.message;
+                    if (data.errors) {
+                        errorText += '\n\nالتفاصيل:\n' + JSON.stringify(data.errors, null, 2);
+                    }
+                    resultDiv.textContent = errorText;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('colorResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        });
+
+        // اختبار المقاس المكرر
+        function testDuplicateSize() {
+            const formData = new FormData();
+            formData.append('_token', getCSRFToken());
+            formData.append('name', 'XL'); // محاولة إضافة مقاس موجود
+            formData.append('description', 'اختبار المقاس المكرر');
+            
+            fetch('/superadmin/sizes-colors/sizes', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('sizeResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + data.message;
+                } else {
+                    resultDiv.className = 'result error';
+                    let errorText = '❌ فشل (متوقع): ' + data.message;
+                    if (data.errors) {
+                        errorText += '\n\nالتفاصيل:\n' + JSON.stringify(data.errors, null, 2);
+                    }
+                    resultDiv.textContent = errorText;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('sizeResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        // اختبار اللون المكرر
+        function testDuplicateColor() {
+            const formData = new FormData();
+            formData.append('_token', getCSRFToken());
+            formData.append('name', 'أحمر'); // محاولة إضافة لون موجود
+            formData.append('code', '#FF0000');
+            formData.append('description', 'اختبار اللون المكرر');
+            
+            fetch('/superadmin/sizes-colors/colors', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('colorResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + data.message;
+                } else {
+                    resultDiv.className = 'result error';
+                    let errorText = '❌ فشل (متوقع): ' + data.message;
+                    if (data.errors) {
+                        errorText += '\n\nالتفاصيل:\n' + JSON.stringify(data.errors, null, 2);
+                    }
+                    resultDiv.textContent = errorText;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('colorResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        // الحصول على المقاسات
+        function getSizes() {
+            fetch('/superadmin/sizes-colors/sizes')
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('listResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ المقاسات الموجودة:\n' + JSON.stringify(data.sizes, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('listResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        // الحصول على الألوان
+        function getColors() {
+            fetch('/superadmin/sizes-colors/colors')
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('listResult');
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ الألوان الموجودة:\n' + JSON.stringify(data.colors, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('listResult');
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+    </script>
+</body>
+</html>

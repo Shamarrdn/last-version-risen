@@ -15,6 +15,56 @@
                 </button>
             </div>
             
+            <!-- Search Form -->
+            <div class="p-3 border-bottom bg-light">
+                <form id="searchForm" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="searchQuery" class="form-label">
+                            <i class="fas fa-search text-muted"></i> البحث
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="searchQuery" name="search" 
+                                   placeholder="البحث بالاسم، البريد الإلكتروني، أو رقم الهاتف" 
+                                   value="{{ request('search') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="roleFilter" class="form-label">
+                            <i class="fas fa-user-tag text-muted"></i> الدور
+                        </label>
+                        <select class="form-select" id="roleFilter" name="role">
+                            <option value="">جميع الأدوار</option>
+                            <option value="superadmin" {{ request('role') == 'superadmin' ? 'selected' : '' }}>سوبر أدمن</option>
+                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>أدمن</option>
+                            <option value="customer" {{ request('role') == 'customer' ? 'selected' : '' }}>عميل</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">
+                            <i class="fas fa-toggle-on text-muted"></i> الحالة
+                        </label>
+                        <select class="form-select" id="statusFilter" name="status">
+                            <option value="">جميع الحالات</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-flex gap-2 w-100">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="fas fa-search"></i> بحث
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()" title="مسح البحث">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -227,5 +277,116 @@
     function editUser(userId) {
         window.location.href = `/superadmin/users/${userId}/edit`;
     }
+    
+    // وظائف البحث
+    function performSearch() {
+        const searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+        const roleFilter = document.getElementById('roleFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        const rows = document.querySelectorAll('tbody tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            // تجاهل صف "لا يوجد مستخدمين"
+            if (row.querySelector('td[colspan="6"]')) {
+                return;
+            }
+            
+            const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const email = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const phone = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const roleSelect = row.querySelector('td:nth-child(4) select');
+            const role = roleSelect ? roleSelect.value : '';
+            
+            // التحقق من البحث
+            const matchesSearch = !searchQuery || 
+                name.includes(searchQuery) || 
+                email.includes(searchQuery) || 
+                phone.includes(searchQuery);
+            
+            // التحقق من فلتر الدور
+            const matchesRole = !roleFilter || role === roleFilter;
+            
+            // التحقق من فلتر الحالة (يمكن إضافة منطق الحالة هنا)
+            const matchesStatus = !statusFilter || true; // مؤقت للحالة
+            
+            if (matchesSearch && matchesRole && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // إظهار/إخفاء رسالة "لا توجد نتائج"
+        updateNoResultsMessage(visibleCount);
+        
+        // تحديث عدد النتائج
+        updateResultsCount(visibleCount);
+    }
+    
+    function updateNoResultsMessage(visibleCount) {
+        let noResultsRow = document.querySelector('tbody tr.no-results');
+        
+        if (visibleCount === 0) {
+            if (!noResultsRow) {
+                const tbody = document.querySelector('tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.className = 'no-results';
+                noResultsRow.innerHTML = '<td colspan="6" class="text-center text-muted">لا توجد نتائج للبحث</td>';
+                tbody.appendChild(noResultsRow);
+            }
+        } else {
+            if (noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+    }
+    
+    function updateResultsCount(count) {
+        let countElement = document.getElementById('resultsCount');
+        if (!countElement) {
+            countElement = document.createElement('div');
+            countElement.id = 'resultsCount';
+            countElement.className = 'alert alert-info mt-3';
+            document.querySelector('.table-responsive').after(countElement);
+        }
+        countElement.innerHTML = `<i class="fas fa-info-circle"></i> تم العثور على <strong>${count}</strong> مستخدم`;
+    }
+    
+    function clearSearch() {
+        document.getElementById('searchQuery').value = '';
+        document.getElementById('roleFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        performSearch();
+    }
+    
+    // إضافة مستمعي الأحداث للبحث
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchQuery = document.getElementById('searchQuery');
+        const roleFilter = document.getElementById('roleFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const searchForm = document.getElementById('searchForm');
+        
+        if (searchQuery) {
+            searchQuery.addEventListener('input', performSearch);
+        }
+        if (roleFilter) {
+            roleFilter.addEventListener('change', performSearch);
+        }
+        if (statusFilter) {
+            statusFilter.addEventListener('change', performSearch);
+        }
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                performSearch();
+            });
+        }
+        
+        // تهيئة البحث عند تحميل الصفحة
+        performSearch();
+    });
 </script>
 @endsection

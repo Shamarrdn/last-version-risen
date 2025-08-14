@@ -4,24 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductColor extends Model
 {
     use HasFactory;
 
+    protected $table = 'color_options';
+
     protected $fillable = [
-        'product_id',
-        'color',
-        'is_available'
+        'name',
+        'code',
+        'description',
     ];
 
-    protected $casts = [
-        'is_available' => 'boolean'
-    ];
-
-    public function product(): BelongsTo
+    public function products()
     {
-        return $this->belongsTo(Product::class);
+        return $this->hasMany(Product::class);
     }
 }

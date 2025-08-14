@@ -89,7 +89,7 @@ class Product extends Model
 
   public function sizes(): HasMany
   {
-    return $this->hasMany(ProductSize::class);
+    return $this->hasMany(\App\Models\ProductSizeRelation::class);
   }
 
   public function orderItems(): HasMany

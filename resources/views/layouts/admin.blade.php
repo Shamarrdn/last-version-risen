@@ -69,6 +69,12 @@
                         </a>
                     </div>
                     <div class="nav-item">
+                        <a href="{{ route('admin.sizes-colors.index') }}" class="nav-link {{ request()->routeIs('admin.sizes-colors.*') ? 'active' : '' }}">
+                            <i class="fas fa-palette"></i>
+                            <span class="nav-title">الألوان والمقاسات</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
                         <a href="{{ route('admin.sales.statistics') }}" class="nav-link {{ request()->routeIs('admin.sales.statistics') ? 'active' : '' }}">
                             <i class="fas fa-chart-line"></i>
                             <span class="nav-title">إحصائيات المبيعات</span>
@@ -145,7 +151,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">إدارة المستخدمين</div>
                     <div class="nav-item">
-                        <a href="/user/profile" class="nav-link {{ request()->routeIs('user.profile') ? 'active' : '' }}">
+                        <a href="{{ route('profile.show') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                             <i class="fas fa-user"></i>
                             <span class="nav-title">الملف الشخصي</span>
                         </a>

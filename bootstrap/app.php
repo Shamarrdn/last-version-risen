@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\ClientMiddleware;
 use App\Http\Middleware\AdminPopupAuthMiddleware;
+use App\Http\Middleware\MethodOverrideMiddleware;
 
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\PermissionMiddleware;
@@ -36,8 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
-
         ]);
+
+        // Add Method Override middleware to web group
+        $middleware->appendToGroup('web', MethodOverrideMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -81,7 +81,9 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('admin.products.create', compact('categories'));
+        $availableSizes = \App\Models\ProductSize::all();
+        $availableColors = \App\Models\ProductColor::all();
+        return view('admin.products.create', compact('categories', 'availableSizes', 'availableColors'));
     }
 
     public function store(Request $request)
@@ -102,25 +104,42 @@ class ProductController extends Controller
             'detail_keys.*' => 'nullable|string|max:255',
             'detail_values.*' => 'nullable|string|max:255',
             'base_price' => 'nullable|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'stock' => 'required|numeric|min:0|max:999999',
         ];
 
-        if ($request->has('has_colors')) {
-            $rules['colors'] = 'required|array|min:1';
-            $rules['colors.*'] = 'required|string|max:255';
-            $rules['color_available'] = 'array';
-            $rules['color_available.*'] = 'boolean';
+        // التحقق من المقاسات والألوان المختارة
+        if ($request->has('selected_sizes') && $request->has('selected_colors')) {
+            $rules['selected_sizes'] = 'array';
+            $rules['selected_sizes.*'] = 'exists:size_options,id';
+            $rules['selected_colors'] = 'array';
+            $rules['selected_colors.*'] = 'exists:color_options,id';
+            
+            // التحقق من المخزون والأسعار للمقاسات والألوان
+            if ($request->has('stock') && is_array($request->stock)) {
+                $rules['stock.*.*'] = 'nullable|integer|min:0';
+            }
+            if ($request->has('price') && is_array($request->price)) {
+                $rules['price.*.*'] = 'nullable|numeric|min:0';
+            }
         }
 
-        if ($request->has('has_sizes')) {
-            $rules['sizes'] = 'required|array|min:1';
-            $rules['sizes.*'] = 'required|string|max:255';
-            $rules['size_ids.*'] = 'nullable|exists:product_sizes,id';
-            $rules['size_available.*'] = 'nullable|boolean';
-            $rules['size_prices.*'] = 'nullable|numeric|min:0';
+        // معالجة البيانات قبل التحقق من صحتها
+        $data = $request->all();
+        
+        // التأكد من أن المخزون قيمة رقمية
+        if (isset($data['stock'])) {
+            if (is_array($data['stock'])) {
+                $data['stock'] = $data['stock'][0] ?? 0;
+            }
+            $data['stock'] = max(0, floatval($data['stock']));
         }
-
-        $validatedData = $request->validate($rules);
+        
+        $validatedData = validator($data, $rules, [
+            'stock.required' => 'حقل المخزون مطلوب',
+            'stock.numeric' => 'حقل المخزون يجب أن يكون رقماً',
+            'stock.min' => 'حقل المخزون يجب أن يكون 0 أو أكثر',
+            'stock.max' => 'حقل المخزون يجب أن يكون أقل من 999999',
+        ])->validate();
 
         try {
             DB::beginTransaction();
@@ -132,9 +151,10 @@ class ProductController extends Controller
             }
 
             $details = [];
-            if ($request->has('detail_keys') && $request->has('detail_values')) {
+            if ($request->has('detail_keys') && $request->has('detail_values') && 
+                is_array($request->detail_keys) && is_array($request->detail_values)) {
                 foreach ($request->detail_keys as $index => $key) {
-                    if (!empty($key) && !empty($request->detail_values[$index])) {
+                    if (!empty($key) && isset($request->detail_values[$index]) && !empty($request->detail_values[$index])) {
                         $details[$key] = $request->detail_values[$index];
                     }
                 }
@@ -146,38 +166,41 @@ class ProductController extends Controller
             $validatedData['enable_color_selection'] = $request->has('enable_color_selection');
             $validatedData['enable_size_selection'] = $request->has('enable_size_selection');
             $validatedData['is_available'] = $request->has('is_available');
-            $validatedData['stock'] = $request->input('stock', 0);
+            // التأكد من أن المخزون قيمة صحيحة
+            $validatedData['stock'] = intval($validatedData['stock']);
 
             $product = Product::create($validatedData);
 
-            if ($request->has('categories')) {
+            if ($request->has('categories') && is_array($request->categories)) {
                 $product->categories()->attach($request->categories);
             }
 
-            if ($request->has('has_colors') && $request->has('colors')) {
-                foreach ($request->colors as $index => $color) {
-                    if (!empty($color)) {
-                        $product->colors()->create([
-                            'color' => $color,
-                            'is_available' => $request->color_available[$index] ?? true
-                        ]);
-                    }
-                }
-            }
-
-            if ($request->enable_size_selection && isset($request->sizes)) {
-                foreach ($request->sizes as $index => $size) {
-                    if (!empty($size)) {
-                        $price = null;
-                        if (isset($request->size_prices[$index]) && !empty($request->size_prices[$index])) {
-                            $price = $request->size_prices[$index];
+            // معالجة المقاسات والألوان المختارة
+            if ($request->has('selected_sizes') && $request->has('selected_colors') && 
+                is_array($request->selected_sizes) && is_array($request->selected_colors)) {
+                // استخدام المخزون والأسعار للمقاسات والألوان فقط إذا كانت مصفوفات
+                $stockData = is_array($request->input('stock')) ? $request->input('stock', []) : [];
+                $priceData = is_array($request->input('price')) ? $request->input('price', []) : [];
+                
+                foreach ($request->selected_sizes as $sizeId) {
+                    foreach ($request->selected_colors as $colorId) {
+                        // التحقق من وجود مخزون لهذا المقاس واللون
+                        $stock = isset($stockData[$sizeId][$colorId]) ? $stockData[$sizeId][$colorId] : null;
+                        $price = isset($priceData[$sizeId][$colorId]) ? $priceData[$sizeId][$colorId] : null;
+                        
+                        if ($stock !== null && $stock > 0) {
+                            // إضافة إلى جدول product_sizes
+                            \DB::table('product_sizes')->insert([
+                                'product_id' => $product->id,
+                                'size_id' => $sizeId,
+                                'color_id' => $colorId,
+                                'stock' => $stock,
+                                'price' => $price,
+                                'is_available' => 1,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
                         }
-
-                        $product->sizes()->create([
-                            'size' => $size,
-                            'price' => $price,
-                            'is_available' => isset($request->size_available[$index]) ? 1 : 0
-                        ]);
                     }
                 }
             }
@@ -187,7 +210,7 @@ class ProductController extends Controller
                     $path = $this->uploadFile($image, 'products');
                     $product->images()->create([
                         'image_path' => $path,
-                        'is_primary' => $request->input('is_primary.' . $index, false)
+                        'is_primary' => $request->input('is_primary.' . $index, false) ? true : false
                     ]);
                 }
             }
@@ -259,9 +282,10 @@ class ProductController extends Controller
             }
 
             $details = [];
-            if ($request->has('detail_keys') && $request->has('detail_values')) {
+            if ($request->has('detail_keys') && $request->has('detail_values') && 
+                is_array($request->detail_keys) && is_array($request->detail_values)) {
                 foreach ($request->detail_keys as $index => $key) {
-                    if (!empty($key) && !empty($request->detail_values[$index])) {
+                    if (!empty($key) && isset($request->detail_values[$index]) && !empty($request->detail_values[$index])) {
                         $details[$key] = $request->detail_values[$index];
                     }
                 }
@@ -282,11 +306,11 @@ class ProductController extends Controller
                 'stock' => $request->input('stock', 0),
             ]);
 
-            $product->categories()->sync($request->categories ?? []);
+            $product->categories()->sync(is_array($request->categories) ? $request->categories : []);
 
-            if ($request->has('has_colors')) {
+            if ($request->has('has_colors') && is_array($request->colors)) {
                 $currentColorIds = $product->colors->pluck('id')->toArray();
-                $updatedColorIds = array_filter($request->color_ids ?? []);
+                $updatedColorIds = array_filter(is_array($request->color_ids) ? $request->color_ids : []);
                 $deletedColorIds = array_diff($currentColorIds, $updatedColorIds);
 
                 if (!empty($deletedColorIds)) {
@@ -295,10 +319,10 @@ class ProductController extends Controller
 
                 foreach ($request->colors as $index => $colorName) {
                     if (!empty($colorName)) {
-                        $colorId = $request->color_ids[$index] ?? null;
+                        $colorId = isset($request->color_ids[$index]) ? $request->color_ids[$index] : null;
                         $colorData = [
                             'color' => $colorName,
-                            'is_available' => $request->color_available[$index] ?? true
+                            'is_available' => isset($request->color_available[$index]) ? $request->color_available[$index] : true
                         ];
 
                         if ($colorId && in_array($colorId, $currentColorIds)) {
@@ -312,21 +336,22 @@ class ProductController extends Controller
                 $product->colors()->delete();
             }
 
-            if ($request->has('has_sizes')) {
+            if ($request->has('has_sizes') && is_array($request->sizes)) {
                 $currentSizeIds = $product->sizes->pluck('id')->toArray();
-                $updatedSizeIds = array_filter($request->size_ids ?? []);
+                $updatedSizeIds = array_filter(is_array($request->size_ids) ? $request->size_ids : []);
                 $deletedSizeIds = array_diff($currentSizeIds, $updatedSizeIds);
 
                 if (!empty($deletedSizeIds)) {
-                    $product->sizes()->whereIn('id', $deletedSizeIds)->delete();
+                    // حذف المقاسات من جدول product_sizes باستخدام product_id
+                    \DB::table('product_sizes')->where('product_id', $product->id)->whereIn('id', $deletedSizeIds)->delete();
                 }
 
                 foreach ($request->sizes as $index => $sizeName) {
                     if (!empty($sizeName)) {
-                        $sizeId = $request->size_ids[$index] ?? null;
+                        $sizeId = isset($request->size_ids[$index]) ? $request->size_ids[$index] : null;
                         $sizeData = [
                             'size' => $sizeName,
-                            'is_available' => $request->size_available[$index] ?? true
+                            'is_available' => isset($request->size_available[$index]) ? $request->size_available[$index] : true
                         ];
 
                         if (isset($request->size_prices[$index])) {
@@ -334,17 +359,21 @@ class ProductController extends Controller
                         }
 
                         if ($sizeId && in_array($sizeId, $currentSizeIds)) {
-                            $product->sizes()->where('id', $sizeId)->update($sizeData);
+                            // تحديث المقاس في جدول product_sizes
+                            \DB::table('product_sizes')->where('id', $sizeId)->where('product_id', $product->id)->update($sizeData);
                         } else {
-                            $product->sizes()->create($sizeData);
+                            // إضافة مقاس جديد إلى جدول product_sizes
+                            $sizeData['product_id'] = $product->id;
+                            \DB::table('product_sizes')->insert($sizeData);
                         }
                     }
                 }
             } else {
-                $product->sizes()->delete();
+                // حذف جميع مقاسات المنتج من جدول product_sizes
+                \DB::table('product_sizes')->where('product_id', $product->id)->delete();
             }
 
-            if ($request->has('remove_images')) {
+            if ($request->has('remove_images') && is_array($request->remove_images)) {
                 foreach ($request->remove_images as $imageId) {
                     $image = $product->images()->find($imageId);
                     if ($image) {
@@ -359,12 +388,12 @@ class ProductController extends Controller
                     $path = $this->uploadFile($image, 'products');
                     $product->images()->create([
                         'image_path' => $path,
-                        'is_primary' => $request->input('is_primary_new.' . $index, false)
+                        'is_primary' => $request->input('is_primary_new.' . $index, false) ? true : false
                     ]);
                 }
             }
 
-            if ($request->has('is_primary')) {
+            if ($request->has('is_primary') && !empty($request->is_primary)) {
                 $product->images()->update(['is_primary' => false]);
                 $product->images()->where('id', $request->is_primary)->update(['is_primary' => true]);
             }
@@ -391,7 +420,8 @@ class ProductController extends Controller
             DB::beginTransaction();
 
             $product->colors()->delete();
-            $product->sizes()->delete();
+            // حذف جميع مقاسات المنتج من جدول product_sizes
+            \DB::table('product_sizes')->where('product_id', $product->id)->delete();
             $product->orderItems()->delete();
             $product->discounts()->detach();
             $product->categories()->detach();

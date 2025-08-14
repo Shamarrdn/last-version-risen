@@ -114,7 +114,12 @@
                     </thead>
                     <tbody>
                         @forelse($adminUsers as $admin)
-                            <tr>
+                            <tr data-admin-id="{{ $admin->id }}" 
+                                data-total-sales="{{ $adminSalesData[$admin->id]['totalSales'] ?? 0 }}"
+                                data-today-sales="{{ $adminSalesData[$admin->id]['todaySales'] ?? 0 }}"
+                                data-pending-orders="{{ $adminSalesData[$admin->id]['pendingOrders'] ?? 0 }}"
+                                data-processing-orders="{{ $adminSalesData[$admin->id]['processingOrders'] ?? 0 }}"
+                                data-completed-orders="{{ $adminSalesData[$admin->id]['completedOrders'] ?? 0 }}">
                                 <td>{{ $admin->name }}</td>
                                 <td>{{ $admin->email }}</td>
                                 <td>{{ number_format($adminSalesData[$admin->id]['totalSales'] ?? 0) }} ريال</td>
@@ -297,9 +302,31 @@
             const modal = new bootstrap.Modal(document.getElementById('adminDetailsModal'));
             modal.show();
             
-            // In a real application, you would fetch detailed data here
-            // For now, we'll just simulate loading and show some dummy content
-            setTimeout(() => {
+                    // Get admin data from the table
+        const adminId = this.getAttribute('data-admin-id');
+        const adminRow = document.querySelector(`tr[data-admin-id="${adminId}"]`);
+        
+        if (adminRow) {
+            const totalSales = adminRow.getAttribute('data-total-sales') || '0';
+            const todaySales = adminRow.getAttribute('data-today-sales') || '0';
+            const pendingOrders = adminRow.getAttribute('data-pending-orders') || '0';
+            const processingOrders = adminRow.getAttribute('data-processing-orders') || '0';
+            const completedOrders = adminRow.getAttribute('data-completed-orders') || '0';
+            
+            // Update the details content
+            document.getElementById('adminTotalSales').textContent = Number(totalSales).toLocaleString() + ' ريال';
+            document.getElementById('adminTodaySales').textContent = Number(todaySales).toLocaleString() + ' ريال';
+            document.getElementById('adminTotalOrders').textContent = Number(pendingOrders) + Number(processingOrders) + Number(completedOrders);
+            
+            // Update chart data
+            const chartData = [Number(pendingOrders), Number(processingOrders), Number(completedOrders)];
+            if (window.adminOrderStatusChart) {
+                window.adminOrderStatusChart.data.datasets[0].data = chartData;
+                window.adminOrderStatusChart.update();
+            }
+        }
+        
+        setTimeout(() => {
                 document.getElementById('adminDetailsContent').innerHTML = `
                     <h4 class="mb-4 text-center">تفاصيل مبيعات المشرف: ${adminName}</h4>
                     <div class="row mb-4">
@@ -308,17 +335,15 @@
                             <table class="table table-bordered">
                                 <tr>
                                     <th>إجمالي المبيعات</th>
-                                    <td>${Number({{ $adminSalesData[$admin->id]['totalSales'] ?? 0 }}).toLocaleString()} ريال</td>
+                                    <td id="adminTotalSales">جاري التحميل...</td>
                                 </tr>
                                 <tr>
                                     <th>مبيعات اليوم</th>
-                                    <td>${Number({{ $adminSalesData[$admin->id]['todaySales'] ?? 0 }}).toLocaleString()} ريال</td>
+                                    <td id="adminTodaySales">جاري التحميل...</td>
                                 </tr>
                                 <tr>
                                     <th>عدد الطلبات</th>
-                                    <td>${Number({{ $adminSalesData[$admin->id]['pendingOrders'] ?? 0 }} + 
-                                        {{ $adminSalesData[$admin->id]['processingOrders'] ?? 0 }} + 
-                                        {{ $adminSalesData[$admin->id]['completedOrders'] ?? 0 }}).toLocaleString()}</td>
+                                    <td id="adminTotalOrders">جاري التحميل...</td>
                                 </tr>
                             </table>
                         </div>
@@ -357,18 +382,14 @@
                 `;
                 
                 // Create order status chart for the admin
-                new Chart(
+                window.adminOrderStatusChart = new Chart(
                     document.getElementById('adminOrderStatusChart').getContext('2d'),
                     {
                         type: 'pie',
                         data: {
                             labels: ['معلق', 'قيد المعالجة', 'مكتمل'],
                             datasets: [{
-                                data: [
-                                    {{ $adminSalesData[$admin->id]['pendingOrders'] ?? 0 }},
-                                    {{ $adminSalesData[$admin->id]['processingOrders'] ?? 0 }},
-                                    {{ $adminSalesData[$admin->id]['completedOrders'] ?? 0 }}
-                                ],
+                                data: [0, 0, 0], // سيتم تحديثها عبر JavaScript
                                 backgroundColor: [
                                     'rgba(255, 193, 7, 0.8)',
                                     'rgba(13, 202, 240, 0.8)',

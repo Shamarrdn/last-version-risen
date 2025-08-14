@@ -200,11 +200,11 @@
                                                     <small class="text-muted">أضف تفاصيل إضافية للمنتج مثل الأبعاد، البراند، بلد المنشأ، إلخ...</small>
                                                 </div>
                                                 <div id="detailsContainer">
-                                                    @if(old('detail_keys'))
+                                                    @if(old('detail_keys') && is_array(old('detail_keys')))
                                                         @foreach(old('detail_keys') as $index => $key)
                                                             <div class="input-group mb-2 shadow-sm">
                                                                 <input type="text" name="detail_keys[]" class="form-control" placeholder="الخاصية" value="{{ $key }}">
-                                                                <input type="text" name="detail_values[]" class="form-control" placeholder="القيمة" value="{{ old('detail_values')[$index] ?? '' }}">
+                                                                <input type="text" name="detail_values[]" class="form-control" placeholder="القيمة" value="{{ is_array(old('detail_values')) ? (old('detail_values')[$index] ?? '') : '' }}">
                                                                 <button type="button" class="btn btn-light-danger" onclick="this.closest('.input-group').remove()">
                                                                     <i class="fas fa-times"></i>
                                                                 </button>

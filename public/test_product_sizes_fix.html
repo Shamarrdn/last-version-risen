@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إصلاح مشكلة product_sizes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار إصلاح مشكلة product_sizes</h1>
+    
+    <div class="test-section">
+        <h2>معلومات الإصلاح</h2>
+        <div class="debug-info">
+            <strong>المشكلة:</strong> SQLSTATE[42S22]: Column not found: 1054 Unknown column 'size_options.product_id'<br>
+            <strong>السبب:</strong> خلط بين جدولين:<br>
+            - size_options (جدول عام للمقاسات المتاحة)<br>
+            - product_sizes (جدول العلاقة بين المنتجات والمقاسات)<br>
+            <strong>الحل:</strong> استخدام DB::table('product_sizes') بدلاً من العلاقات
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار قاعدة البيانات</h2>
+        <button onclick="testDatabaseStructure()">اختبار هيكل قاعدة البيانات</button>
+        <button onclick="testProductSizes()">اختبار جدول product_sizes</button>
+        <button onclick="testSizeOptions()">اختبار جدول size_options</button>
+        <div id="dbResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>اختبار المنتجات</h2>
+        <button onclick="loadProducts()">تحميل المنتجات</button>
+        <button onclick="testProductWithSizes()">اختبار منتج مع مقاسات</button>
+        <div id="productResult" class="result"></div>
+    </div>
+
+    <script>
+        function testDatabaseStructure() {
+            const resultDiv = document.getElementById('dbResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'جاري اختبار هيكل قاعدة البيانات...';
+            
+            fetch('/api/test/database-structure')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + JSON.stringify(data.data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        function testProductSizes() {
+            const resultDiv = document.getElementById('dbResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'جاري اختبار جدول product_sizes...';
+            
+            fetch('/api/test/product-sizes')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + JSON.stringify(data.data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        function testSizeOptions() {
+            const resultDiv = document.getElementById('dbResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'جاري اختبار جدول size_options...';
+            
+            fetch('/api/test/size-options')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + JSON.stringify(data.data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        function loadProducts() {
+            const resultDiv = document.getElementById('productResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'جاري تحميل المنتجات...';
+            
+            fetch('/api/products')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح تحميل المنتجات: ' + data.products.length + ' منتج';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+
+        function testProductWithSizes() {
+            const resultDiv = document.getElementById('productResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'جاري اختبار منتج مع مقاسات...';
+            
+            fetch('/api/test/product-with-sizes')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ نجح: ' + JSON.stringify(data.data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ فشل: ' + data.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ خطأ في الاتصال: ' + error.message;
+            });
+        }
+    </script>
+</body>
+</html>
