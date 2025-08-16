@@ -363,10 +363,11 @@
                                 @foreach($product->colors as $color)
                                     <div class="color-item {{ $color->is_available ? 'available' : 'unavailable' }}"
                                         data-color="{{ $color->color }}"
+                                        data-color-id="{{ $color->id }}"
                                         onclick="selectColor(this)">
                                         <div class="d-flex align-items-center gap-2">
-                                            <span class="color-preview" style="background-color: {{ $color->color }}"></span>
-                                            <span class="color-name">{{ $color->color }}</span>
+                                            <span class="color-preview" style="background-color: {{ $color->code ?? $color->color }}"></span>
+                                            <span class="color-name">{{ $color->name ?? $color->color }}</span>
                                         </div>
                                         <span class="color-status">
                                             @if($color->is_available)
@@ -397,26 +398,33 @@
                     <!-- Available Sizes Section -->
                     @if($product->allow_size_selection && $product->sizes->isNotEmpty())
                         <div class="available-sizes mb-4">
-                            <h5 class="fw-bold mb-3">المقاسات المتاحة</h5>
-                            <div class="d-flex flex-wrap gap-2">
+                            <h5 class="section-title">
+                                <i class="fas fa-ruler-combined me-2"></i>
+                                المقاسات المتاحة
+                            </h5>
+                            <div class="d-flex flex-wrap gap-2" id="sizesContainer">
                                 @foreach($product->sizes as $size)
                                     @if($size->is_available)
                                     <button type="button"
                                         class="size-option btn"
                                         data-size="{{ $size->size }}"
+                                        data-size-id="{{ $size->id }}"
                                         data-price="{{ $size->price }}"
                                         onclick="selectSize(this)">
-                                        {{ $size->size }}
+                                        {{ $size->name ?? $size->size }}
                                         @if($size->price != null)
                                             <span class="ms-2 badge bg-primary">{{ number_format($size->price, 2) }} ر.س</span>
                                         @endif
                                     </button>
                                     @else
                                     <button type="button" class="size-option btn disabled">
-                                        {{ $size->size }} (غير متوفر)
+                                        {{ $size->name ?? $size->size }} (غير متوفر)
                                     </button>
                                     @endif
                                 @endforeach
+                            </div>
+                            <div id="dynamicSizesContainer" class="d-flex flex-wrap gap-2" style="display: none;">
+                                <!-- سيتم ملؤها ديناميكياً -->
                             </div>
                         </div>
                     @endif
@@ -510,6 +518,223 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('assets/js/index.js') }}?t={{ time() }}"></script>
     <script src="{{ asset('assets/js/customer/products-show.js') }}?t={{ time() }}"></script>
+    
+    <script>
+        // متغيرات عامة
+        let selectedColorId = null;
+        let selectedSizeId = null;
+        let selectedVariantId = null;
+        let currentPrice = {{ $product->base_price ?? $product->price }};
+
+        // تحديث السعر المعروض
+        function updateDisplayedPrice() {
+            const priceElement = document.querySelector('.product-price');
+            if (priceElement) {
+                priceElement.textContent = currentPrice.toFixed(2) + ' ر.س';
+            }
+        }
+
+        // فلترة المقاسات حسب اللون المختار
+        function filterSizesByColor(colorId) {
+            if (!colorId) {
+                // إظهار جميع المقاسات إذا لم يتم اختيار لون
+                document.getElementById('sizesContainer').style.display = 'flex';
+                document.getElementById('dynamicSizesContainer').style.display = 'none';
+                return;
+            }
+
+            fetch(`/products/{{ $product->id }}/sizes-for-color?color_id=${colorId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const container = document.getElementById('dynamicSizesContainer');
+                        const originalContainer = document.getElementById('sizesContainer');
+                        
+                        // إخفاء المقاسات الأصلية
+                        originalContainer.style.display = 'none';
+                        
+                        // ملء المقاسات الديناميكية
+                        container.innerHTML = '';
+                        data.sizes.forEach(size => {
+                            const button = document.createElement('button');
+                            button.type = 'button';
+                            button.className = 'size-option btn';
+                            button.setAttribute('data-size-id', size.id);
+                            button.setAttribute('data-price', size.price);
+                            button.setAttribute('data-variant-id', size.variant_id);
+                            button.onclick = function() { selectSize(this); };
+                            
+                            button.innerHTML = `
+                                ${size.name}
+                                <span class="ms-2 badge bg-primary">${size.price.toFixed(2)} ر.س</span>
+                                <small class="d-block text-muted">المتوفر: ${size.available_stock}</small>
+                            `;
+                            
+                            container.appendChild(button);
+                        });
+                        
+                        container.style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sizes:', error);
+                });
+        }
+
+        // فلترة الألوان حسب المقاس المختار
+        function filterColorsBySize(sizeId) {
+            if (!sizeId) {
+                // إظهار جميع الألوان إذا لم يتم اختيار مقاس
+                return;
+            }
+
+            fetch(`/products/{{ $product->id }}/colors-for-size?size_id=${sizeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // تحديث الألوان المتاحة
+                        const colorItems = document.querySelectorAll('.color-item');
+                        colorItems.forEach(item => {
+                            const colorId = item.getAttribute('data-color-id');
+                            const isAvailable = data.colors.some(color => color.id == colorId);
+                            
+                            if (isAvailable) {
+                                item.classList.remove('unavailable');
+                                item.classList.add('available');
+                                item.onclick = function() { selectColor(this); };
+                            } else {
+                                item.classList.remove('available');
+                                item.classList.add('unavailable');
+                                item.onclick = null;
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching colors:', error);
+                });
+        }
+
+        // تحديث تفاصيل الـ variant
+        function updateVariantDetails() {
+            if (!selectedColorId && !selectedSizeId) {
+                // إعادة تعيين السعر الأصلي
+                currentPrice = {{ $product->base_price ?? $product->price }};
+                selectedVariantId = null;
+                updateDisplayedPrice();
+                return;
+            }
+
+            fetch(`/products/{{ $product->id }}/variant-details?color_id=${selectedColorId || ''}&size_id=${selectedSizeId || ''}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentPrice = data.variant.price;
+                        selectedVariantId = data.variant.id;
+                        updateDisplayedPrice();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching variant details:', error);
+                });
+        }
+
+        // تحديث دالة اختيار اللون
+        function selectColor(element) {
+            // إزالة التحديد من جميع الألوان
+            document.querySelectorAll('.color-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // تحديد اللون المختار
+            element.classList.add('selected');
+            selectedColorId = element.getAttribute('data-color-id');
+            
+            // فلترة المقاسات حسب اللون
+            filterSizesByColor(selectedColorId);
+            
+            // تحديث تفاصيل الـ variant
+            updateVariantDetails();
+        }
+
+        // تحديث دالة اختيار المقاس
+        function selectSize(element) {
+            // إزالة التحديد من جميع المقاسات
+            document.querySelectorAll('.size-option').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // تحديد المقاس المختار
+            element.classList.add('selected');
+            selectedSizeId = element.getAttribute('data-size-id');
+            selectedVariantId = element.getAttribute('data-variant-id');
+            
+            // تحديث السعر إذا كان متوفر
+            const price = element.getAttribute('data-price');
+            if (price) {
+                currentPrice = parseFloat(price);
+                updateDisplayedPrice();
+            }
+            
+            // فلترة الألوان حسب المقاس
+            filterColorsBySize(selectedSizeId);
+        }
+
+        // تحديث دالة إضافة للكارت
+        function addToCart() {
+            const quantity = document.getElementById('productQuantity').value;
+            const customColor = document.getElementById('customColor')?.value || '';
+            const customSize = document.getElementById('customSize')?.value || '';
+            
+            const data = {
+                product_id: {{ $product->id }},
+                quantity: quantity,
+                color_id: selectedColorId,
+                size_id: selectedSizeId,
+                color: customColor || (selectedColorId ? document.querySelector('.color-item.selected .color-name').textContent : ''),
+                size: customSize || (selectedSizeId ? document.querySelector('.size-option.selected').textContent.split(' ')[0] : '')
+            };
+
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // تحديث عدد العناصر في الكارت
+                    updateCartCount(data.cart_count);
+                    
+                    // إظهار رسالة نجاح
+                    showToast('تم إضافة المنتج إلى السلة بنجاح', 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('حدث خطأ أثناء إضافة المنتج إلى السلة', 'error');
+            });
+        }
+
+        // دالة إظهار رسائل
+        function showToast(message, type = 'info') {
+            // يمكنك استخدام مكتبة toast أو إنشاء عنصر مخصص
+            alert(message);
+        }
+
+        // تحديث عدد العناصر في الكارت
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+            }
+        }
+    </script>
 </body>
 </html>
 @endsection

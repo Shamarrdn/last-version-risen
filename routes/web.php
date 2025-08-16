@@ -117,6 +117,13 @@ Route::middleware([
             Route::post('/clear', [CartController::class, 'clear'])->name('clear');
         });
 
+        // Product Variants API
+        Route::prefix('products')->name('products.')->group(function () {
+            Route::get('/{product}/sizes-for-color', [ProductController::class, 'getSizesForColor'])->name('sizes-for-color');
+            Route::get('/{product}/colors-for-size', [ProductController::class, 'getColorsForSize'])->name('colors-for-size');
+            Route::get('/{product}/variant-details', [ProductController::class, 'getVariantDetails'])->name('variant-details');
+        });
+
         // Checkout
         Route::controller(CheckoutController::class)->prefix('checkout')->name('checkout.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -292,6 +299,9 @@ Route::middleware([
 
             // مسار صفحة المخزون
             Route::get('/products/inventory/status', [AdminProductController::class, 'inventory'])->name('products.inventory');
+            
+            // Inventory Management
+            Route::resource('inventory', \App\Http\Controllers\Admin\InventoryController::class);
         });
 });
 

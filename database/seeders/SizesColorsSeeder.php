@@ -63,3 +63,5 @@ class SizesColorsSeeder extends Seeder
     }
 }
 
+
+

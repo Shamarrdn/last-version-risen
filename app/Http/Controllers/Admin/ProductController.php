@@ -81,8 +81,45 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
+        
+        // إنشاء مقاسات افتراضية إذا لم تكن موجودة
         $availableSizes = \App\Models\ProductSize::all();
+        if ($availableSizes->isEmpty()) {
+            // إنشاء مقاسات افتراضية
+            $defaultSizes = [
+                ['name' => 'XS', 'description' => 'مقاس صغير جداً'],
+                ['name' => 'S', 'description' => 'مقاس صغير'],
+                ['name' => 'M', 'description' => 'مقاس متوسط'],
+                ['name' => 'L', 'description' => 'مقاس كبير'],
+                ['name' => 'XL', 'description' => 'مقاس كبير جداً'],
+                ['name' => 'XXL', 'description' => 'مقاس كبير جداً جداً'],
+            ];
+            
+            foreach ($defaultSizes as $size) {
+                \App\Models\ProductSize::create($size);
+            }
+            $availableSizes = \App\Models\ProductSize::all();
+        }
+        
+        // إنشاء ألوان افتراضية إذا لم تكن موجودة
         $availableColors = \App\Models\ProductColor::all();
+        if ($availableColors->isEmpty()) {
+            // إنشاء ألوان افتراضية
+            $defaultColors = [
+                ['name' => 'أحمر', 'code' => '#FF0000', 'description' => 'لون أحمر'],
+                ['name' => 'أزرق', 'code' => '#0000FF', 'description' => 'لون أزرق'],
+                ['name' => 'أخضر', 'code' => '#00FF00', 'description' => 'لون أخضر'],
+                ['name' => 'أصفر', 'code' => '#FFFF00', 'description' => 'لون أصفر'],
+                ['name' => 'أسود', 'code' => '#000000', 'description' => 'لون أسود'],
+                ['name' => 'أبيض', 'code' => '#FFFFFF', 'description' => 'لون أبيض'],
+            ];
+            
+            foreach ($defaultColors as $color) {
+                \App\Models\ProductColor::create($color);
+            }
+            $availableColors = \App\Models\ProductColor::all();
+        }
+        
         return view('admin.products.create', compact('categories', 'availableSizes', 'availableColors'));
     }
 
@@ -203,6 +240,14 @@ class ProductController extends Controller
                         }
                     }
                 }
+                
+                                    // ربط الألوان المختارة بالمنتج
+                if (!empty($request->selected_colors)) {
+                    // إضافة الألوان إلى جدول product_colors
+                    foreach ($request->selected_colors as $colorId) {
+                        $product->colors()->attach($colorId);
+                    }
+                }
             }
 
             if ($request->hasFile('images')) {
@@ -229,8 +274,42 @@ class ProductController extends Controller
     {
         $product->load(['images', 'colors', 'sizes', 'categories']);
         $categories = Category::all();
+        $availableSizes = \App\Models\ProductSize::all();
+        if ($availableSizes->isEmpty()) {
+            // Create default sizes
+            $defaultSizes = [
+                ['name' => 'XS', 'description' => 'مقاس صغير جداً'],
+                ['name' => 'S', 'description' => 'مقاس صغير'],
+                ['name' => 'M', 'description' => 'مقاس متوسط'],
+                ['name' => 'L', 'description' => 'مقاس كبير'],
+                ['name' => 'XL', 'description' => 'مقاس كبير جداً'],
+                ['name' => 'XXL', 'description' => 'مقاس كبير جداً جداً'],
+            ];
+            foreach ($defaultSizes as $size) {
+                \App\Models\ProductSize::create($size);
+            }
+            $availableSizes = \App\Models\ProductSize::all();
+        }
+
+        $availableColors = \App\Models\ProductColor::all();
+        if ($availableColors->isEmpty()) {
+            // Create default colors
+            $defaultColors = [
+                ['name' => 'أحمر', 'code' => '#FF0000', 'description' => 'لون أحمر'],
+                ['name' => 'أزرق', 'code' => '#0000FF', 'description' => 'لون أزرق'],
+                ['name' => 'أخضر', 'code' => '#00FF00', 'description' => 'لون أخضر'],
+                ['name' => 'أصفر', 'code' => '#FFFF00', 'description' => 'لون أصفر'],
+                ['name' => 'أسود', 'code' => '#000000', 'description' => 'لون أسود'],
+                ['name' => 'أبيض', 'code' => '#FFFFFF', 'description' => 'لون أبيض'],
+            ];
+            foreach ($defaultColors as $color) {
+                \App\Models\ProductColor::create($color);
+            }
+            $availableColors = \App\Models\ProductColor::all();
+        }
+
         $selectedCategories = $product->categories->pluck('id')->toArray();
-        return view('admin.products.edit', compact('product', 'categories', 'selectedCategories'));
+        return view('admin.products.edit', compact('product', 'categories', 'availableSizes', 'availableColors', 'selectedCategories'));
     }
 
     public function update(Request $request, Product $product)
@@ -256,19 +335,25 @@ class ProductController extends Controller
                 'stock' => 'required|integer|min:0',
             ];
 
-            if ($request->has('has_colors')) {
-                $rules['colors'] = 'required|array|min:1';
-                $rules['colors.*'] = 'required|string|max:255';
-                $rules['color_ids.*'] = 'nullable|exists:product_colors,id';
-                $rules['color_available.*'] = 'nullable|boolean';
+            // إضافة validation rules للمقاسات والألوان المختارة
+            if ($request->has('selected_sizes')) {
+                $rules['selected_sizes'] = 'array';
+                $rules['selected_sizes.*'] = 'exists:size_options,id';
             }
 
-            if ($request->has('has_sizes')) {
-                $rules['sizes'] = 'required|array|min:1';
-                $rules['sizes.*'] = 'required|string|max:255';
-                $rules['size_ids.*'] = 'nullable|exists:product_sizes,id';
-                $rules['size_available.*'] = 'nullable|boolean';
-                $rules['size_prices.*'] = 'nullable|numeric|min:0';
+            if ($request->has('selected_colors')) {
+                $rules['selected_colors'] = 'array';
+                $rules['selected_colors.*'] = 'exists:color_options,id';
+            }
+
+            if ($request->has('stock')) {
+                $rules['stock'] = 'array';
+                $rules['stock.*.*'] = 'nullable|numeric|min:0';
+            }
+
+            if ($request->has('price')) {
+                $rules['price'] = 'array';
+                $rules['price.*.*'] = 'nullable|numeric|min:0';
             }
 
             $validated = $request->validate($rules);
@@ -308,69 +393,86 @@ class ProductController extends Controller
 
             $product->categories()->sync(is_array($request->categories) ? $request->categories : []);
 
-            if ($request->has('has_colors') && is_array($request->colors)) {
-                $currentColorIds = $product->colors->pluck('id')->toArray();
-                $updatedColorIds = array_filter(is_array($request->color_ids) ? $request->color_ids : []);
-                $deletedColorIds = array_diff($currentColorIds, $updatedColorIds);
-
-                if (!empty($deletedColorIds)) {
-                    $product->colors()->whereIn('id', $deletedColorIds)->delete();
-                }
-
-                foreach ($request->colors as $index => $colorName) {
-                    if (!empty($colorName)) {
-                        $colorId = isset($request->color_ids[$index]) ? $request->color_ids[$index] : null;
-                        $colorData = [
-                            'color' => $colorName,
-                            'is_available' => isset($request->color_available[$index]) ? $request->color_available[$index] : true
-                        ];
-
-                        if ($colorId && in_array($colorId, $currentColorIds)) {
-                            $product->colors()->where('id', $colorId)->update($colorData);
-                        } else {
-                            $product->colors()->create($colorData);
+            // معالجة المقاسات والألوان المختارة
+            if ($request->has('selected_sizes') && $request->has('selected_colors') && 
+                is_array($request->selected_sizes) && is_array($request->selected_colors)) {
+                // استخدام المخزون والأسعار للمقاسات والألوان فقط إذا كانت مصفوفات
+                $stockData = is_array($request->input('stock')) ? $request->input('stock', []) : [];
+                $priceData = is_array($request->input('price')) ? $request->input('price', []) : [];
+                
+                // حذف جميع المقاسات والألوان الحالية
+                $product->colors()->detach();
+                \DB::table('product_sizes')->where('product_id', $product->id)->delete();
+                
+                foreach ($request->selected_sizes as $sizeId) {
+                    foreach ($request->selected_colors as $colorId) {
+                        // التحقق من وجود مخزون لهذا المقاس واللون
+                        $stock = isset($stockData[$sizeId][$colorId]) ? $stockData[$sizeId][$colorId] : null;
+                        $price = isset($priceData[$sizeId][$colorId]) ? $priceData[$sizeId][$colorId] : null;
+                        
+                        if ($stock !== null && $stock > 0) {
+                            // إضافة إلى جدول product_sizes
+                            \DB::table('product_sizes')->insert([
+                                'product_id' => $product->id,
+                                'size_id' => $sizeId,
+                                'color_id' => $colorId,
+                                'stock' => $stock,
+                                'price' => $price,
+                                'is_available' => 1,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
                         }
                     }
                 }
-            } else {
-                $product->colors()->delete();
+                
+                // ربط الألوان المختارة بالمنتج
+                if (!empty($request->selected_colors)) {
+                    foreach ($request->selected_colors as $colorId) {
+                        $product->colors()->attach($colorId);
+                    }
+                }
             }
 
-            if ($request->has('has_sizes') && is_array($request->sizes)) {
-                $currentSizeIds = $product->sizes->pluck('id')->toArray();
-                $updatedSizeIds = array_filter(is_array($request->size_ids) ? $request->size_ids : []);
-                $deletedSizeIds = array_diff($currentSizeIds, $updatedSizeIds);
-
-                if (!empty($deletedSizeIds)) {
-                    // حذف المقاسات من جدول product_sizes باستخدام product_id
-                    \DB::table('product_sizes')->where('product_id', $product->id)->whereIn('id', $deletedSizeIds)->delete();
-                }
-
-                foreach ($request->sizes as $index => $sizeName) {
-                    if (!empty($sizeName)) {
-                        $sizeId = isset($request->size_ids[$index]) ? $request->size_ids[$index] : null;
-                        $sizeData = [
-                            'size' => $sizeName,
-                            'is_available' => isset($request->size_available[$index]) ? $request->size_available[$index] : true
-                        ];
-
-                        if (isset($request->size_prices[$index])) {
-                            $sizeData['price'] = $request->size_prices[$index];
-                        }
-
-                        if ($sizeId && in_array($sizeId, $currentSizeIds)) {
-                            // تحديث المقاس في جدول product_sizes
-                            \DB::table('product_sizes')->where('id', $sizeId)->where('product_id', $product->id)->update($sizeData);
-                        } else {
-                            // إضافة مقاس جديد إلى جدول product_sizes
-                            $sizeData['product_id'] = $product->id;
-                            \DB::table('product_sizes')->insert($sizeData);
+            // معالجة المقاسات والألوان المختارة
+            if ($request->has('selected_sizes') && $request->has('selected_colors') && 
+                is_array($request->selected_sizes) && is_array($request->selected_colors)) {
+                // استخدام المخزون والأسعار للمقاسات والألوان فقط إذا كانت مصفوفات
+                $stockData = is_array($request->input('stock')) ? $request->input('stock', []) : [];
+                $priceData = is_array($request->input('price')) ? $request->input('price', []) : [];
+                
+                // حذف جميع المقاسات والألوان الحالية
+                $product->colors()->detach();
+                \DB::table('product_sizes')->where('product_id', $product->id)->delete();
+                
+                foreach ($request->selected_sizes as $sizeId) {
+                    foreach ($request->selected_colors as $colorId) {
+                        // التحقق من وجود مخزون لهذا المقاس واللون
+                        $stock = isset($stockData[$sizeId][$colorId]) ? $stockData[$sizeId][$colorId] : null;
+                        $price = isset($priceData[$sizeId][$colorId]) ? $priceData[$sizeId][$colorId] : null;
+                        
+                        if ($stock !== null && $stock > 0) {
+                            // إضافة إلى جدول product_sizes
+                            \DB::table('product_sizes')->insert([
+                                'product_id' => $product->id,
+                                'size_id' => $sizeId,
+                                'color_id' => $colorId,
+                                'stock' => $stock,
+                                'price' => $price,
+                                'is_available' => 1,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
                         }
                     }
                 }
-            } else {
-                // حذف جميع مقاسات المنتج من جدول product_sizes
-                \DB::table('product_sizes')->where('product_id', $product->id)->delete();
+                
+                // ربط الألوان المختارة بالمنتج
+                if (!empty($request->selected_colors)) {
+                    foreach ($request->selected_colors as $colorId) {
+                        $product->colors()->attach($colorId);
+                    }
+                }
             }
 
             if ($request->has('remove_images') && is_array($request->remove_images)) {

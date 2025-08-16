@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
+use App\Models\ProductSizeColorInventory;
 use App\Notifications\OrderStatusUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -935,7 +936,51 @@ class OrderController extends Controller
           $sizeId = $orderItem->size_id;
           $colorId = $orderItem->color_id;
 
-          // إذا كان المنتج يستخدم النظام الجديد (مقاسات وألوان)
+          // البحث في نظام المخزون الجديد أولاً
+          $inventory = ProductSizeColorInventory::where('product_id', $product->id)
+              ->where(function($query) use ($sizeId, $colorId) {
+                  if ($sizeId && $colorId) {
+                      // إذا كان هناك مقاس ولون محددين
+                      $query->where('size_id', $sizeId)
+                            ->where('color_id', $colorId);
+                  } elseif ($sizeId) {
+                      // إذا كان هناك مقاس فقط
+                      $query->where('size_id', $sizeId)
+                            ->whereNull('color_id');
+                  } elseif ($colorId) {
+                      // إذا كان هناك لون فقط
+                      $query->whereNull('size_id')
+                            ->where('color_id', $colorId);
+                  } else {
+                      // إذا لم يكن هناك مقاس أو لون (المنتج الأساسي)
+                      $query->whereNull('size_id')
+                            ->whereNull('color_id');
+                  }
+              })
+              ->first();
+
+          if ($inventory) {
+              // تحديث المخزون في النظام الجديد
+              if ($action === 'consume') {
+                  $inventory->consumeStock($quantity);
+              } elseif ($action === 'return') {
+                  $inventory->returnStock($quantity);
+              }
+              
+              Log::info("تم تحديث المخزون بنجاح في النظام الجديد", [
+                  'product_id' => $product->id,
+                  'size_id' => $sizeId,
+                  'color_id' => $colorId,
+                  'quantity' => $quantity,
+                  'action' => $action
+              ]);
+              
+              return;
+          }
+
+          // إذا لم يتم العثور على مخزون في النظام الجديد، نحاول في النظام القديم
+          
+          // إذا كان المنتج يستخدم نظام المقاسات والألوان القديم
           if ($sizeId && $colorId) {
               $productSize = \DB::table('product_sizes')
                   ->where('product_id', $product->id)
@@ -955,17 +1000,41 @@ class OrderController extends Controller
                           ->where('id', $productSize->id)
                           ->update(['stock' => $newStock]);
                   }
-              }
-          } else {
-              // النظام القديم (مخزون عام)
-              if ($action === 'consume') {
-                  $product->consumeStock($quantity);
-              } elseif ($action === 'return') {
-                  $product->returnStock($quantity);
+                  
+                  Log::info("تم تحديث المخزون بنجاح في نظام المقاسات القديم", [
+                      'product_id' => $product->id,
+                      'size_id' => $sizeId,
+                      'color_id' => $colorId,
+                      'quantity' => $quantity,
+                      'action' => $action
+                  ]);
+                  
+                  return;
               }
           }
+          
+          // النظام القديم (مخزون عام للمنتج)
+          if ($action === 'consume') {
+              $product->consumeStock($quantity);
+          } elseif ($action === 'return') {
+              $product->returnStock($quantity);
+          }
+          
+          Log::info("تم تحديث المخزون العام للمنتج", [
+              'product_id' => $product->id,
+              'quantity' => $quantity,
+              'action' => $action
+          ]);
+          
       } catch (\Exception $e) {
-          Log::error('Error updating product stock: ' . $e->getMessage());
+          Log::error('Error updating product stock: ' . $e->getMessage(), [
+              'product_id' => $product->id ?? null,
+              'size_id' => $sizeId ?? null,
+              'color_id' => $colorId ?? null,
+              'quantity' => $quantity ?? null,
+              'action' => $action ?? null,
+              'trace' => $e->getTraceAsString()
+          ]);
           throw $e;
       }
   }

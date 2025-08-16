@@ -258,7 +258,21 @@ function safeOldInt($key, $default = 0) {
                                                 إدارة المقاسات والألوان
                                                 </h5>
                                             <small class="text-muted">اختر المقاسات والألوان المتاحة من قاعدة البيانات</small>
-                                                </div>
+                                        </div>
+                                        
+                                        @if($availableSizes->isEmpty() || $availableColors->isEmpty())
+                                        <div class="alert alert-warning mt-3">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>تنبيه:</strong>
+                                            @if($availableSizes->isEmpty())
+                                                لا توجد مقاسات متاحة. 
+                                            @endif
+                                            @if($availableColors->isEmpty())
+                                                لا توجد ألوان متاحة.
+                                            @endif
+                                            سيتم إنشاء مقاسات وألوان افتراضية تلقائياً.
+                                        </div>
+                                        @endif
 
 
 
@@ -271,7 +285,7 @@ function safeOldInt($key, $default = 0) {
                                             <div id="sizeColorMatrix">
                                                 <!-- سيتم إنشاء المقاسات هنا ديناميكياً -->
                                             </div>
-                                            <button type="button" class="add-size-btn" onclick="addNewSize()">
+                                            <button type="button" class="add-size-btn" id="addSizeButton">
                                                 <i class="fas fa-plus me-2"></i>
                                                 إضافة مقاس جديد
                                                         </button>
@@ -285,7 +299,7 @@ function safeOldInt($key, $default = 0) {
                                 <div class="col-12">
                                     <div class="card border-0 shadow-sm">
                                         <div class="card-body">
-                                            <button type="submit" class="btn btn-primary" onclick="handleSaveClick(event)">
+                                            <button type="submit" class="btn btn-primary">
                                                 <i class="fas fa-save me-2"></i>
                                                 حفظ المنتج
                                             </button>
@@ -813,20 +827,20 @@ function safeOldInt($key, $default = 0) {
         }
         
         // إعداد حقل المخزون للتأكد من القيمة الصحيحة
-        const stockInput = document.querySelector('input[name="stock"]');
-        if (stockInput) {
+        const mainStockInput = document.querySelector('input[name="stock"]');
+        if (mainStockInput) {
                     // التأكد من القيمة الصحيحة عند التحميل
-        const initialValue = parseInt(stockInput.value) || 0;
-        stockInput.value = Math.max(0, initialValue);
-        console.log('Stock input initialized with value:', stockInput.value);
+        const initialValue = parseInt(mainStockInput.value) || 0;
+        mainStockInput.value = Math.max(0, initialValue);
+        console.log('Stock input initialized with value:', mainStockInput.value);
             
-            stockInput.addEventListener('blur', function() {
+            mainStockInput.addEventListener('blur', function() {
                 const value = parseInt(this.value) || 0;
                 this.value = Math.max(0, value);
                 console.log('Stock input blur event - value set to:', this.value);
             });
             
-            stockInput.addEventListener('input', function() {
+            mainStockInput.addEventListener('input', function() {
                 // السماح فقط بالأرقام
                 this.value = this.value.replace(/[^0-9]/g, '');
                 console.log('Stock input input event - value:', this.value);
@@ -839,37 +853,244 @@ function safeOldInt($key, $default = 0) {
         @endif
         
         // تحميل الألوان المتاحة من البيانات المرسلة من الخادم
-        @if(isset($availableColors))
+        @if(isset($availableColors) && $availableColors->count() > 0)
             availableColors = @json($availableColors);
+        @else
+            availableColors = [];
         @endif
         
+        console.log('Available sizes:', availableSizes);
+        console.log('Available colors:', availableColors);
+        
+        // إظهار تفاصيل أكثر في console للمساعدة في التصحيح
+        if (availableSizes.length === 0) {
+            console.warn('⚠️ لا توجد مقاسات متاحة في قاعدة البيانات');
+        } else {
+            console.log('✅ المقاسات المتاحة:', availableSizes.map(s => `${s.name} (ID: ${s.id})`));
+        }
+        
+        if (availableColors.length === 0) {
+            console.warn('⚠️ لا توجد ألوان متاحة في قاعدة البيانات');
+        } else {
+            console.log('✅ الألوان المتاحة:', availableColors.map(c => `${c.name} (ID: ${c.id})`));
+        }
+        
         // إضافة مقاس افتراضي عند تحميل الصفحة إذا لم تكن هناك مقاسات
-        if (selectedSizes.length === 0) {
+        console.log('Checking if we need to add a default size...');
+        try {
+            if (!selectedSizes || selectedSizes.length === 0) {
+                console.log('Adding default size on page load');
+                setTimeout(function() {
+                    addNewSize();
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Error adding default size:', error);
+        }
+        
+        // إظهار رسالة للمستخدم إذا لم تكن هناك مقاسات أو ألوان متاحة
+        if (availableSizes.length === 0 || availableColors.length === 0) {
+            const message = [];
+            if (availableSizes.length === 0) {
+                message.push('مقاسات');
+            }
+            if (availableColors.length === 0) {
+                message.push('ألوان');
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>معلومات:</strong> لا توجد ${message.join(' و ')} متاحة في قاعدة البيانات. 
+                سيتم إنشاء ${message.join(' و ')} افتراضية تلقائياً.
+            `;
+            
+            const container = document.querySelector('.container-fluid') || document.querySelector('.container');
+            if (container) {
+                container.insertBefore(alertDiv, container.firstChild);
+            }
+            
+            // إضافة رسالة في console للمساعدة في التصحيح
+            console.log(`🔍 تم إضافة رسالة للمستخدم: لا توجد ${message.join(' و ')} متاحة`);
+        }
+        
+        // إذا لم تكن هناك مقاسات متاحة، أضف مقاس افتراضي
+        if (availableSizes.length === 0) {
+            console.log('No available sizes, adding default size');
             addNewSize();
         }
         
-        // التأكد من أن حقل المخزون يحتوي على قيمة صحيحة عند التحميل
-        const stockInput = document.querySelector('input[name="stock"]');
-        if (stockInput) {
-            const currentValue = parseInt(stockInput.value) || 0;
-            stockInput.value = Math.max(0, currentValue);
-            console.log('Stock input initialized with value:', stockInput.value);
+        // إذا لم تكن هناك ألوان متاحة، أضف لون افتراضي للمقاس الأول
+        if (availableColors.length === 0 && selectedSizes.length > 0) {
+            console.log('No available colors, adding default color to first size');
+            const firstSize = selectedSizes[0];
+            if (firstSize && (!firstSize.colors || firstSize.colors.length === 0)) {
+                addColorToSize(firstSize.id);
+            }
         }
+        
+        // التحقق من وجود مقاسات وألوان متاحة
+        if (availableSizes.length === 0) {
+            console.warn('لا توجد مقاسات متاحة');
+            // إظهار رسالة للمستخدم
+            const sizeWarning = document.createElement('div');
+            sizeWarning.className = 'alert alert-warning mt-3';
+            sizeWarning.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> لا توجد مقاسات متاحة. سيتم إنشاء مقاسات افتراضية.';
+            const sizeColorDetails = document.querySelector('#sizeColorDetails');
+            if (sizeColorDetails) {
+                sizeColorDetails.prepend(sizeWarning);
+            }
+        }
+        
+        if (availableColors.length === 0) {
+            console.warn('لا توجد ألوان متاحة');
+            // إظهار رسالة للمستخدم
+            const colorWarning = document.createElement('div');
+            colorWarning.className = 'alert alert-warning mt-3';
+            colorWarning.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> لا توجد ألوان متاحة. سيتم إنشاء ألوان افتراضية.';
+            const sizeColorDetails = document.querySelector('#sizeColorDetails');
+            if (sizeColorDetails) {
+                sizeColorDetails.prepend(colorWarning);
+            }
+        }
+        
+        // إضافة رسائل في القوائم المنسدلة إذا لم تكن هناك خيارات
+        setTimeout(() => {
+            const sizeSelects = document.querySelectorAll('.size-select');
+            const colorSelects = document.querySelectorAll('.color-select');
+            
+            console.log('Found size selects:', sizeSelects.length);
+            console.log('Found color selects:', colorSelects.length);
+            
+            if (availableSizes.length === 0) {
+                sizeSelects.forEach(select => {
+                    if (select.options.length <= 1) { // فقط "اختر المقاس..."
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'لا توجد مقاسات متاحة';
+                        option.disabled = true;
+                        select.appendChild(option);
+                        console.log('Added "no sizes" option to size select');
+                    }
+                });
+            }
+            
+            if (availableColors.length === 0) {
+                colorSelects.forEach(select => {
+                    if (select.options.length <= 1) { // فقط "اختر اللون..."
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'لا توجد ألوان متاحة';
+                        option.disabled = true;
+                        select.appendChild(option);
+                        console.log('Added "no colors" option to color select');
+                    }
+                });
+            }
+        }, 100);
+        
+        // إضافة رسالة في أعلى الصفحة إذا لم تكن هناك مقاسات أو ألوان متاحة
+        if (availableSizes.length === 0 || availableColors.length === 0) {
+            const message = [];
+            if (availableSizes.length === 0) {
+                message.push('مقاسات');
+            }
+            if (availableColors.length === 0) {
+                message.push('ألوان');
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>تنبيه:</strong> لا توجد ${message.join(' و ')} متاحة في قاعدة البيانات. 
+                سيتم إنشاء ${message.join(' و ')} افتراضية تلقائياً.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container-fluid') || document.querySelector('.container');
+            if (container) {
+                container.insertBefore(alertDiv, container.firstChild);
+            }
+            
+            // إضافة رسالة في console للمساعدة في التصحيح
+            console.log(`🔍 تم إضافة رسالة تنبيه للمستخدم: لا توجد ${message.join(' و ')} متاحة`);
+        }
+        
+        // إضافة رسالة في القوائم المنسدلة إذا لم تكن هناك خيارات
+        setTimeout(() => {
+            const sizeSelects = document.querySelectorAll('.size-select');
+            const colorSelects = document.querySelectorAll('.color-select');
+            
+            console.log('Found size selects:', sizeSelects.length);
+            console.log('Found color selects:', colorSelects.length);
+            
+            if (availableSizes.length === 0) {
+                sizeSelects.forEach(select => {
+                    if (select.options.length <= 1) { // فقط "اختر المقاس..."
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'لا توجد مقاسات متاحة';
+                        option.disabled = true;
+                        select.appendChild(option);
+                        console.log('Added "no sizes" option to size select');
+                    }
+                });
+            }
+            
+            if (availableColors.length === 0) {
+                colorSelects.forEach(select => {
+                    if (select.options.length <= 1) { // فقط "اختر اللون..."
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'لا توجد ألوان متاحة';
+                        option.disabled = true;
+                        select.appendChild(option);
+                        console.log('Added "no colors" option to color select');
+                    }
+                });
+            }
+        }, 200);
+        
+        // إضافة رسالة في console للمساعدة في التصحيح
+        console.log('🔍 تم إضافة معالجة للقوائم المنسدلة الفارغة');
+        
+        // التأكد من أن حقل المخزون يحتوي على قيمة صحيحة عند التحميل
+        const stockInput2 = document.querySelector('input[name="stock"]');
+        if (stockInput2) {
+            const currentValue = parseInt(stockInput2.value) || 0;
+            stockInput2.value = Math.max(0, currentValue);
+            console.log('Stock input initialized with value:', stockInput2.value);
+        }
+        
+        // إضافة مستمع حدث لزر إضافة مقاس جديد
+        document.getElementById('addSizeButton').addEventListener('click', function() {
+            addNewSize();
+        });
     });
 
     // تحديث مصفوفة المقاسات والألوان - التصميم الجديد المبسط
     function updateSizeColorMatrix() {
-        const matrixContainer = document.getElementById('sizeColorMatrix');
-        if (!matrixContainer) {
-            console.error('Size color matrix container not found');
-            return;
-        }
-        
-        matrixContainer.innerHTML = '';
-        console.log('Updating size color matrix with', selectedSizes.length, 'sizes');
-        
-        // إنشاء مستطيلات المقاسات
-        selectedSizes.forEach((size, sizeIndex) => {
+        try {
+            const matrixContainer = document.getElementById('sizeColorMatrix');
+            if (!matrixContainer) {
+                console.error('Size color matrix container not found');
+                return;
+            }
+            
+            matrixContainer.innerHTML = '';
+            console.log('Updating size color matrix with', selectedSizes ? selectedSizes.length : 0, 'sizes');
+            
+            // التأكد من وجود مصفوفة المقاسات
+            if (!selectedSizes || !Array.isArray(selectedSizes)) {
+                console.warn('selectedSizes is not an array, initializing it');
+                selectedSizes = [];
+                return;
+            }
+            
+            // إنشاء مستطيلات المقاسات
+            selectedSizes.forEach((size, sizeIndex) => {
             const sizeContainer = document.createElement('div');
             sizeContainer.className = 'size-container active';
             sizeContainer.dataset.sizeId = size.id;
@@ -894,7 +1115,7 @@ function safeOldInt($key, $default = 0) {
                     <option value="">اختر المقاس...</option>
                     ${availableSizes.map(s => `
                         <option value="${s.id}" ${s.id == size.id ? 'selected' : ''}>
-                            ${s.name}
+                            ${s.name} - ${s.description || ''}
                         </option>
                     `).join('')}
                 </select>
@@ -910,8 +1131,8 @@ function safeOldInt($key, $default = 0) {
                                 <select class="color-select" onchange="updateColorName(this, '${size.id}')">
                                     <option value="">اختر اللون...</option>
                                     ${availableColors.map(c => `
-                                        <option value="${c.id}" data-hex="${c.hex_code || '#007bff'}" ${c.id == color.id ? 'selected' : ''}>
-                                            ${c.name}
+                                        <option value="${c.id}" data-hex="${c.code || '#007bff'}" ${c.id == color.id ? 'selected' : ''}>
+                                            ${c.name} - ${c.description || ''}
                                         </option>
                                     `).join('')}
                                 </select>
@@ -954,6 +1175,10 @@ function safeOldInt($key, $default = 0) {
         });
         
         console.log('Size color matrix updated successfully');
+        } catch (error) {
+            console.error('Error in updateSizeColorMatrix:', error);
+            alert('حدث خطأ أثناء تحديث مصفوفة المقاسات والألوان: ' + error.message);
+        }
     }
 
     // تحديث بيانات المصفوفة
@@ -1055,12 +1280,26 @@ function safeOldInt($key, $default = 0) {
             size.colors = [];
         }
         
-        const newColor = {
-            id: 'temp_' + Date.now(),
-            name: '',
-            stock: '',
-            price: ''
-        };
+        let newColor;
+        
+        // إذا كانت هناك ألوان متاحة، استخدم أول لون
+        if (availableColors.length > 0) {
+            const firstColor = availableColors[0];
+            newColor = {
+                id: firstColor.id,
+                name: firstColor.name,
+                stock: '',
+                price: ''
+            };
+        } else {
+            // إذا لم تكن هناك ألوان متاحة، أنشئ لون مؤقت
+            newColor = {
+                id: 'temp_' + Date.now(),
+                name: '',
+                stock: '',
+                price: ''
+            };
+        }
         
         size.colors.push(newColor);
         updateSizeColorMatrix();
@@ -1136,13 +1375,13 @@ function safeOldInt($key, $default = 0) {
             colorItem.dataset.colorId = colorId;
             
             // تحديث أسماء الحقول
-            const stockInput = colorItem.querySelector('input[name*="stock"]');
+            const colorStockInput = colorItem.querySelector('input[name*="stock"]');
             const priceInput = colorItem.querySelector('input[name*="price"]');
             
-            if (stockInput) {
-                stockInput.name = `stock[${sizeId}][${colorId}]`;
+            if (colorStockInput) {
+                colorStockInput.name = `stock[${sizeId}][${colorId}]`;
                 // حفظ القيمة في البيانات
-                stockInput.addEventListener('input', function() {
+                colorStockInput.addEventListener('input', function() {
                     size.colors[colorIndex].stock = this.value;
                 });
             }
@@ -1203,15 +1442,48 @@ function safeOldInt($key, $default = 0) {
 
     // إضافة مقاس جديد
     function addNewSize() {
-        const newSize = {
-            id: 'temp_' + Date.now(),
-            name: 'مقاس جديد',
-            colors: [] // مصفوفة فارغة للألوان
-        };
-        selectedSizes.push(newSize);
-        updateSizeColorMatrix();
-        console.log('New size added:', newSize);
-        console.log('Total sizes:', selectedSizes.length);
+        try {
+            console.log('Adding new size...');
+            let newSize;
+            
+            // إذا كانت هناك مقاسات متاحة، استخدم أول مقاس
+            if (availableSizes && availableSizes.length > 0) {
+                const firstSize = availableSizes[0];
+                newSize = {
+                    id: firstSize.id,
+                    name: firstSize.name,
+                    colors: [] // مصفوفة فارغة للألوان
+                };
+                console.log('Using available size:', firstSize);
+            } else {
+                // إذا لم تكن هناك مقاسات متاحة، أنشئ مقاس مؤقت
+                newSize = {
+                    id: 'temp_' + Date.now(),
+                    name: 'مقاس جديد',
+                    colors: [] // مصفوفة فارغة للألوان
+                };
+                console.log('Created temporary size');
+            }
+            
+            // التأكد من أن مصفوفة المقاسات المختارة موجودة
+            if (!selectedSizes) {
+                selectedSizes = [];
+                console.log('Initialized selectedSizes array');
+            }
+            
+            selectedSizes.push(newSize);
+            console.log('New size added:', newSize);
+            console.log('Total sizes:', selectedSizes.length);
+            
+            // تحديث المصفوفة في واجهة المستخدم
+            updateSizeColorMatrix();
+            
+            return true;
+        } catch (error) {
+            console.error('Error in addNewSize:', error);
+            alert('حدث خطأ أثناء إضافة مقاس جديد: ' + error.message);
+            return false;
+        }
     }
 
     // تحديث اسم المقاس
@@ -1241,40 +1513,11 @@ function safeOldInt($key, $default = 0) {
 
 
     // دالة معالجة النقر على زر الحفظ
-    function handleSaveClick(event) {
-        console.log('Save button clicked!');
-        event.preventDefault();
-        
-        // تأخير بسيط للتأكد من تحميل النموذج
-        setTimeout(() => {
-            handleSaveClickInternal();
-        }, 100);
-    }
+
     
-    function handleSaveClickInternal() {
-        
+    function validateForm() {
         // التحقق من صحة النموذج
-        const allForms = document.querySelectorAll('form');
-        console.log('All forms on page:', allForms);
-        
-        // البحث عن النموذج الصحيح (الذي يحتوي على action للمنتجات)
-        let form = null;
-        for (let f of allForms) {
-            console.log('Form action:', f.action);
-            if (f.action && f.action.includes('products')) {
-                form = f;
-                console.log('Found products form:', form);
-                break;
-            }
-        }
-        
-        // إذا لم يتم العثور على النموذج الصحيح، استخدم الأول
-        if (!form && allForms.length > 0) {
-            form = allForms[0];
-            console.log('Using first form:', form);
-        }
-        
-        console.log('Selected form:', form);
+        const form = document.querySelector('form[action*="products"]');
         
         if (!form) {
             console.error('Form not found!');
@@ -1282,48 +1525,20 @@ function safeOldInt($key, $default = 0) {
             return false;
         }
         
-        console.log('Form action:', form.action);
-        console.log('Form method:', form.method);
-        
         // التحقق من البيانات الأساسية
         const nameInput = form.querySelector('input[name="name"]');
         const categoryInput = form.querySelector('select[name="category_id"]');
+        const descriptionInput = form.querySelector('textarea[name="description"]');
+        const stockInput = form.querySelector('input[name="stock"]');
         
-        console.log('Form:', form);
-        console.log('All inputs in form:', form.querySelectorAll('input'));
-        console.log('Name input:', nameInput);
-        console.log('Name value:', nameInput?.value);
-        console.log('Name trimmed:', nameInput?.value?.trim());
-        
-        if (!nameInput) {
-            // محاولة أخرى للعثور على حقل الاسم
-            const allInputs = form.querySelectorAll('input');
-            console.log('All inputs in form:', allInputs);
-            
-            let foundNameInput = null;
-            for (let input of allInputs) {
-                console.log('Input name:', input.name, 'Input type:', input.type, 'Input value:', input.value);
-                if (input.name === 'name') {
-                    foundNameInput = input;
-                    console.log('Found name input:', foundNameInput);
-                    break;
-                }
-            }
-            
-            if (foundNameInput) {
-                nameInput = foundNameInput;
-            } else {
-                alert('خطأ: لم يتم العثور على حقل اسم المنتج');
-                return false;
-            }
-        }
-        
-        if (!nameInput.value || !nameInput.value.trim()) {
+        // التحقق من اسم المنتج
+        if (!nameInput || !nameInput.value || !nameInput.value.trim()) {
             alert('يرجى إدخال اسم المنتج');
-            nameInput.focus();
+            nameInput?.focus();
             return false;
         }
         
+        // التحقق من التصنيف
         if (!categoryInput || !categoryInput.value) {
             alert('يرجى اختيار التصنيف الرئيسي');
             categoryInput?.focus();
@@ -1331,10 +1546,6 @@ function safeOldInt($key, $default = 0) {
         }
         
         // التحقق من الوصف
-        const descriptionInput = form.querySelector('textarea[name="description"]');
-        console.log('Description input:', descriptionInput);
-        console.log('Description value:', descriptionInput?.value);
-        
         if (!descriptionInput || !descriptionInput.value.trim()) {
             alert('يرجى إدخال وصف المنتج');
             descriptionInput?.focus();
@@ -1342,10 +1553,6 @@ function safeOldInt($key, $default = 0) {
         }
         
         // التحقق من المخزون
-        const stockInput = form.querySelector('input[name="stock"]');
-        console.log('Stock input:', stockInput);
-        console.log('Stock value:', stockInput?.value);
-        
         if (!stockInput) {
             alert('خطأ: لم يتم العثور على حقل المخزون');
             return false;
@@ -1362,26 +1569,6 @@ function safeOldInt($key, $default = 0) {
         stockInput.value = Math.max(0, stockValue);
         console.log('Stock value updated to:', stockInput.value);
         
-        // التحقق من المقاسات
-        const validSizes = selectedSizes.filter(size => size.id && !size.id.startsWith('temp_'));
-        console.log('Valid sizes:', validSizes);
-        
-        if (validSizes.length === 0) {
-            alert('يرجى اختيار مقاس واحد على الأقل من المقاسات المتاحة');
-            return false;
-        }
-        
-        // إعداد البيانات
-        const success = prepareFormData();
-        if (!success) {
-            alert('خطأ في إعداد البيانات');
-            return false;
-        }
-        
-        console.log('Form is valid, submitting...');
-        
-        // إرسال النموذج
-        form.submit();
         return true;
     }
 
@@ -1412,7 +1599,7 @@ function safeOldInt($key, $default = 0) {
         // إضافة المقاسات المختارة
         selectedSizes.forEach(size => {
             // تجاهل المقاسات المؤقتة التي لم يتم اختيار مقاس حقيقي لها
-            if (size.id && !size.id.startsWith('temp_')) {
+            if (size.id && !String(size.id).startsWith('temp_')) {
                 console.log('Adding size:', size.id, size.name);
                 
                 const input = document.createElement('input');
@@ -1424,7 +1611,7 @@ function safeOldInt($key, $default = 0) {
                 // إضافة الألوان المختارة لهذا المقاس
                 if (size.colors && size.colors.length > 0) {
                     size.colors.forEach(color => {
-                        if (color.id && !color.id.startsWith('temp_') && color.stock) {
+                        if (color.id && !String(color.id).startsWith('temp_') && color.stock) {
                             console.log('Adding color:', color.id, color.name, 'stock:', color.stock);
                             
                             // إضافة الكمية
@@ -1445,7 +1632,7 @@ function safeOldInt($key, $default = 0) {
                         }
                     });
                 }
-            } else if (size.id && size.id.startsWith('temp_')) {
+            } else if (size.id && String(size.id).startsWith('temp_')) {
                 console.log('Skipping temporary size:', size.id);
             }
         });
@@ -1456,52 +1643,146 @@ function safeOldInt($key, $default = 0) {
 
     // إعداد النموذج قبل الإرسال عند التحميل
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, setting up form...');
-        
-        // إعداد النموذج قبل الإرسال
-        const form = document.querySelector('form');
-        if (form) {
-            console.log('Form found, adding submit listener...');
-            form.addEventListener('submit', function(e) {
-                console.log('Form submitted, preparing data...');
-                const success = prepareFormData();
-                if (success) {
-                    console.log('Data prepared successfully, form will be submitted');
-                } else {
-                    console.error('Failed to prepare form data');
-                    e.preventDefault();
-                }
-            });
-        } else {
-            console.error('Form not found!');
+        try {
+            console.log('DOM loaded, setting up form...');
+            
+            // تهيئة المتغيرات العامة
+            if (typeof selectedSizes === 'undefined') {
+                selectedSizes = [];
+                console.log('Initialized selectedSizes array');
+            }
+            
+            if (typeof availableSizes === 'undefined') {
+                availableSizes = [];
+                console.log('Initialized availableSizes array');
+            }
+            
+            if (typeof availableColors === 'undefined') {
+                availableColors = [];
+                console.log('Initialized availableColors array');
+            }
+            
+            // إعداد النموذج قبل الإرسال
+            const form = document.querySelector('form');
+            if (form) {
+                console.log('Form found, adding submit listener...');
+                form.addEventListener('submit', function(e) {
+                    console.log('Form submitted, preparing data...');
+                    const success = prepareFormData();
+                    if (success) {
+                        console.log('Data prepared successfully, form will be submitted');
+                    } else {
+                        console.error('Failed to prepare form data');
+                        e.preventDefault();
+                    }
+                });
+            } else {
+                console.error('Form not found!');
+            }
+        } catch (error) {
+            console.error('Error in DOMContentLoaded event:', error);
         }
         
-        // إضافة event listener مباشر لزر حفظ المنتج
-        const saveButton = document.querySelector('button[type="submit"]');
-        if (saveButton) {
-            console.log('Save button found, adding click listener...');
-            saveButton.addEventListener('click', function(e) {
-                console.log('Save button clicked, preparing data...');
-                const success = prepareFormData();
-                if (!success) {
-                    console.error('Failed to prepare form data');
-                    e.preventDefault();
-                }
-            });
-        } else {
-            console.error('Save button not found!');
-        }
-        
-        // إضافة event listener للنموذج نفسه (مكرر للتأكد من العمل)
+        // إضافة event listener للنموذج نفسه
         const formElement = document.querySelector('form');
         if (formElement) {
             formElement.addEventListener('submit', function(e) {
-                console.log('Form submit event triggered...');
-                const success = prepareFormData();
-                if (!success) {
-                    console.error('Failed to prepare form data');
-                    e.preventDefault();
+                // منع إرسال النموذج بشكل افتراضي
+                e.preventDefault();
+                
+                // إظهار رسالة تحميل
+                const loadingAlert = document.createElement('div');
+                loadingAlert.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-4';
+                loadingAlert.style.zIndex = '9999';
+                loadingAlert.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">جاري التحميل...</span>
+                        </div>
+                        <div>جاري حفظ المنتج...</div>
+                    </div>
+                `;
+                document.body.appendChild(loadingAlert);
+                
+                // التحقق من صحة البيانات
+                if (!validateForm()) {
+                    loadingAlert.remove();
+                    return false;
                 }
+                
+                // إعداد البيانات للمقاسات والألوان
+                prepareFormData();
+                
+                // جمع بيانات النموذج
+                const formData = new FormData(formElement);
+                
+                // إرسال البيانات باستخدام AJAX
+                fetch(formElement.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    loadingAlert.remove();
+                    
+                    if (!response.ok) {
+                        if (response.status === 422) {
+                            // أخطاء التحقق
+                            return response.json().then(data => {
+                                throw new Error(Object.values(data.errors).flat().join('\n'));
+                            });
+                        }
+                        throw new Error('حدث خطأ أثناء حفظ المنتج (رمز الخطأ: ' + response.status + ')');
+                    }
+                    
+                    return response.text();
+                })
+                .then(data => {
+                    // إظهار رسالة نجاح
+                    const successAlert = document.createElement('div');
+                    successAlert.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-4';
+                    successAlert.style.zIndex = '9999';
+                    successAlert.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <div>تم إضافة المنتج بنجاح</div>
+                        </div>
+                    `;
+                    document.body.appendChild(successAlert);
+                    
+                    // إزالة الرسالة بعد ثانيتين
+                    setTimeout(() => {
+                        successAlert.remove();
+                        // إعادة توجيه المستخدم إلى صفحة المنتجات
+                        window.location.href = '{{ route("admin.products.index") }}';
+                    }, 2000);
+                })
+                .catch(error => {
+                    loadingAlert.remove();
+                    
+                    // إظهار رسالة خطأ
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-4';
+                    errorAlert.style.zIndex = '9999';
+                    errorAlert.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>حدث خطأ أثناء حفظ المنتج: ${error.message}</div>
+                        </div>
+                    `;
+                    document.body.appendChild(errorAlert);
+                    
+                    // إزالة الرسالة بعد 5 ثوان
+                    setTimeout(() => {
+                        errorAlert.remove();
+                    }, 5000);
+                    
+                    console.error('Error:', error);
+                });
             });
         }
 
@@ -1511,11 +1792,11 @@ function safeOldInt($key, $default = 0) {
         }
         
         // التأكد من أن حقل المخزون يحتوي على قيمة صحيحة
-        const stockInput = document.querySelector('input[name="stock"]');
-        if (stockInput) {
-            const currentValue = parseInt(stockInput.value) || 0;
-            stockInput.value = Math.max(0, currentValue);
-            console.log('Stock input value corrected to:', stockInput.value);
+        const stockInput3 = document.querySelector('input[name="stock"]');
+        if (stockInput3) {
+            const currentValue = parseInt(stockInput3.value) || 0;
+            stockInput3.value = Math.max(0, currentValue);
+            console.log('Stock input value corrected to:', stockInput3.value);
         }
         
         console.log('Form setup completed');

@@ -14,11 +14,14 @@ class CartItem extends Model
   protected $fillable = [
     'cart_id',
     'product_id',
+    'variant_id',
     'quantity',
     'unit_price',
     'subtotal',
     'color',
-    'size'
+    'size',
+    'color_id',
+    'size_id'
   ];
 
   protected $casts = [
@@ -35,5 +38,10 @@ class CartItem extends Model
   public function product(): BelongsTo
   {
     return $this->belongsTo(Product::class);
+  }
+
+  public function variant(): BelongsTo
+  {
+    return $this->belongsTo(ProductSizeColorInventory::class, 'variant_id');
   }
 }

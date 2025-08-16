@@ -186,4 +186,125 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * الحصول على المقاسات المتاحة للون محدد
+     */
+    public function getSizesForColor(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'color_id' => 'required|exists:color_options,id'
+        ]);
+
+        try {
+            $variants = \App\Models\ProductSizeColorInventory::where('product_id', $request->product_id)
+                ->where('color_id', $request->color_id)
+                ->where('is_available', true)
+                ->where('stock', '>', 0)
+                ->with(['size'])
+                ->get();
+
+            $sizes = $variants->map(function ($variant) {
+                return [
+                    'id' => $variant->size_id,
+                    'name' => $variant->size->name ?? 'غير محدد',
+                    'price' => $variant->price,
+                    'available_stock' => $variant->available_stock,
+                    'variant_id' => $variant->id
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'sizes' => $sizes
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء جلب المقاسات'
+            ], 500);
+        }
+    }
+
+    /**
+     * الحصول على الألوان المتاحة للمقاس محدد
+     */
+    public function getColorsForSize(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'size_id' => 'required|exists:size_options,id'
+        ]);
+
+        try {
+            $variants = \App\Models\ProductSizeColorInventory::where('product_id', $request->product_id)
+                ->where('size_id', $request->size_id)
+                ->where('is_available', true)
+                ->where('stock', '>', 0)
+                ->with(['color'])
+                ->get();
+
+            $colors = $variants->map(function ($variant) {
+                return [
+                    'id' => $variant->color_id,
+                    'name' => $variant->color->name ?? 'غير محدد',
+                    'price' => $variant->price,
+                    'available_stock' => $variant->available_stock,
+                    'variant_id' => $variant->id
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'colors' => $colors
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء جلب الألوان'
+            ], 500);
+        }
+    }
+
+    /**
+     * الحصول على تفاصيل الـ variant
+     */
+    public function getVariantDetails(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'size_id' => 'nullable|exists:size_options,id',
+            'color_id' => 'nullable|exists:color_options,id'
+        ]);
+
+        try {
+            $variant = \App\Models\ProductSizeColorInventory::where('product_id', $request->product_id)
+                ->where('size_id', $request->size_id)
+                ->where('color_id', $request->color_id)
+                ->first();
+
+            if (!$variant) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذا الخيار غير متوفر'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'variant' => [
+                    'id' => $variant->id,
+                    'price' => $variant->price,
+                    'available_stock' => $variant->available_stock,
+                    'is_available' => $variant->is_available
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء جلب تفاصيل الخيار'
+            ], 500);
+        }
+    }
 }

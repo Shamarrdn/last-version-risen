@@ -106,13 +106,39 @@ class CartService
             ->where(function($query) use ($request) {
                 $query->where('size', $request->size)->orWhereNull('size');
             })
+            ->where(function($query) use ($request) {
+                if ($request->color_id) {
+                    $query->where('color_id', $request->color_id);
+                } else {
+                    $query->whereNull('color_id');
+                }
+            })
+            ->where(function($query) use ($request) {
+                if ($request->size_id) {
+                    $query->where('size_id', $request->size_id);
+                } else {
+                    $query->whereNull('size_id');
+                }
+            })
             ->first();
 
         // تحديد السعر بناءً على المقاس
         $itemPrice = 0; // Default price is 0 if no price source is found
 
-        // جمع سعر المقاس إذا تم اختياره
-        if ($request->size && $product->enable_size_selection) {
+        // البحث في نظام المخزون الجديد أولاً
+        if ($request->size_id && $request->color_id) {
+            $inventory = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
+                ->where('size_id', $request->size_id)
+                ->where('color_id', $request->color_id)
+                ->first();
+                
+            if ($inventory && $inventory->price) {
+                $itemPrice = $inventory->price;
+            }
+        }
+        
+        // إذا لم يتم العثور على سعر في نظام المخزون، ابحث في المقاسات القديمة
+        if ($itemPrice == 0 && $request->size && $product->enable_size_selection) {
             $size = $product->sizes->where('size', $request->size)->first();
             if ($size && $size->price) {
                 $itemPrice = $size->price;
@@ -138,7 +164,9 @@ class CartService
                 'unit_price' => $itemPrice,
                 'subtotal' => $request->quantity * $itemPrice,
                 'color' => $request->color,
-                'size' => $request->size
+                'size' => $request->size,
+                'color_id' => $request->color_id,
+                'size_id' => $request->size_id
             ]);
         }
 

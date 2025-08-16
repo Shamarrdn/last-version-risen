@@ -1,5 +1,7 @@
 let selectedColor = null;
+let selectedColorId = null;
 let selectedSize = null;
+let selectedSizeId = null;
 
 function updateMainImage(src, thumbnail) {
     document.getElementById('mainImage').src = src;
@@ -34,6 +36,11 @@ function selectColor(element) {
 
     element.classList.add('active');
     selectedColor = element.dataset.color;
+    
+    // Store the color ID if available
+    if (element.dataset.colorId) {
+        selectedColorId = element.dataset.colorId;
+    }
 }
 
 function selectSize(element) {
@@ -42,6 +49,7 @@ function selectSize(element) {
     if (element.classList.contains('active')) {
         element.classList.remove('active');
         selectedSize = null;
+        selectedSizeId = null;
 
         updatePrice();
         return;
@@ -61,6 +69,11 @@ function selectSize(element) {
 
     element.classList.add('active');
     selectedSize = element.dataset.size;
+    
+    // Store the size ID if available
+    if (element.dataset.sizeId) {
+        selectedSizeId = element.dataset.sizeId;
+    }
 
     updatePrice();
 }
@@ -110,8 +123,10 @@ function addToCart() {
     const hasCustomSizeEnabled = document.getElementById('customSize') !== null;
 
     let colorValue = null;
+    let colorId = null;
     if (hasColorSelectionEnabled && selectedColor) {
         colorValue = selectedColor;
+        colorId = selectedColorId;
     } else if (hasCustomColorEnabled) {
         const customColor = document.getElementById('customColor').value.trim();
         if (customColor) {
@@ -120,8 +135,10 @@ function addToCart() {
     }
 
     let sizeValue = null;
+    let sizeId = null;
     if (hasSizeSelectionEnabled && selectedSize) {
         sizeValue = selectedSize;
+        sizeId = selectedSizeId;
     } else if (hasCustomSizeEnabled) {
         const customSize = document.getElementById('customSize').value.trim();
         if (customSize) {
@@ -166,6 +183,8 @@ function addToCart() {
         quantity: quantity,
         color: colorValue,
         size: sizeValue,
+        color_id: colorId,
+        size_id: sizeId
     };
 
     fetch('/cart/add', {

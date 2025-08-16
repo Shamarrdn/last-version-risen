@@ -223,10 +223,23 @@ class CheckoutController extends Controller
           throw new CheckoutException('المنتج "' . $item->product->name . '" غير متوفر حالياً');
         }
 
-        // التحقق من المخزون المتاح (المخزون - المستهلك)
-        $availableStock = $item->product->available_stock;
-        if ($item->quantity > $availableStock) {
-          throw new CheckoutException('المنتج "' . $item->product->name . '" غير متوفر بالكمية المطلوبة. (المتوفر حالياً: ' . $availableStock . ')<br>لإكمال الطلب يجب إزالة المنتجات غير المتوفرة أو تعديل الكمية في السلة.');
+        // التحقق من المخزون حسب نوع المنتج
+        if ($item->variant_id) {
+          // للمنتجات ذات المقاسات/الألوان
+          $variant = $item->variant;
+          if (!$variant || !$variant->is_available) {
+            throw new CheckoutException('الخيار المحدد للمنتج "' . $item->product->name . '" غير متوفر حالياً');
+          }
+          
+          if ($item->quantity > $variant->available_stock) {
+            throw new CheckoutException('المنتج "' . $item->product->name . '" غير متوفر بالكمية المطلوبة. (المتوفر حالياً: ' . $variant->available_stock . ')<br>لإكمال الطلب يجب إزالة المنتجات غير المتوفرة أو تعديل الكمية في السلة.');
+          }
+        } else {
+          // للمنتجات العادية
+          $availableStock = $item->product->available_stock;
+          if ($item->quantity > $availableStock) {
+            throw new CheckoutException('المنتج "' . $item->product->name . '" غير متوفر بالكمية المطلوبة. (المتوفر حالياً: ' . $availableStock . ')<br>لإكمال الطلب يجب إزالة المنتجات غير المتوفرة أو تعديل الكمية في السلة.');
+          }
         }
       }
 
@@ -270,10 +283,24 @@ class CheckoutController extends Controller
             'unit_price' => $item->unit_price,
             'subtotal' => $item->subtotal,
             'color' => $item->color,
-            'size' => $item->size
+            'size' => $item->size,
+            'color_id' => $item->color_id,
+            'size_id' => $item->size_id
           ];
 
-          $order->items()->create($orderItemData);
+          $orderItem = $order->items()->create($orderItemData);
+
+          // خصم المخزون حسب نوع المنتج
+          if ($item->variant_id) {
+            // للمنتجات ذات المقاسات/الألوان
+            $variant = $item->variant;
+            if ($variant) {
+              $variant->consumeStock($item->quantity);
+            }
+          } else {
+            // للمنتجات العادية
+            $item->product->consumeStock($item->quantity);
+          }
         }
 
         if ($discountResult['coupon_applied'] && $couponCode) {
