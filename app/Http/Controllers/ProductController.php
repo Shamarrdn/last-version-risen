@@ -47,7 +47,12 @@ class ProductController extends Controller
             abort(404, 'المنتج غير متوفر حالياً');
         }
 
-        $product->load(['category', 'images', 'colors', 'sizes', 'quantityDiscounts']);
+        // تحميل البيانات من النظام الجديد
+        $product->load(['category', 'images', 'inventory.color', 'inventory.size', 'quantityDiscounts']);
+
+        // الحصول على الألوان والمقاسات من النظام الجديد
+        $availableColors = $product->available_colors;
+        $availableSizes = $product->available_sizes;
 
         $availableFeatures = $this->productService->getAvailableFeatures($product);
         $relatedProducts = $this->productService->getRelatedProducts($product);
@@ -57,7 +62,9 @@ class ProductController extends Controller
             'product',
             'relatedProducts',
             'availableFeatures',
-            'quantityDiscounts'
+            'quantityDiscounts',
+            'availableColors',
+            'availableSizes'
         ));
     }
 

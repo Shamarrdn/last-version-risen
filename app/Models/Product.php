@@ -83,18 +83,20 @@ class Product extends Model
   }
 
       public function colors(): BelongsToMany
-    {
-        return $this->belongsToMany(ProductColor::class, 'product_colors', 'product_id', 'color_id');
-    }
-    
-    public function inventory(): HasMany
-    {
-        return $this->hasMany(ProductSizeColorInventory::class);
-    }
-
-  public function sizes(): HasMany
   {
-    return $this->hasMany(\App\Models\ProductSizeRelation::class);
+    return $this->belongsToMany(ProductColor::class, 'product_size_color_inventory', 'product_id', 'color_id')
+      ->distinct();
+  }
+  
+  public function inventory(): HasMany
+  {
+    return $this->hasMany(ProductSizeColorInventory::class, 'product_id');
+  }
+
+  public function sizes(): BelongsToMany
+  {
+    return $this->belongsToMany(ProductSize::class, 'product_size_color_inventory', 'product_id', 'size_id')
+      ->distinct();
   }
 
   public function orderItems(): HasMany
@@ -197,6 +199,83 @@ class Product extends Model
   public function getAllowCustomColorAttribute()
   {
     return $this->enable_custom_color;
+  }
+
+  /**
+   * الحصول على الألوان المتاحة من النظام الجديد
+   */
+  public function getAvailableColorsAttribute()
+  {
+    return $this->inventory()
+      ->where('is_available', true)
+      ->where('stock', '>', 0)
+      ->with('color')
+      ->get()
+      ->pluck('color')
+      ->unique('id')
+      ->filter();
+  }
+
+  /**
+   * الحصول على المقاسات المتاحة من النظام الجديد
+   */
+  public function getAvailableSizesAttribute()
+  {
+    return $this->inventory()
+      ->where('is_available', true)
+      ->where('stock', '>', 0)
+      ->with('size')
+      ->get()
+      ->pluck('size')
+      ->unique('id')
+      ->filter();
+  }
+
+  /**
+   * الحصول على السعر الأدنى من النظام الجديد
+   */
+  public function getMinPriceFromInventoryAttribute()
+  {
+    $minPrice = $this->inventory()
+      ->where('is_available', true)
+      ->where('stock', '>', 0)
+      ->min('price');
+
+    return $minPrice ?? $this->base_price ?? 0;
+  }
+
+  /**
+   * الحصول على السعر الأقصى من النظام الجديد
+   */
+  public function getMaxPriceFromInventoryAttribute()
+  {
+    $maxPrice = $this->inventory()
+      ->where('is_available', true)
+      ->where('stock', '>', 0)
+      ->max('price');
+
+    return $maxPrice ?? $this->base_price ?? 0;
+  }
+
+  /**
+   * الحصول على variant محدد
+   */
+  public function getVariant($colorId = null, $sizeId = null)
+  {
+    return $this->inventory()
+      ->where('color_id', $colorId)
+      ->where('size_id', $sizeId)
+      ->where('is_available', true)
+      ->first();
+  }
+
+  /**
+   * التحقق من توفر variant
+   */
+  public function hasVariant($colorId = null, $sizeId = null, $quantity = 1)
+  {
+    $variant = $this->getVariant($colorId, $sizeId);
+    return $variant && $variant->available_stock >= $quantity;
   }
 
   public function getAllowCustomSizeAttribute()

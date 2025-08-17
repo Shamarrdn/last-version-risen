@@ -9,7 +9,7 @@ class ProductSizeRelation extends Model
 {
     use HasFactory;
 
-    protected $table = 'product_sizes';
+    protected $table = 'product_size_color_inventory';
 
     protected $fillable = [
         'product_id',

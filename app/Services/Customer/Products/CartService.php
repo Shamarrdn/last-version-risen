@@ -13,6 +13,14 @@ class CartService
 {
     public function addToCart(Request $request)
     {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+            'color_id' => 'nullable|exists:color_options,id',
+            'size_id' => 'nullable|exists:size_options,id',
+            'variant_id' => 'nullable|exists:product_size_color_inventory,id'
+        ]);
+
         $product = Product::findOrFail($request->product_id);
 
         if (!$product->is_available) {
@@ -23,45 +31,28 @@ class CartService
             ];
         }
 
-        $needsColor = $product->allow_color_selection || $product->allow_custom_color;
-        $needsSize = $product->allow_size_selection || $product->allow_custom_size;
-
-        if ($needsColor && empty($request->color)) {
-            $colorMessage = '';
-            if ($product->allow_color_selection && $product->allow_custom_color) {
-                $colorMessage = 'يرجى اختيار لون أو كتابة اللون المطلوب';
-            } else if ($product->allow_color_selection) {
-                $colorMessage = 'يرجى اختيار لون للمنتج';
-            } else if ($product->allow_custom_color) {
-                $colorMessage = 'يرجى كتابة اللون المطلوب';
-            }
-
+        // البحث عن أو إنشاء variant
+        $variant = $this->findOrCreateVariant($product, $request->color_id, $request->size_id, $request->variant_id);
+        
+        if (!$variant) {
             return [
                 'success' => false,
-                'message' => $colorMessage,
+                'message' => 'الخيار المحدد غير متوفر',
                 'status' => 422
             ];
         }
 
-        if ($needsSize && empty($request->size)) {
-            $sizeMessage = '';
-            if ($product->allow_size_selection && $product->allow_custom_size) {
-                $sizeMessage = 'يرجى اختيار مقاس أو كتابة المقاس المطلوب';
-            } else if ($product->allow_size_selection) {
-                $sizeMessage = 'يرجى اختيار مقاس للمنتج';
-            } else if ($product->allow_custom_size) {
-                $sizeMessage = 'يرجى كتابة المقاس المطلوب';
-            }
-
+        // التحقق من المخزون
+        if ($request->quantity > $variant->available_stock) {
             return [
                 'success' => false,
-                'message' => $sizeMessage,
+                'message' => 'الكمية المطلوبة غير متوفرة. المتوفر: ' . $variant->available_stock,
                 'status' => 422
             ];
         }
 
         $cart = $this->getOrCreateCart($request);
-        $cartItem = $this->findOrCreateCartItem($cart, $product, $request);
+        $cartItem = $this->findOrCreateCartItem($cart, $product, $variant, $request);
 
         return [
             'success' => true,
@@ -95,64 +86,25 @@ class CartService
         }
     }
 
-    public function findOrCreateCartItem($cart, $product, $request)
+    public function findOrCreateCartItem($cart, $product, $variant, $request)
     {
-        // البحث عن العنصر في السلة مع مراعاة اللون والمقاس
+        // البحث عن العنصر في السلة مع مراعاة الـ variant
         $cartItem = CartItem::where('cart_id', $cart->id)
             ->where('product_id', $product->id)
-            ->where(function($query) use ($request) {
-                $query->where('color', $request->color)->orWhereNull('color');
-            })
-            ->where(function($query) use ($request) {
-                $query->where('size', $request->size)->orWhereNull('size');
-            })
-            ->where(function($query) use ($request) {
-                if ($request->color_id) {
-                    $query->where('color_id', $request->color_id);
-                } else {
-                    $query->whereNull('color_id');
-                }
-            })
-            ->where(function($query) use ($request) {
-                if ($request->size_id) {
-                    $query->where('size_id', $request->size_id);
-                } else {
-                    $query->whereNull('size_id');
-                }
-            })
+            ->where('variant_id', $variant->id)
             ->first();
 
-        // تحديد السعر بناءً على المقاس
-        $itemPrice = 0; // Default price is 0 if no price source is found
-
-        // البحث في نظام المخزون الجديد أولاً
-        if ($request->size_id && $request->color_id) {
-            $inventory = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
-                ->where('size_id', $request->size_id)
-                ->where('color_id', $request->color_id)
-                ->first();
-                
-            if ($inventory && $inventory->price) {
-                $itemPrice = $inventory->price;
-            }
-        }
-        
-        // إذا لم يتم العثور على سعر في نظام المخزون، ابحث في المقاسات القديمة
-        if ($itemPrice == 0 && $request->size && $product->enable_size_selection) {
-            $size = $product->sizes->where('size', $request->size)->first();
-            if ($size && $size->price) {
-                $itemPrice = $size->price;
-            }
-        }
-
-        // إذا لم يتم تحديد سعر من المقاس، نستخدم أقل سعر متاح
-        if ($itemPrice == 0) {
-            $priceRange = $product->getPriceRange();
-            $itemPrice = $priceRange['min'];
-        }
+        $itemPrice = $variant->price ?? $product->price;
 
         if ($cartItem) {
-            $cartItem->quantity += $request->quantity;
+            $newQuantity = $cartItem->quantity + $request->quantity;
+            
+            // التحقق من المخزون مرة أخرى
+            if ($newQuantity > $variant->available_stock) {
+                throw new \Exception('الكمية الإجمالية تتجاوز المخزون المتوفر');
+            }
+            
+            $cartItem->quantity = $newQuantity;
             $cartItem->unit_price = $itemPrice;
             $cartItem->subtotal = $cartItem->quantity * $itemPrice;
             $cartItem->save();
@@ -160,11 +112,10 @@ class CartService
             $cartItem = CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $product->id,
+                'variant_id' => $variant->id,
                 'quantity' => $request->quantity,
                 'unit_price' => $itemPrice,
                 'subtotal' => $request->quantity * $itemPrice,
-                'color' => $request->color,
-                'size' => $request->size,
                 'color_id' => $request->color_id,
                 'size_id' => $request->size_id
             ]);
@@ -174,6 +125,52 @@ class CartService
         $cart->save();
 
         return $cartItem;
+    }
+
+    /**
+     * البحث عن أو إنشاء variant للمنتج
+     */
+    protected function findOrCreateVariant($product, $colorId, $sizeId, $variantId = null)
+    {
+        // إذا تم تمرير variant_id مباشرة
+        if ($variantId) {
+            return \App\Models\ProductSizeColorInventory::find($variantId);
+        }
+
+        // البحث عن variant موجود
+        $variant = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
+            ->where('color_id', $colorId)
+            ->where('size_id', $sizeId)
+            ->first();
+
+        if ($variant) {
+            return $variant;
+        }
+
+        // إنشاء variant جديد إذا لم يكن موجوداً
+        if ($colorId || $sizeId) {
+            return \App\Models\ProductSizeColorInventory::create([
+                'product_id' => $product->id,
+                'color_id' => $colorId,
+                'size_id' => $sizeId,
+                'stock' => 0,
+                'consumed_stock' => 0,
+                'price' => $product->price,
+                'is_available' => true
+            ]);
+        }
+
+        // للمنتجات العادية بدون مقاسات/ألوان
+        return \App\Models\ProductSizeColorInventory::firstOrCreate([
+            'product_id' => $product->id,
+            'color_id' => null,
+            'size_id' => null
+        ], [
+            'stock' => $product->stock ?? 0,
+            'consumed_stock' => $product->consumed_stock ?? 0,
+            'price' => $product->price,
+            'is_available' => $product->is_available
+        ]);
     }
 
     public function getCartItems(Request $request)

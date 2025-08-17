@@ -50,6 +50,7 @@ function selectSize(element) {
         element.classList.remove('active');
         selectedSize = null;
         selectedSizeId = null;
+        selectedVariantId = null;
 
         updatePrice();
         return;
@@ -75,6 +76,11 @@ function selectSize(element) {
         selectedSizeId = element.dataset.sizeId;
     }
 
+    // Store the variant ID if available
+    if (element.dataset.variantId) {
+        selectedVariantId = element.dataset.variantId;
+    }
+
     updatePrice();
 }
 
@@ -82,26 +88,29 @@ function updatePrice() {
     const priceElement = document.getElementById('product-price');
     const originalPrice = parseFloat(document.getElementById('original-price').value);
     let currentPrice = originalPrice;
-    let sizePrice = 0;
 
-    // حساب سعر المقاس إذا تم اختياره
-    if (selectedSize) {
-        const sizeElement = document.querySelector(`.size-option[data-size="${selectedSize}"]`);
-        if (sizeElement && sizeElement.dataset.price) {
-            sizePrice = parseFloat(sizeElement.dataset.price);
+    // إذا تم اختيار variant، نستخدم سعره
+    if (selectedVariantId) {
+        const variantElement = document.querySelector(`.size-option[data-variant-id="${selectedVariantId}"]`);
+        if (variantElement && variantElement.dataset.price) {
+            currentPrice = parseFloat(variantElement.dataset.price);
         }
     }
-
     // إذا تم اختيار مقاس محدد، نستخدم سعره
-    if (selectedSize) {
-        currentPrice = sizePrice;
+    else if (selectedSize) {
+        const sizeElement = document.querySelector(`.size-option[data-size="${selectedSize}"]`);
+        if (sizeElement && sizeElement.dataset.price) {
+            currentPrice = parseFloat(sizeElement.dataset.price);
+        }
     }
     // وإلا نستخدم السعر الأصلي
     else {
         currentPrice = originalPrice;
     }
 
-    priceElement.textContent = currentPrice.toFixed(2) + ' ر.س';
+    if (priceElement) {
+        priceElement.textContent = currentPrice.toFixed(2) + ' ر.س';
+    }
 }
 
 document.querySelectorAll('.size-option').forEach(el => {
@@ -124,6 +133,8 @@ function addToCart() {
 
     let colorValue = null;
     let colorId = null;
+    let variantId = null;
+    
     if (hasColorSelectionEnabled && selectedColor) {
         colorValue = selectedColor;
         colorId = selectedColorId;
@@ -139,6 +150,11 @@ function addToCart() {
     if (hasSizeSelectionEnabled && selectedSize) {
         sizeValue = selectedSize;
         sizeId = selectedSizeId;
+        // الحصول على variant_id من العنصر المختار
+        const selectedSizeElement = document.querySelector('.size-option.active');
+        if (selectedSizeElement && selectedSizeElement.dataset.variantId) {
+            variantId = selectedSizeElement.dataset.variantId;
+        }
     } else if (hasCustomSizeEnabled) {
         const customSize = document.getElementById('customSize').value.trim();
         if (customSize) {
@@ -184,7 +200,8 @@ function addToCart() {
         color: colorValue,
         size: sizeValue,
         color_id: colorId,
-        size_id: sizeId
+        size_id: sizeId,
+        variant_id: variantId
     };
 
     fetch('/cart/add', {

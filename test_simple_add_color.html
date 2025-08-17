@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إضافة الألوان - نسخة مبسطة</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .size-container {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .size-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .size-title {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .size-select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .colors-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        .color-item {
+            border: 1px solid #eee;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .color-select {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .color-inputs {
+            display: flex;
+            gap: 10px;
+            flex: 2;
+        }
+        .input-group-sm {
+            flex: 1;
+        }
+        .input-group-sm label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        .input-group-sm input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .color-remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .add-color-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .error {
+            color: #721c24;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #console-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 اختبار إضافة الألوان - نسخة مبسطة</h1>
+        <p>هذا الملف لاختبار إضافة الألوان بدون مسح البيانات المدخلة</p>
+        
+        <form id="testForm">
+            <div id="sizeColorMatrix">
+                <!-- سيتم إنشاء المقاسات هنا -->
+            </div>
+            
+            <button type="button" onclick="addNewSize()">إضافة مقاس جديد</button>
+            <button type="button" onclick="testAddColor()">اختبار إضافة لون</button>
+            <button type="button" onclick="clearConsole()">مسح Console</button>
+        </form>
+        
+        <div class="test-results">
+            <h3>نتائج الاختبار:</h3>
+            <div id="testResults"></div>
+        </div>
+        
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // محاكاة البيانات المتاحة
+        let availableSizes = [
+            { id: 1, name: 'XS', description: 'مقاس صغير جداً' },
+            { id: 2, name: 'S', description: 'مقاس صغير' },
+            { id: 3, name: 'M', description: 'مقاس متوسط' },
+            { id: 4, name: 'L', description: 'مقاس كبير' }
+        ];
+        
+        let availableColors = [
+            { id: 1, name: 'أحمر', description: 'لون أحمر', code: '#FF0000' },
+            { id: 2, name: 'أزرق', description: 'لون أزرق', code: '#0000FF' },
+            { id: 3, name: 'أخضر', description: 'لون أخضر', code: '#00FF00' },
+            { id: 4, name: 'أصفر', description: 'لون أصفر', code: '#FFFF00' }
+        ];
+        
+        let selectedSizes = [];
+        
+        // اعتراض console.log
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const consoleOutput = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleOutput.textContent += args.join(' ') + '\n';
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            consoleOutput.textContent += '❌ ERROR: ' + args.join(' ') + '\n';
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            consoleOutput.textContent += '⚠️ WARN: ' + args.join(' ') + '\n';
+        };
+        
+        // دالة إضافة مقاس جديد
+        function addNewSize() {
+            const newSize = {
+                id: 'temp_' + Date.now(),
+                name: 'مقاس جديد',
+                colors: []
+            };
+            
+            selectedSizes.push(newSize);
+            updateSizeColorMatrix();
+        }
+        
+        // دالة تحديث مصفوفة المقاسات والألوان
+        function updateSizeColorMatrix() {
+            const matrixContainer = document.getElementById('sizeColorMatrix');
+            matrixContainer.innerHTML = '';
+            
+            selectedSizes.forEach((size, sizeIndex) => {
+                const sizeContainer = document.createElement('div');
+                sizeContainer.className = 'size-container';
+                sizeContainer.dataset.sizeId = size.id;
+                
+                sizeContainer.innerHTML = `
+                    <div class="size-header">
+                        <div class="size-title">
+                            المقاس ${sizeIndex + 1}
+                        </div>
+                        <button type="button" onclick="removeSize(${sizeIndex})" style="background: #dc3545;">
+                            حذف
+                        </button>
+                    </div>
+                    
+                    <select class="size-select" onchange="updateSizeName(${sizeIndex}, this.value)">
+                        <option value="">اختر المقاس...</option>
+                        ${availableSizes.map(s => `
+                            <option value="${s.id}" ${s.id == size.id ? 'selected' : ''}>
+                                ${s.name} - ${s.description}
+                            </option>
+                        `).join('')}
+                    </select>
+                    
+                    <div class="colors-section">
+                        <h6>الألوان المتاحة</h6>
+                        <div class="size-colors-container" id="size-colors-${size.id}">
+                            ${size.colors.map(color => `
+                                <div class="color-item" data-color-id="${color.id}">
+                                    <select class="color-select" onchange="updateColorName(this, '${size.id}')">
+                                        <option value="">اختر اللون...</option>
+                                        ${availableColors.map(c => `
+                                            <option value="${c.id}" ${c.id == color.id ? 'selected' : ''}>
+                                                ${c.name} - ${c.description}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                    
+                                    <div class="color-inputs">
+                                        <div class="input-group-sm">
+                                            <label>عدد القطع:</label>
+                                            <input type="number" 
+                                                name="stock[${size.id}][${color.id}]" 
+                                                placeholder="50"
+                                                min="0"
+                                                value="${color.stock || ''}"
+                                                required>
+                                        </div>
+                                        <div class="input-group-sm">
+                                            <label>السعر (ر.س):</label>
+                                            <input type="number" 
+                                                name="price[${size.id}][${color.id}]" 
+                                                placeholder="150"
+                                                step="0.01"
+                                                min="0"
+                                                value="${color.price || ''}">
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" class="color-remove-btn" onclick="removeColor('${size.id}', '${color.id}')">
+                                        ×
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="add-color-btn" onclick="addColorToSize('${size.id}')">
+                            + إضافة لون
+                        </button>
+                    </div>
+                `;
+                
+                matrixContainer.appendChild(sizeContainer);
+            });
+        }
+        
+        // دالة إضافة لون لمقاس (بدون إعادة إنشاء كل شيء)
+        function addColorToSize(sizeId) {
+            console.log('Adding color to size:', sizeId);
+            
+            const size = selectedSizes.find(s => s.id === sizeId);
+            if (!size) {
+                console.error('Size not found:', sizeId);
+                return;
+            }
+            
+            const newColor = {
+                id: 'temp_color_' + Date.now(),
+                name: '',
+                stock: '',
+                price: ''
+            };
+            
+            size.colors.push(newColor);
+            
+            // بدلاً من إعادة إنشاء كل شيء، أضف اللون الجديد فقط
+            addColorToUI(size, newColor);
+            
+            console.log('Color added successfully to size:', size.id, 'Total colors:', size.colors.length);
+        }
+        
+        // دالة إضافة اللون للواجهة فقط (بدون إعادة إنشاء كل شيء) - نسخة مبسطة
+        function addColorToUI(size, color) {
+            console.log('Adding color to UI for size:', size.id, 'color:', color);
+            
+            // البحث عن الحاوية بطريقة مبسطة وموثوقة
+            let colorsContainer = null;
+            
+            // الطريقة 1: البحث بالـ ID المباشر
+            colorsContainer = document.querySelector(`#size-colors-${size.id}`);
+            console.log('Method 1 - Direct ID search:', colorsContainer ? 'Found' : 'Not found');
+            
+            // الطريقة 2: البحث في جميع الحاويات
+            if (!colorsContainer) {
+                const allContainers = document.querySelectorAll('.size-colors-container');
+                console.log('Found', allContainers.length, 'color containers');
+                
+                for (let container of allContainers) {
+                    const sizeContainer = container.closest('.size-container');
+                    if (sizeContainer) {
+                        const containerSizeId = sizeContainer.dataset.sizeId;
+                        console.log('Container size ID:', containerSizeId, 'Looking for:', size.id);
+                        
+                        if (String(containerSizeId) === String(size.id)) {
+                            colorsContainer = container;
+                            console.log('Found matching container!');
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // الطريقة 3: البحث في جميع المقاسات
+            if (!colorsContainer) {
+                const allSizeContainers = document.querySelectorAll('.size-container');
+                console.log('Found', allSizeContainers.length, 'size containers');
+                
+                for (let sizeContainer of allSizeContainers) {
+                    const containerSizeId = sizeContainer.dataset.sizeId;
+                    console.log('Size container ID:', containerSizeId, 'Looking for:', size.id);
+                    
+                    if (String(containerSizeId) === String(size.id)) {
+                        const container = sizeContainer.querySelector('.size-colors-container');
+                        if (container) {
+                            colorsContainer = container;
+                            console.log('Found container in size container!');
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // إذا لم نجد الحاوية، استخدم الحل البديل
+            if (!colorsContainer) {
+                console.error('Colors container not found for size:', size.id);
+                console.log('Available size containers:', Array.from(document.querySelectorAll('.size-container')).map(c => c.dataset.sizeId));
+                console.log('Available color containers:', Array.from(document.querySelectorAll('.size-colors-container')).length);
+                
+                // إعادة إنشاء المصفوفة كاملة كحل بديل
+                console.log('Falling back to full matrix update');
+                updateSizeColorMatrix();
+                return;
+            }
+            
+            console.log('Found colors container:', colorsContainer);
+            
+            // إنشاء عنصر اللون الجديد
+            const colorItem = document.createElement('div');
+            colorItem.className = 'color-item';
+            colorItem.dataset.colorId = color.id;
+            
+            colorItem.innerHTML = `
+                <select class="color-select" onchange="updateColorName(this, '${size.id}')">
+                    <option value="">اختر اللون...</option>
+                    ${availableColors.map(c => `
+                        <option value="${c.id}" ${c.id == color.id ? 'selected' : ''}>
+                            ${c.name} - ${c.description}
+                        </option>
+                    `).join('')}
+                </select>
+                
+                <div class="color-inputs">
+                    <div class="input-group-sm">
+                        <label>عدد القطع:</label>
+                        <input type="number" 
+                            name="stock[${size.id}][${color.id}]" 
+                            placeholder="50"
+                            min="0"
+                            value="${color.stock || ''}"
+                            required>
+                    </div>
+                    <div class="input-group-sm">
+                        <label>السعر (ر.س):</label>
+                        <input type="number" 
+                            name="price[${size.id}][${color.id}]" 
+                            placeholder="150"
+                            step="0.01"
+                            min="0"
+                            value="${color.price || ''}">
+                    </div>
+                </div>
+                
+                <button type="button" class="color-remove-btn" onclick="removeColor('${size.id}', '${color.id}')">
+                    ×
+                </button>
+            `;
+            
+            // إضافة العنصر للحاوية
+            colorsContainer.appendChild(colorItem);
+            console.log('Color item added successfully to container');
+        }
+        
+        // دالة حذف مقاس
+        function removeSize(sizeIndex) {
+            selectedSizes.splice(sizeIndex, 1);
+            updateSizeColorMatrix();
+        }
+        
+        // دالة حذف لون
+        function removeColor(sizeId, colorId) {
+            const size = selectedSizes.find(s => s.id === sizeId);
+            if (size) {
+                size.colors = size.colors.filter(c => c.id !== colorId);
+                updateSizeColorMatrix();
+            }
+        }
+        
+        // دالة تحديث اسم المقاس
+        function updateSizeName(sizeIndex, sizeId) {
+            if (selectedSizes[sizeIndex]) {
+                selectedSizes[sizeIndex].id = sizeId;
+                const sizeData = availableSizes.find(s => s.id == sizeId);
+                if (sizeData) {
+                    selectedSizes[sizeIndex].name = sizeData.name;
+                }
+            }
+        }
+        
+        // دالة تحديث اسم اللون
+        function updateColorName(selectElement, sizeId) {
+            const colorItem = selectElement.closest('.color-item');
+            const colorId = selectElement.value;
+            const size = selectedSizes.find(s => s.id === sizeId);
+            
+            if (size && colorId) {
+                const color = size.colors.find(c => c.id === colorItem.dataset.colorId);
+                if (color) {
+                    color.id = colorId;
+                    const colorData = availableColors.find(c => c.id == colorId);
+                    if (colorData) {
+                        color.name = colorData.name;
+                    }
+                }
+            }
+        }
+        
+        // دالة اختبار إضافة لون
+        function testAddColor() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '';
+            
+            console.log('=== بدء اختبار إضافة لون ===');
+            
+            if (selectedSizes.length === 0) {
+                results.innerHTML = '<div class="error">❌ لا توجد مقاسات متاحة. أضف مقاس أولاً.</div>';
+                return;
+            }
+            
+            const firstSize = selectedSizes[0];
+            const initialColorCount = firstSize.colors.length;
+            
+            console.log('Initial color count:', initialColorCount);
+            
+            // إضافة لون جديد
+            addColorToSize(firstSize.id);
+            
+            const finalColorCount = firstSize.colors.length;
+            console.log('Final color count:', finalColorCount);
+            
+            if (finalColorCount > initialColorCount) {
+                results.innerHTML = `
+                    <div class="success">
+                        ✅ تم إضافة اللون بنجاح!<br>
+                        - عدد الألوان قبل الإضافة: ${initialColorCount}<br>
+                        - عدد الألوان بعد الإضافة: ${finalColorCount}<br>
+                        - تم إضافة: ${finalColorCount - initialColorCount} لون جديد
+                    </div>
+                `;
+                console.log('✅ الاختبار نجح!');
+            } else {
+                results.innerHTML = '<div class="error">❌ فشل في إضافة اللون</div>';
+                console.error('❌ الاختبار فشل!');
+            }
+        }
+        
+        // دالة مسح Console
+        function clearConsole() {
+            consoleOutput.textContent = '';
+        }
+        
+        // إضافة مقاس افتراضي عند التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 بدء اختبار النموذج...');
+            addNewSize();
+            console.log('✅ تم إضافة مقاس افتراضي');
+        });
+    </script>
+</body>
+</html>

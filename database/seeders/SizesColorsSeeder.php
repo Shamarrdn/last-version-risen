@@ -65,3 +65,4 @@ class SizesColorsSeeder extends Seeder
 
 
 
+

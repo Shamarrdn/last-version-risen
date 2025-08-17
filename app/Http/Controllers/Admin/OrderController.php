@@ -982,7 +982,7 @@ class OrderController extends Controller
           
           // إذا كان المنتج يستخدم نظام المقاسات والألوان القديم
           if ($sizeId && $colorId) {
-              $productSize = \DB::table('product_sizes')
+              $productSize = \DB::table('product_size_color_inventory')
                   ->where('product_id', $product->id)
                   ->where('size_id', $sizeId)
                   ->where('color_id', $colorId)
@@ -991,12 +991,12 @@ class OrderController extends Controller
               if ($productSize) {
                   if ($action === 'consume') {
                       $newStock = max(0, $productSize->stock - $quantity);
-                      \DB::table('product_sizes')
+                      \DB::table('product_size_color_inventory')
                           ->where('id', $productSize->id)
                           ->update(['stock' => $newStock]);
                   } elseif ($action === 'return') {
                       $newStock = $productSize->stock + $quantity;
-                      \DB::table('product_sizes')
+                      \DB::table('product_size_color_inventory')
                           ->where('id', $productSize->id)
                           ->update(['stock' => $newStock]);
                   }

@@ -102,7 +102,6 @@ class ProductController extends Controller
             'selected_colors' => $request->get('selected_colors'),
             'stock_data' => $request->get('stock'),
             'price_data' => $request->get('price'),
-            'inventories' => $request->get('inventories'),
             'stock_data_type' => gettype($request->get('stock')),
             'price_data_type' => gettype($request->get('price')),
             'all_request_keys' => array_keys($request->all()),
@@ -131,26 +130,20 @@ class ProductController extends Controller
             
             // قواعد الفاليديشن للمقاسات والألوان - محدثة لتتطابق مع النماذج
             'selected_sizes' => 'nullable|array',
-            'selected_sizes.*' => 'exists:size_options,id',
+            'selected_sizes.*' => 'exists:product_sizes,id',
             'selected_colors' => 'nullable|array',
-            'selected_colors.*' => 'exists:color_options,id',
+            'selected_colors.*' => 'exists:product_colors,id',
             
             // قواعد الفاليديشن للـ variants (الشكل الجديد)
             'variants' => 'nullable|array',
-            'variants.*.size_id' => 'nullable|exists:size_options,id',
-            'variants.*.color_id' => 'nullable|exists:color_options,id',
+            'variants.*.size_id' => 'nullable|exists:product_sizes,id',
+            'variants.*.color_id' => 'nullable|exists:product_colors,id',
             'variants.*.stock' => 'nullable|integer|min:0',
             'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.is_available' => 'nullable|boolean',
             
             // قواعد الفاليديشن للشكل المتداخل
             'inventory' => 'nullable|array',
-            
-            // قواعد الفاليديشن للنمط الجديد
-            'inventories' => 'nullable|array',
-            'inventories.*.*.color_id' => 'nullable|exists:color_options,id',
-            'inventories.*.*.stock' => 'nullable|integer|min:0',
-            'inventories.*.*.price' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -191,83 +184,80 @@ class ProductController extends Controller
                 $product->categories()->attach($request->categories);
             }
 
-            // ===== DEBUG LEVEL 2: Before inventory processing =====
-            Log::info('🔍 [DEBUG LEVEL 2] About to process inventory - STORE', [
+            // ===== DEBUG LEVEL 2: Before normalizeVariantsFromRequest =====
+            Log::info('🔍 [DEBUG LEVEL 2] About to call normalizeVariantsFromRequest - STORE', [
                 'product_id' => $product->id,
                 'request_keys' => array_keys($request->all()),
-                'has_inventories' => $request->has('inventories'),
-                'inventories_data' => $request->get('inventories'),
+                'selected_sizes' => $request->get('selected_sizes'),
+                'selected_colors' => $request->get('selected_colors'),
+                'stock_data' => $request->get('stock'),
+                'price_data' => $request->get('price'),
                 'all_request_data' => $request->all()
             ]);
             
-            // معالجة المخزون - النظام الجديد
-            if ($request->has('inventories') && is_array($request->inventories)) {
-                Log::info('🔍 [DEBUG LEVEL 3] Processing inventories data - STORE', [
+            // [VARIANTS_DEBUG][STORE] Raw Request
+            Log::info('[VARIANTS_DEBUG][STORE] Raw Request:', $request->all());
+            
+            // معالجة المقاسات والألوان - النظام الجديد
+            $rows = $this->normalizeVariantsFromRequest($request, $product->id);
+
+            // [VARIANTS_DEBUG][STORE] Normalized Variants
+            Log::info('[VARIANTS_DEBUG][STORE] Normalized Variants:', $rows);
+            Log::info('[VARIANTS_DEBUG][STORE] Variants Count: ' . count($rows));
+
+            // ===== DEBUG LEVEL 2: After normalizeVariantsFromRequest =====
+            Log::info('🔍 [DEBUG LEVEL 2] normalizeVariantsFromRequest output - STORE', [
+                'product_id' => $product->id,
+                'rows_count' => count($rows),
+                'rows' => $rows
+            ]);
+
+            \Log::info('ProductController store - Normalized variants:', [
+                'product_id' => $product->id,
+                'rows_count' => count($rows),
+                'rows' => $rows,
+                'request_keys' => array_keys($request->all()),
+                'request_data' => [
+                    'selected_sizes' => $request->get('selected_sizes'),
+                    'selected_colors' => $request->get('selected_colors'),
+                    'stock_data' => $request->get('stock'),
+                    'price_data' => $request->get('price'),
+                    'variants' => $request->get('variants'),
+                    'inventory' => $request->get('inventory')
+                ]
+            ]);
+
+            if (!empty($rows)) {
+                // ===== DEBUG LEVEL 3: Before upsert =====
+                Log::info('🔍 [DEBUG LEVEL 3] Variants to upsert - STORE', [
                     'product_id' => $product->id,
-                    'inventories_count' => count($request->inventories),
-                    'inventories' => $request->inventories
+                    'variants_count' => count($rows),
+                    'variants' => $rows
                 ]);
                 
-                foreach ($request->inventories as $sizeId => $colors) {
-                    foreach ($colors as $colorId => $data) {
-                        Log::info('🔍 [DEBUG LEVEL 4] Processing inventory item - STORE', [
-                            'product_id' => $product->id,
-                            'size_id' => $sizeId,
-                            'color_id' => $colorId,
-                            'data' => $data
-                        ]);
-                        
-                        \App\Models\ProductSizeColorInventory::updateOrCreate(
-                            [
-                                'product_id' => $product->id,
-                                'size_id'    => $sizeId,
-                                'color_id'   => $colorId,
-                            ],
-                            [
-                                'stock'        => $data['stock'] ?? 0,
-                                'price'        => $data['price'] ?? 0,
-                                'is_available' => 1,
-                            ]
-                        );
-                        
-                        Log::info('✅ Inventory item created/updated successfully', [
-                            'product_id' => $product->id,
-                            'size_id' => $sizeId,
-                            'color_id' => $colorId,
-                            'stock' => $data['stock'] ?? 0,
-                            'price' => $data['price'] ?? 0
-                        ]);
-                    }
+                try {
+                    // upsert يضمن عدم التكرار على نفس الثلاثي
+                    \App\Models\ProductSizeColorInventory::upsert(
+                        $rows,
+                        ['product_id', 'size_id', 'color_id'],
+                        ['stock', 'price', 'is_available']
+                    );
+                    \Log::info('ProductSizeColorInventory upsert completed successfully', [
+                        'product_id' => $product->id,
+                        'rows_count' => count($rows),
+                        'first_row' => $rows[0] ?? null
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('[VARIANTS_DEBUG][UPSERT_ERROR] ' . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw new \Exception('فشل في حفظ بيانات المقاسات والألوان: ' . $e->getMessage());
                 }
             } else {
-                // Fallback للنظام القديم
-                Log::info('🔍 [DEBUG LEVEL 3] Using fallback inventory system - STORE', [
+                \Log::warning('No inventory rows to insert for product', [
                     'product_id' => $product->id,
-                    'has_selected_sizes' => $request->has('selected_sizes'),
-                    'has_selected_colors' => $request->has('selected_colors')
+                    'request_data' => $request->only(['selected_sizes', 'selected_colors', 'stock', 'price'])
                 ]);
-                
-                $rows = $this->normalizeVariantsFromRequest($request, $product->id);
-
-                if (!empty($rows)) {
-                    try {
-                        \App\Models\ProductSizeColorInventory::upsert(
-                            $rows,
-                            ['product_id', 'size_id', 'color_id'],
-                            ['stock', 'price', 'is_available']
-                        );
-                        \Log::info('ProductSizeColorInventory upsert completed successfully', [
-                            'product_id' => $product->id,
-                            'rows_count' => count($rows),
-                            'first_row' => $rows[0] ?? null
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::error('[VARIANTS_DEBUG][UPSERT_ERROR] ' . $e->getMessage(), [
-                            'trace' => $e->getTraceAsString(),
-                        ]);
-                        throw new \Exception('فشل في حفظ بيانات المقاسات والألوان: ' . $e->getMessage());
-                    }
-                }
             }
 
             // ربط الألوان والمقاسات كـ pivot للفلترة والتقارير
@@ -396,7 +386,6 @@ class ProductController extends Controller
             'selected_colors' => $request->get('selected_colors'),
             'stock_data' => $request->get('stock'),
             'price_data' => $request->get('price'),
-            'inventories' => $request->get('inventories'),
             'stock_data_type' => gettype($request->get('stock')),
             'price_data_type' => gettype($request->get('price')),
             'all_request_keys' => array_keys($request->all()),
@@ -441,12 +430,10 @@ class ProductController extends Controller
                 
                 // قواعد الفاليديشن للشكل المتداخل
                 'inventory' => 'nullable|array',
-                
-                // قواعد الفاليديشن للنمط الجديد
                 'inventories' => 'nullable|array',
-                'inventories.*.*.color_id' => 'nullable|exists:color_options,id',
                 'inventories.*.*.stock' => 'nullable|integer|min:0',
                 'inventories.*.*.price' => 'nullable|numeric|min:0',
+                'inventories.*.*.color_id' => 'nullable|exists:color_options,id',
             ]);
 
             DB::beginTransaction();
@@ -488,154 +475,123 @@ class ProductController extends Controller
             // ربط التصنيفات
             $product->categories()->sync(is_array($request->categories) ? $request->categories : []);
 
-            // ===== DEBUG LEVEL 2: Before inventory processing =====
-            Log::info('🔍 [DEBUG LEVEL 2] About to process inventory - UPDATE', [
+            // ===== DEBUG LEVEL 2: Before normalizeVariantsFromRequest =====
+            Log::info('🔍 [DEBUG LEVEL 2] About to call normalizeVariantsFromRequest - UPDATE', [
                 'product_id' => $product->id,
                 'request_keys' => array_keys($request->all()),
-                'has_inventories' => $request->has('inventories'),
-                'inventories_data' => $request->get('inventories'),
+                'selected_sizes' => $request->get('selected_sizes'),
+                'selected_colors' => $request->get('selected_colors'),
+                'stock_data' => $request->get('stock'),
+                'price_data' => $request->get('price'),
                 'all_request_data' => $request->all()
             ]);
             
-            // معالجة المخزون - النظام الجديد
-            if ($request->has('inventories') && is_array($request->inventories)) {
-                Log::info('🔍 [DEBUG LEVEL 3] Processing inventories data - UPDATE', [
-                    'product_id' => $product->id,
-                    'inventories_count' => count($request->inventories),
-                    'inventories' => $request->inventories
-                ]);
-                
-                foreach ($request->inventories as $sizeId => $colors) {
-                    foreach ($colors as $colorId => $data) {
-                        Log::info('🔍 [DEBUG LEVEL 4] Processing inventory item - UPDATE', [
-                            'product_id' => $product->id,
-                            'size_id' => $sizeId,
-                            'colorId' => $colorId,
-                            'data' => $data
-                        ]);
-                        
-                        \App\Models\ProductSizeColorInventory::updateOrCreate(
-                            [
-                                'product_id' => $product->id,
-                                'size_id'    => $sizeId,
-                                'color_id'   => $colorId,
-                            ],
-                            [
-                                'stock'        => $data['stock'] ?? 0,
-                                'price'        => $data['price'] ?? 0,
-                                'is_available' => 1,
-                            ]
-                        );
-                        
-                        Log::info('✅ Inventory item updated successfully', [
-                            'product_id' => $product->id,
-                            'size_id' => $sizeId,
-                            'color_id' => $colorId,
-                            'stock' => $data['stock'] ?? 0,
-                            'price' => $data['price'] ?? 0
-                        ]);
-                    }
-                }
-            } else {
-                // Fallback للنظام القديم
-                Log::info('🔍 [DEBUG LEVEL 3] Using fallback inventory system - UPDATE', [
-                    'product_id' => $product->id,
-                    'has_selected_sizes' => $request->has('selected_sizes'),
-                    'has_selected_colors' => $request->has('selected_colors')
-                ]);
-                
-                $rows = $this->normalizeVariantsFromRequest($request, $product->id);
+            // [VARIANTS_DEBUG][UPDATE] Raw Request
+            Log::info('[VARIANTS_DEBUG][UPDATE] Raw Request:', $request->all());
+            
+            // معالجة المقاسات والألوان - النظام الجديد
+            $rows = $this->normalizeVariantsFromRequest($request, $product->id);
 
-                \Log::info('ProductController update - Normalized variants:', [
+            // [VARIANTS_DEBUG][UPDATE] Normalized Variants
+            Log::info('[VARIANTS_DEBUG][UPDATE] Normalized Variants:', $rows);
+            Log::info('[VARIANTS_DEBUG][UPDATE] Variants Count: ' . count($rows));
+
+            // ===== DEBUG LEVEL 2: After normalizeVariantsFromRequest =====
+            Log::info('🔍 [DEBUG LEVEL 2] normalizeVariantsFromRequest output - UPDATE', [
+                'product_id' => $product->id,
+                'rows_count' => count($rows),
+                'rows' => $rows
+            ]);
+
+            \Log::info('ProductController update - Normalized variants:', [
+                'product_id' => $product->id,
+                'rows_count' => count($rows),
+                'request_data' => [
+                    'selected_sizes' => $request->get('selected_sizes'),
+                    'selected_colors' => $request->get('selected_colors'),
+                    'has_stock_data' => $request->has('stock'),
+                    'has_price_data' => $request->has('price'),
+                ]
+            ]);
+            
+            // التحقق من إذا تم طلب حذف كل المخزون بشكل صريح
+            $explicitlyDeleteAll = $request->has('delete_all_inventory') && $request->delete_all_inventory;
+
+            if (!empty($rows)) {
+                // ===== DEBUG LEVEL 3: Before upsert =====
+                Log::info('🔍 [DEBUG LEVEL 3] Variants to upsert - UPDATE', [
                     'product_id' => $product->id,
-                    'rows_count' => count($rows),
-                    'request_data' => [
-                        'selected_sizes' => $request->get('selected_sizes'),
-                        'selected_colors' => $request->get('selected_colors'),
-                        'has_stock_data' => $request->has('stock'),
-                        'has_price_data' => $request->has('price'),
-                    ]
+                    'variants_count' => count($rows),
+                    'variants' => $rows
                 ]);
                 
-                // التحقق من إذا تم طلب حذف كل المخزون بشكل صريح
-                $explicitlyDeleteAll = $request->has('delete_all_inventory') && $request->delete_all_inventory;
-
-                if (!empty($rows)) {
-                    // ===== DEBUG LEVEL 3: Before upsert =====
-                    Log::info('🔍 [DEBUG LEVEL 3] Variants to upsert - UPDATE', [
-                        'product_id' => $product->id,
-                        'variants_count' => count($rows),
-                        'variants' => $rows
-                    ]);
+                try {
+                    // 1. قبل حذف أي شيء، تأكد من أن هناك بيانات فعلية
+                    $hasSizeData = $request->has('selected_sizes') && !empty($request->selected_sizes);
+                    $hasColorData = $request->has('selected_colors') && !empty($request->selected_colors);
                     
-                    try {
-                        // 1. قبل حذف أي شيء، تأكد من أن هناك بيانات فعلية
-                        $hasSizeData = $request->has('selected_sizes') && !empty($request->selected_sizes);
-                        $hasColorData = $request->has('selected_colors') && !empty($request->selected_colors);
-                        
-                        // 2. إذا حدد المستخدم مقاسات/ألوان جديدة، تحديث فقط ما تغير
-                        if (($hasSizeData || $hasColorData) && !$explicitlyDeleteAll) {
-                            // احذف فقط الـ variants اللي اتشالت من الفورم مع الحفاظ على البقية
-                            $this->deleteMissingVariants($product, $rows);
-                            \Log::info('Updated only missing variants', [
-                                'has_size_data' => $hasSizeData,
-                                'has_color_data' => $hasColorData
-                            ]);
-                        } else {
-                            \Log::info('Keeping existing variants since no selection data was provided');
-                        }
-                        
-                        // 3. تحديث أو إضافة البيانات الجديدة
-                        \App\Models\ProductSizeColorInventory::upsert(
-                            $rows,
-                            ['product_id', 'size_id', 'color_id'],
-                            ['stock', 'price', 'is_available']
-                        );
-                        
-                        \Log::info('ProductSizeColorInventory update completed successfully', [
-                            'product_id' => $product->id,
-                            'rows_count' => count($rows),
-                            'first_few_rows' => array_slice($rows, 0, 3)
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::error('[VARIANTS_DEBUG][UPSERT_ERROR] ' . $e->getMessage(), [
-                            'trace' => $e->getTraceAsString(),
-                        ]);
-                        throw new \Exception('فشل في تحديث بيانات المقاسات والألوان: ' . $e->getMessage());
-                    }
-                } else {
-                    // حالة خاصة: طلب صريح لحذف كل المخزون
-                    if ($explicitlyDeleteAll) {
-                        $deletedCount = $product->inventory()->count();
-                        $product->inventory()->delete();
-                        \Log::warning('Explicitly requested to delete all inventory', [
-                            'product_id' => $product->id,
-                            'deleted_count' => $deletedCount
+                    // 2. إذا حدد المستخدم مقاسات/ألوان جديدة، تحديث فقط ما تغير
+                    if (($hasSizeData || $hasColorData) && !$explicitlyDeleteAll) {
+                        // احذف فقط الـ variants اللي اتشالت من الفورم مع الحفاظ على البقية
+                        $this->deleteMissingVariants($product, $rows);
+                        \Log::info('Updated only missing variants', [
+                            'has_size_data' => $hasSizeData,
+                            'has_color_data' => $hasColorData
                         ]);
                     } else {
-                        // هنا المفترض أن الـ normalizeVariantsFromRequest أرجعت مصفوفة فارغة رغم محاولاتها المتعددة
-                        // هذا يعني أن المنتج فعلاً لا يجب أن يكون له variants
-                        \Log::warning('No variants were created despite all attempts. Keeping existing inventory if any', [
+                        \Log::info('Keeping existing variants since no selection data was provided');
+                    }
+                    
+                    // 3. تحديث أو إضافة البيانات الجديدة
+                    \App\Models\ProductSizeColorInventory::upsert(
+                        $rows,
+                        ['product_id', 'size_id', 'color_id'],
+                        ['stock', 'price', 'is_available']
+                    );
+                    
+                    \Log::info('ProductSizeColorInventory update completed successfully', [
+                        'product_id' => $product->id,
+                        'rows_count' => count($rows),
+                        'first_few_rows' => array_slice($rows, 0, 3)
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('[VARIANTS_DEBUG][UPSERT_ERROR] ' . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    throw new \Exception('فشل في تحديث بيانات المقاسات والألوان: ' . $e->getMessage());
+                }
+            } else {
+                // حالة خاصة: طلب صريح لحذف كل المخزون
+                if ($explicitlyDeleteAll) {
+                    $deletedCount = $product->inventory()->count();
+                    $product->inventory()->delete();
+                    \Log::warning('Explicitly requested to delete all inventory', [
+                        'product_id' => $product->id,
+                        'deleted_count' => $deletedCount
+                    ]);
+                } else {
+                    // هنا المفترض أن الـ normalizeVariantsFromRequest أرجعت مصفوفة فارغة رغم محاولاتها المتعددة
+                    // هذا يعني أن المنتج فعلاً لا يجب أن يكون له variants
+                    \Log::warning('No variants were created despite all attempts. Keeping existing inventory if any', [
+                        'product_id' => $product->id,
+                        'existing_count' => $product->inventory()->count()
+                    ]);
+                    
+                    // في حالة عدم وجود أي inventory، نضيف واحد افتراضي
+                    if ($product->inventory()->count() == 0) {
+                        \App\Models\ProductSizeColorInventory::create([
                             'product_id' => $product->id,
-                            'existing_count' => $product->inventory()->count()
+                            'size_id' => null,
+                            'color_id' => null,
+                            'stock' => $product->stock ?? 10,
+                            'price' => $product->base_price ?? 0,
+                            'is_available' => true,
                         ]);
-                        
-                        // في حالة عدم وجود أي inventory، نضيف واحد افتراضي
-                        if ($product->inventory()->count() == 0) {
-                            \App\Models\ProductSizeColorInventory::create([
-                                'product_id' => $product->id,
-                                'size_id' => null,
-                                'color_id' => null,
-                                'stock' => $product->stock ?? 10,
-                                'price' => $product->base_price ?? 0,
-                                'is_available' => true,
-                            ]);
-                            \Log::info('Created default generic inventory item', [
-                                'product_id' => $product->id,
-                                'stock' => $product->stock ?? 10,
-                                'price' => $product->base_price ?? 0
-                            ]);
-                        }
+                        \Log::info('Created default generic inventory item', [
+                            'product_id' => $product->id,
+                            'stock' => $product->stock ?? 10,
+                            'price' => $product->base_price ?? 0
+                        ]);
                     }
                 }
             }
@@ -876,6 +832,7 @@ class ProductController extends Controller
             'product_id' => $productId,
             'has_variants' => $request->filled('variants'),
             'has_inventory' => $request->filled('inventory'),
+            'has_inventories' => $request->filled('inventories'),
             'has_selected_sizes' => $request->has('selected_sizes'),
             'has_selected_colors' => $request->has('selected_colors'),
             'base_price' => $basePrice,
@@ -894,8 +851,22 @@ class ProductController extends Controller
                     'is_available' => isset($row['is_available']) ? (bool)$row['is_available'] : true,
                 ];
             }
+        } elseif ($request->filled('inventories') && is_array($request->inventories)) {
+            // الحالة 2: البيانات مجهزة على شكل inventories[size_id][color_id][field]
+            foreach ($request->inventories as $sizeId => $colorsMap) {
+                foreach ((array)$colorsMap as $colorId => $data) {
+                    $out[] = [
+                        'product_id'   => $productId,
+                        'size_id'      => $sizeId !== 'null' ? (int)$sizeId : null,
+                        'color_id'     => $colorId !== 'null' ? (int)$colorId : null,
+                        'stock'        => (int)($data['stock'] ?? $defaultStock),
+                        'price'        => $data['price'] ?? $basePrice,
+                        'is_available' => isset($data['is_available']) ? (bool)$data['is_available'] : true,
+                    ];
+                }
+            }
         } elseif ($request->filled('inventory') && is_array($request->inventory)) {
-            // الحالة 2: البيانات مجهزة على شكل inventory[size_id][color_id]
+            // الحالة 2.1: البيانات مجهزة على شكل inventory[size_id][color_id] (النظام القديم)
             foreach ($request->inventory as $sizeId => $colorsMap) {
                 foreach ((array)$colorsMap as $colorId => $data) {
                     $out[] = [
@@ -1026,26 +997,54 @@ class ProductController extends Controller
                    
             // إذا كانت rows فارغة بعد المعالجة، ربما البيانات غير منظمة في الشكل المتوقع
             if (empty($out)) {
-                \Log::warning('No variants created from selected_sizes/colors. Looking for stock[] fields directly');
-                // نفحص جميع الحقول بحثاً عن stock[size_id][color_id]
+                \Log::warning('No variants created from selected_sizes/colors. Looking for inventories[] fields directly');
+                // نفحص جميع الحقول بحثاً عن inventories[size_id][color_id][field]
                 $allInputs = $request->all();
                 foreach ($allInputs as $key => $value) {
-                    if (strpos($key, 'stock[') === 0) {
-                        // استخراج size_id و color_id من اسم الحقل
-                        preg_match('/stock\[([^\]]+)\]\[([^\]]+)\]/', $key, $matches);
-                        if (count($matches) === 3) {
+                    if (strpos($key, 'inventories[') === 0) {
+                        // استخراج size_id و color_id و field من اسم الحقل
+                        preg_match('/inventories\[([^\]]+)\]\[([^\]]+)\]\[([^\]]+)\]/', $key, $matches);
+                        if (count($matches) === 4) {
                             $sizeId = (int)$matches[1];
                             $colorId = (int)$matches[2];
-                            $priceKey = "price[{$matches[1]}][{$matches[2]}]";
-                            $price = isset($allInputs[$priceKey]) ? $allInputs[$priceKey] : $basePrice;
+                            $field = $matches[3];
                             
-                            $out[] = [
-                                'product_id'   => $productId,
-                                'size_id'      => $sizeId,
-                                'color_id'     => $colorId,
-                                'stock'        => (int)($value ?: $defaultStock),
-                                'price'        => $price,
-                                'is_available' => true,
+                            // البحث عن السجل الموجود أو إنشاء واحد جديد
+                            $existingIndex = null;
+                            foreach ($out as $index => $row) {
+                                if ($row['size_id'] == $sizeId && $row['color_id'] == $colorId) {
+                                    $existingIndex = $index;
+                                    break;
+                                }
+                            }
+                            
+                            if ($existingIndex !== null) {
+                                // تحديث السجل الموجود
+                                if ($field === 'stock') {
+                                    $out[$existingIndex]['stock'] = (int)($value ?: $defaultStock);
+                                } elseif ($field === 'price') {
+                                    $out[$existingIndex]['price'] = $value ?: $basePrice;
+                                }
+                            } else {
+                                // إنشاء سجل جديد
+                                $out[] = [
+                                    'product_id'   => $productId,
+                                    'size_id'      => $sizeId,
+                                    'color_id'     => $colorId,
+                                                                     'stock'        => $field === 'stock' ? (int)($value ?: $defaultStock) : $defaultStock,
+                                 'price'        => $field === 'price' ? ($value ?: $basePrice) : $basePrice,
+                                 'is_available' => true,
+                             ];
+                             \Log::info('Added variant from direct field matching', [
+                                 'size_id' => $sizeId, 
+                                 'color_id' => $colorId, 
+                                 'field' => $field,
+                                 'value' => $value
+                             ]);
+                         }
+                     }
+                 }
+             }
                             ];
                             \Log::info('Added variant from direct field matching', [
                                 'field' => $key, 

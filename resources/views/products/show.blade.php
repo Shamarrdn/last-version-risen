@@ -353,28 +353,24 @@
                     @endif
 
                     <!-- Colors Section -->
-                    @if($product->allow_color_selection && $product->colors->isNotEmpty())
+                    @if($product->allow_color_selection && $availableColors->isNotEmpty())
                         <div class="colors-section mb-4">
                             <h5 class="section-title">
                                 <i class="fas fa-palette me-2"></i>
                                 الألوان المتاحة
                             </h5>
                             <div class="colors-grid mb-3">
-                                @foreach($product->colors as $color)
-                                    <div class="color-item {{ $color->is_available ? 'available' : 'unavailable' }}"
-                                        data-color="{{ $color->color }}"
+                                @foreach($availableColors as $color)
+                                    <div class="color-item available"
+                                        data-color="{{ $color->name }}"
                                         data-color-id="{{ $color->id }}"
                                         onclick="selectColor(this)">
                                         <div class="d-flex align-items-center gap-2">
-                                            <span class="color-preview" style="background-color: {{ $color->code ?? $color->color }}"></span>
-                                            <span class="color-name">{{ $color->name ?? $color->color }}</span>
+                                            <span class="color-preview" style="background-color: {{ $color->code ?? '#007bff' }}"></span>
+                                            <span class="color-name">{{ $color->name }}</span>
                                         </div>
                                         <span class="color-status">
-                                            @if($color->is_available)
-                                                <i class="fas fa-check text-success"></i>
-                                            @else
-                                                <i class="fas fa-times text-danger"></i>
-                                            @endif
+                                            <i class="fas fa-check text-success"></i>
                                         </span>
                                     </div>
                                 @endforeach
@@ -396,31 +392,21 @@
                     @endif
 
                     <!-- Available Sizes Section -->
-                    @if($product->allow_size_selection && $product->sizes->isNotEmpty())
+                    @if($product->allow_size_selection && $availableSizes->isNotEmpty())
                         <div class="available-sizes mb-4">
                             <h5 class="section-title">
                                 <i class="fas fa-ruler-combined me-2"></i>
                                 المقاسات المتاحة
                             </h5>
                             <div class="d-flex flex-wrap gap-2" id="sizesContainer">
-                                @foreach($product->sizes as $size)
-                                    @if($size->is_available)
+                                @foreach($availableSizes as $size)
                                     <button type="button"
                                         class="size-option btn"
-                                        data-size="{{ $size->size }}"
+                                        data-size="{{ $size->name }}"
                                         data-size-id="{{ $size->id }}"
-                                        data-price="{{ $size->price }}"
                                         onclick="selectSize(this)">
-                                        {{ $size->name ?? $size->size }}
-                                        @if($size->price != null)
-                                            <span class="ms-2 badge bg-primary">{{ number_format($size->price, 2) }} ر.س</span>
-                                        @endif
+                                        {{ $size->name }}
                                     </button>
-                                    @else
-                                    <button type="button" class="size-option btn disabled">
-                                        {{ $size->name ?? $size->size }} (غير متوفر)
-                                    </button>
-                                    @endif
                                 @endforeach
                             </div>
                             <div id="dynamicSizesContainer" class="d-flex flex-wrap gap-2" style="display: none;">

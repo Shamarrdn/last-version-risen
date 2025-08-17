@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cart_items', function (Blueprint $table) {
+            // إضافة variant_id للربط مع جدول product_size_color_inventory
             $table->unsignedBigInteger('variant_id')->nullable()->after('product_id');
-            
-            $table->foreign('variant_id')->references('id')->on('product_size_color_inventory')->onDelete('set null');
+            $table->foreign('variant_id')->references('id')->on('product_size_color_inventory')->onDelete('cascade');
             
             // إضافة index للتحسين
             $table->index(['product_id', 'variant_id']);
@@ -33,3 +33,4 @@ return new class extends Migration
         });
     }
 };
+

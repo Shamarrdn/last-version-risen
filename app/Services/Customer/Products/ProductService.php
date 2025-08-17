@@ -52,21 +52,25 @@ class ProductService
             $maxPrice = $request->input('max_price');
 
             $query->where(function ($q) use ($minPrice, $maxPrice) {
-                // Products that have at least one size within the price range
-                $q->whereHas('sizes', function ($sizeQuery) use ($minPrice, $maxPrice) {
-                    $sizeQuery->whereNotNull('price');
+                // Products that have at least one variant within the price range
+                $q->whereHas('inventory', function ($inventoryQuery) use ($minPrice, $maxPrice) {
+                    $inventoryQuery->where('is_available', true)
+                        ->where('stock', '>', 0)
+                        ->whereNotNull('price');
                     if ($minPrice !== null) {
-                        $sizeQuery->where('price', '>=', $minPrice);
+                        $inventoryQuery->where('price', '>=', $minPrice);
                     }
                     if ($maxPrice !== null) {
-                        $sizeQuery->where('price', '<=', $maxPrice);
+                        $inventoryQuery->where('price', '<=', $maxPrice);
                     }
                 });
 
-                // OR products that have no priced sizes, but their base_price is in range
+                // OR products that have no priced variants, but their base_price is in range
                 $q->orWhere(function ($subQ) use ($minPrice, $maxPrice) {
-                    $subQ->whereDoesntHave('sizes', function ($sizeQuery) {
-                        $sizeQuery->whereNotNull('price');
+                    $subQ->whereDoesntHave('inventory', function ($inventoryQuery) {
+                        $inventoryQuery->where('is_available', true)
+                            ->where('stock', '>', 0)
+                            ->whereNotNull('price');
                     });
                     if ($minPrice !== null) {
                         $subQ->where('base_price', '>=', $minPrice);
@@ -133,7 +137,7 @@ class ProductService
             case 'price-low':
                 $query->orderByRaw('
                     COALESCE(
-                        (SELECT MIN(price) FROM product_sizes WHERE product_id = products.id AND price IS NOT NULL),
+                        (SELECT MIN(price) FROM product_size_color_inventory WHERE product_id = products.id AND price IS NOT NULL),
                         products.base_price
                     ) ASC
                 ');
@@ -141,7 +145,7 @@ class ProductService
             case 'price-high':
                 $query->orderByRaw('
                     COALESCE(
-                        (SELECT MAX(price) FROM product_sizes WHERE product_id = products.id AND price IS NOT NULL),
+                        (SELECT MAX(price) FROM product_size_color_inventory WHERE product_id = products.id AND price IS NOT NULL),
                         products.base_price
                     ) DESC
                 ');
@@ -186,7 +190,7 @@ class ProductService
 
     public function getPriceRange()
     {
-        $pricesSubQuery = DB::table('product_sizes')
+        $pricesSubQuery = DB::table('product_size_color_inventory')
             ->select('product_id', DB::raw('MIN(price) as min_price'), DB::raw('MAX(price) as max_price'))
             ->whereNotNull('price')
             ->groupBy('product_id');
@@ -403,26 +407,27 @@ class ProductService
     {
         $features = [];
 
-        // الألوان
-        if ($product->enable_color_selection && $product->colors->isNotEmpty()) {
-            $features['colors'] = $product->colors->where('is_available', true)->pluck('color')->toArray();
+        // الألوان من النظام الجديد
+        if ($product->enable_color_selection) {
+            $availableColors = $product->available_colors;
+            if ($availableColors->isNotEmpty()) {
+                $features['colors'] = $availableColors->pluck('name')->toArray();
+            }
         }
 
-        // المقاسات
-        if ($product->enable_size_selection && $product->sizes->isNotEmpty()) {
-            $sizes = $product->sizes->where('is_available', true)->map(function($size) {
-                $sizeData = [
-                    'size' => $size->size
-            ];
+        // المقاسات من النظام الجديد
+        if ($product->enable_size_selection) {
+            $availableSizes = $product->available_sizes;
+            if ($availableSizes->isNotEmpty()) {
+                $sizes = $availableSizes->map(function($size) {
+                    return [
+                        'size' => $size->name,
+                        'id' => $size->id
+                    ];
+                })->toArray();
 
-                if ($size->price) {
-                    $sizeData['price'] = $size->price;
-                }
-
-                return $sizeData;
-            })->toArray();
-
-            $features['sizes'] = $sizes;
+                $features['sizes'] = $sizes;
+            }
         }
 
         // إضافة الخيارات الأخرى
