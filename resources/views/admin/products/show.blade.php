@@ -133,6 +133,32 @@
                                                 </div>
                                             </div>
 
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <dt><i class="fas fa-boxes text-primary"></i> المخزون العام</dt>
+                                    <dd>
+                                        <span class="badge bg-info">{{ number_format($product->stock) }} قطعة</span>
+                                        @if($product->consumed_stock > 0)
+                                            <small class="text-muted ms-2">(مستهلك: {{ $product->consumed_stock }})</small>
+                                        @endif
+                                    </dd>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <dt><i class="fas fa-calendar-plus text-primary"></i> تاريخ الإنشاء</dt>
+                                    <dd>{{ $product->created_at->format('Y-m-d H:i') }}</dd>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <dt><i class="fas fa-calendar-edit text-primary"></i> آخر تحديث</dt>
+                                    <dd>{{ $product->updated_at->format('Y-m-d H:i') }}</dd>
+                                </div>
+                            </div>
+
                                             <div class="col-12">
                                                 <div class="detail-item">
                                                     <dt><i class="fas fa-align-left text-primary"></i> الوصف</dt>
@@ -166,72 +192,122 @@
                                 </div>
                             </div>
 
-                            <!-- Colors -->
-                            @if($product->colors && $product->colors->isNotEmpty())
-                            <div class="col-md-6">
+
+
+                            <!-- Detailed Inventory -->
+                            @if($product->inventory && $product->inventory->isNotEmpty())
+                            <div class="col-12">
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-body">
                                         <h5 class="card-title mb-4">
-                                            <i class="fas fa-palette text-primary me-2"></i>
-                                            الألوان المتاحة
+                                            <i class="fas fa-warehouse text-primary me-2"></i>
+                                            المخزون التفصيلي (المقاسات والألوان)
                                         </h5>
-                                        <div class="row g-3">
-                                            @foreach($product->colors as $color)
-                                            <div class="col-md-6">
-                                                <div class="color-item d-flex align-items-center p-3 rounded border">
-                                                    <span class="color-preview me-2"
-                                                          style="width: 20px; height: 20px; border-radius: 50%; background-color: {{ $color->color }};"></span>
-                                                    <span>{{ $color->color }}</span>
-                                                    <span class="ms-auto">
-                                                        @if($color->is_available)
-                                                            <i class="fas fa-check text-success"></i>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th><i class="fas fa-ruler me-1"></i> المقاس</th>
+                                                        <th><i class="fas fa-palette me-1"></i> اللون</th>
+                                                        <th><i class="fas fa-boxes me-1"></i> المخزون</th>
+                                                        <th><i class="fas fa-money-bill me-1"></i> السعر</th>
+                                                        <th><i class="fas fa-chart-line me-1"></i> المستهلك</th>
+                                                        <th><i class="fas fa-toggle-on me-1"></i> الحالة</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($product->inventory as $inventory)
+                                                    <tr>
+                                                        <td>
+                                                            @if($inventory->size)
+                                                                <span class="badge bg-secondary">{{ $inventory->size->name }}</span>
+                                                                @if($inventory->size->description)
+                                                                    <small class="text-muted d-block">{{ $inventory->size->description }}</small>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-muted">افتراضي</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($inventory->color)
+                                                                <div class="d-flex align-items-center">
+                                                                    @if($inventory->color->code)
+                                                                        <span class="color-preview me-2" style="width: 20px; height: 20px; border-radius: 50%; background-color: {{ $inventory->color->code }}; border: 1px solid #ddd;"></span>
+                                                                    @endif
+                                                                    <span class="badge bg-info">{{ $inventory->color->name }}</span>
+                                                                </div>
+                                                                @if($inventory->color->description)
+                                                                    <small class="text-muted d-block">{{ $inventory->color->description }}</small>
+                                                                @endif
                                                         @else
-                                                            <i class="fas fa-times text-danger"></i>
+                                                                <span class="text-muted">افتراضي</span>
                                                         @endif
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-{{ $inventory->stock > 10 ? 'success' : ($inventory->stock > 0 ? 'warning' : 'danger') }}">
+                                                                {{ number_format($inventory->stock) }} قطعة
                                                     </span>
+                                                        </td>
+                                                        <td>
+                                                            @if($inventory->price)
+                                                                <strong class="text-primary">{{ number_format($inventory->price, 2) }} ر.س</strong>
+                                                            @else
+                                                                <span class="text-muted">سعر أساسي</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($inventory->consumed_stock && $inventory->consumed_stock > 0)
+                                                                <span class="badge bg-warning">{{ number_format($inventory->consumed_stock) }}</span>
+                                                            @else
+                                                                <span class="text-muted">0</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($inventory->is_available)
+                                                                <span class="badge bg-success">متاح</span>
+                                                            @else
+                                                                <span class="badge bg-danger">غير متاح</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- إحصائيات سريعة -->
+                                        <div class="row mt-4">
+                                            <div class="col-md-3">
+                                                <div class="stat-card">
+                                                    <div class="stat-value">{{ $product->inventory->count() }}</div>
+                                                    <div class="stat-label">مجموع المتغيرات</div>
                                                 </div>
                                             </div>
-                                            @endforeach
+                                            <div class="col-md-3">
+                                                <div class="stat-card">
+                                                    <div class="stat-value">{{ number_format($product->inventory->sum('stock')) }}</div>
+                                                    <div class="stat-label">إجمالي المخزون</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="stat-card">
+                                                    <div class="stat-value">{{ number_format($product->inventory->sum('consumed_stock')) }}</div>
+                                                    <div class="stat-label">إجمالي المستهلك</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="stat-card">
+                                                    <div class="stat-value">{{ $product->inventory->where('is_available', true)->count() }}</div>
+                                                    <div class="stat-label">المتغيرات المتاحة</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             @endif
 
-                            <!-- Sizes -->
-                            @if($product->sizes && $product->sizes->isNotEmpty())
-                            <div class="col-md-6">
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-body">
-                                        <h5 class="card-title mb-4">
-                                            <i class="fas fa-ruler text-primary me-2"></i>
-                                            المقاسات المتاحة
-                                        </h5>
-                                        <div class="row g-3">
-                                            @foreach($product->sizes as $size)
-                                            <div class="col-md-6">
-                                                <div class="size-item d-flex align-items-center justify-content-between p-3 rounded border">
-                                                    <div>
-                                                        <span class="fw-semibold">{{ $size->size }}</span>
-                                                        @if($size->price)
-                                                            <div class="mt-1 text-primary fw-bold">{{ number_format($size->price, 0) }} ريال</div>
-                                                        @endif
-                                                    </div>
-                                                    <span>
-                                                        @if($size->is_available)
-                                                            <i class="fas fa-check text-success"></i>
-                                                        @else
-                                                            <i class="fas fa-times text-danger"></i>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
+
 
                             <!-- Product Options -->
                             <div class="col-12">

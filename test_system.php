@@ -27,3 +27,4 @@ echo "- Check logs in storage/logs/laravel.log\n";
 echo "- Test the form submission and check console logs\n";
 ?>
 
+

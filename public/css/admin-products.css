@@ -1,0 +1,425 @@
+/**
+ * Admin Products CSS
+ * Shared styles for product create/edit pages
+ */
+
+/* ===== INVENTORY MANAGEMENT STYLES ===== */
+
+.inventory-row {
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    background: #fff;
+}
+
+.inventory-row:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.inventory-row .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px 10px 0 0;
+    padding: 0.75rem 1rem;
+}
+
+.inventory-row .card-body {
+    padding: 1.5rem;
+}
+
+.inventory-row .form-label {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-bottom: 0.5rem;
+}
+
+.inventory-row .form-control,
+.inventory-row .form-select {
+    border: 2px solid #e3e6f0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.inventory-row .form-control:focus,
+.inventory-row .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.inventory-row .btn-outline-danger {
+    border: 2px solid #e74a3b;
+    color: #e74a3b;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.inventory-row .btn-outline-danger:hover {
+    background: #e74a3b;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* ===== SIZE & COLOR MANAGEMENT ===== */
+
+.size-group {
+    border: 2px solid #f8f9fc;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.size-group .card-header {
+    background: linear-gradient(135deg, #36b9cc 0%, #1cc88a 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.colors-container {
+    background: #f8f9fc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.colors-container h6 {
+    color: #5a5c69;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.color-item {
+    background: white;
+    border: 2px solid #e3e6f0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.color-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.15);
+}
+
+/* ===== ACTION BUTTONS ===== */
+
+.add-inventory-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.add-inventory-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    color: white;
+}
+
+.add-size-btn {
+    background: linear-gradient(135deg, #1cc88a 0%, #36b9cc 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.add-size-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(28, 200, 138, 0.4);
+    color: white;
+}
+
+.debug-btn {
+    background: linear-gradient(135deg, #f6c23e 0%, #f4b619 100%);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.debug-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(246, 194, 62, 0.4);
+    color: white;
+}
+
+/* ===== FORM SECTIONS ===== */
+
+.form-section {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e3e6f0;
+}
+
+.form-section h5 {
+    color: #5a5c69;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #667eea;
+}
+
+.form-section .alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border: 1px solid #bee5eb;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+/* ===== PRODUCT IMAGES ===== */
+
+.image-preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.image-preview-item {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.image-preview-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.image-preview-item .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.image-preview-item:hover .overlay {
+    opacity: 1;
+}
+
+/* ===== FORM VALIDATION STYLES ===== */
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #e74a3b;
+    box-shadow: 0 0 0 0.2rem rgba(231, 74, 59, 0.25);
+}
+
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+}
+
+.invalid-feedback {
+    color: #e74a3b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.valid-feedback {
+    color: #1cc88a;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+/* ===== LOADING STATES ===== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 768px) {
+    .inventory-row .row > div {
+        margin-bottom: 1rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+    
+    .add-inventory-btn {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .image-preview-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .inventory-row .card-header {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .inventory-row .card-body {
+        padding: 1rem;
+    }
+    
+    .form-section h5 {
+        font-size: 1.1rem;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.card-modern {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card-modern:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.btn-modern {
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+}
+
+/* ===== DARK MODE SUPPORT ===== */
+
+@media (prefers-color-scheme: dark) {
+    .form-section {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .inventory-row {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .form-control,
+    .form-select {
+        background: #4a5568;
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+}

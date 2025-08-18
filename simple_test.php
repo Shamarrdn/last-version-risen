@@ -26,3 +26,4 @@ echo "- جرب إنشاء منتج جديد من خلال الواجهة\n";
 echo "- راجع الـ logs في storage/logs/laravel.log\n";
 ?>
 
+

@@ -61,6 +61,62 @@
             border-radius: 50%;
             display: inline-block;
         }
+        
+        /* Styles for new inventory system */
+        .color-item {
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .color-item:hover {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+        
+        .color-item.selected {
+            border-color: #007bff;
+            background-color: #e7f1ff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        }
+        
+        .color-item.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+        
+        .size-option {
+            padding: 8px 16px;
+            border: 2px solid #e1e1e1;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .size-option:hover {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+        
+        .size-option.selected {
+            border-color: #007bff;
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .size-option:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="{{ auth()->check() ? 'user-logged-in' : '' }}">
@@ -257,11 +313,11 @@
                     <!-- Product Price -->
                     <div class="price-container">
                         <div class="product-price">
-                            @if($product->min_price == $product->max_price)
-                                <span class="amount">{{ number_format($product->min_price, 2) }}</span>
+                            @if($product->min_price_from_inventory == $product->max_price_from_inventory)
+                                <span class="amount">{{ number_format($product->min_price_from_inventory, 2) }}</span>
                                 <span class="currency">ر.س</span>
                             @else
-                                <span class="amount">{{ number_format($product->min_price, 2) }} - {{ number_format($product->max_price, 2) }}</span>
+                                <span class="amount">{{ number_format($product->min_price_from_inventory, 2) }} - {{ number_format($product->max_price_from_inventory, 2) }}</span>
                                 <span class="currency">ر.س</span>
                             @endif
                         </div>
@@ -359,19 +415,21 @@
                                 <i class="fas fa-palette me-2"></i>
                                 الألوان المتاحة
                             </h5>
-                            <div class="colors-grid mb-3">
+                            <div class="row g-2 mb-3">
                                 @foreach($availableColors as $color)
-                                    <div class="color-item available"
-                                        data-color="{{ $color->name }}"
-                                        data-color-id="{{ $color->id }}"
-                                        onclick="selectColor(this)">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="color-preview" style="background-color: {{ $color->code ?? '#007bff' }}"></span>
-                                            <span class="color-name">{{ $color->name }}</span>
+                                    <div class="col-md-6">
+                                        <div class="color-item available"
+                                            data-color="{{ $color->name }}"
+                                            data-color-id="{{ $color->id }}"
+                                            onclick="selectColor(this)">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="color-preview" style="background-color: {{ $color->code ?? '#007bff' }}"></span>
+                                                <span class="color-name">{{ $color->name }}</span>
+                                            </div>
+                                            <span class="color-status">
+                                                <i class="fas fa-check text-success"></i>
+                                            </span>
                                         </div>
-                                        <span class="color-status">
-                                            <i class="fas fa-check text-success"></i>
-                                        </span>
                                     </div>
                                 @endforeach
                             </div>
@@ -398,6 +456,7 @@
                                 <i class="fas fa-ruler-combined me-2"></i>
                                 المقاسات المتاحة
                             </h5>
+                            <p class="text-muted small mb-3">اختر المقاس أولاً لعرض الألوان والأسعار المتاحة</p>
                             <div class="d-flex flex-wrap gap-2" id="sizesContainer">
                                 @foreach($availableSizes as $size)
                                     <button type="button"
