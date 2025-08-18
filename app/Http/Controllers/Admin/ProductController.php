@@ -251,16 +251,28 @@ class ProductController extends Controller
 
                 if (!empty($rows)) {
                     try {
-                        \App\Models\ProductSizeColorInventory::upsert(
-                            $rows,
-                            ['product_id', 'size_id', 'color_id'],
-                            ['stock', 'price', 'is_available']
-                        );
-                        \Log::info('ProductSizeColorInventory upsert completed successfully', [
-                            'product_id' => $product->id,
-                            'rows_count' => count($rows),
-                            'first_row' => $rows[0] ?? null
-                        ]);
+                        // تأكد من أن جميع السجلات لها color_id صحيح
+                        $validRows = array_filter($rows, function($row) {
+                            return !empty($row['color_id']) && $row['color_id'] !== null && $row['color_id'] !== 'null';
+                        });
+                        
+                        if (!empty($validRows)) {
+                            \App\Models\ProductSizeColorInventory::upsert(
+                                $validRows,
+                                ['product_id', 'size_id', 'color_id'],
+                                ['stock', 'price', 'is_available']
+                            );
+                            \Log::info('ProductSizeColorInventory upsert completed successfully', [
+                                'product_id' => $product->id,
+                                'rows_count' => count($validRows),
+                                'first_row' => $validRows[0] ?? null
+                            ]);
+                        } else {
+                            \Log::warning('No valid variants to store (all had null color_id)', [
+                                'product_id' => $product->id,
+                                'original_rows_count' => count($rows)
+                            ]);
+                        }
                     } catch (\Exception $e) {
                         Log::error('[VARIANTS_DEBUG][UPSERT_ERROR] ' . $e->getMessage(), [
                             'trace' => $e->getTraceAsString(),
@@ -338,38 +350,44 @@ class ProductController extends Controller
                     $selectedSizes[] = $sizeId;
                 }
                 
-                // إضافة اللون إذا لم يكن موجود
-                if ($colorId && !in_array($colorId, $selectedColors)) {
+                // إضافة اللون إذا لم يكن موجود وكان صحيحاً
+                if ($colorId && $colorId !== null && $colorId !== 'null' && !in_array($colorId, $selectedColors)) {
                     $selectedColors[] = $colorId;
                 }
                 
-                // إضافة بيانات المخزون والسعر
-                if (!isset($stockData[$sizeId])) {
-                    $stockData[$sizeId] = [];
+                // إضافة بيانات المخزون والسعر فقط إذا كان color_id صحيح
+                if ($colorId && $colorId !== null && $colorId !== 'null') {
+                    if (!isset($stockData[$sizeId])) {
+                        $stockData[$sizeId] = [];
+                    }
+                    if (!isset($priceData[$sizeId])) {
+                        $priceData[$sizeId] = [];
+                    }
+                    
+                    $stockData[$sizeId][$colorId] = $inventory->stock;
+                    $priceData[$sizeId][$colorId] = $inventory->price;
                 }
-                if (!isset($priceData[$sizeId])) {
-                    $priceData[$sizeId] = [];
-                }
-                
-                $stockData[$sizeId][$colorId] = $inventory->stock;
-                $priceData[$sizeId][$colorId] = $inventory->price;
             }
         }
         
-        // تجهيز ماب يساعدك تملي الفورم
-        $inventoryMap = $product->inventory->map(function ($row) {
-            return [
-                'id'           => $row->id,
-                'size_id'      => $row->size_id,
-                'color_id'     => $row->color_id,
-                'stock'        => $row->stock,
-                'consumed'     => $row->consumed_stock ?? 0,
-                'price'        => $row->price,
-                'is_available' => $row->is_available,
-                'size_name'    => $row->size ? $row->size->name : null,
-                'color_name'   => $row->color ? $row->color->name : null,
-            ];
-        })->values();
+        // تجهيز ماب يساعدك تملي الفورم - فقط السجلات التي لها color_id صحيح
+        $inventoryMap = $product->inventory
+            ->filter(function ($row) {
+                return $row->color_id && $row->color_id !== null && $row->color_id !== 'null';
+            })
+            ->map(function ($row) {
+                return [
+                    'id'           => $row->id,
+                    'size_id'      => $row->size_id,
+                    'color_id'     => $row->color_id,
+                    'stock'        => $row->stock,
+                    'consumed'     => $row->consumed_stock ?? 0,
+                    'price'        => $row->price,
+                    'is_available' => $row->is_available,
+                    'size_name'    => $row->size ? $row->size->name : null,
+                    'color_name'   => $row->color ? $row->color->name : null,
+                ];
+            })->values();
             
         return view('admin.products.edit', compact(
             'product', 
@@ -585,12 +603,23 @@ class ProductController extends Controller
                             \Log::info('Keeping existing variants since no selection data was provided');
                         }
                         
-                        // 3. تحديث أو إضافة البيانات الجديدة
-                        \App\Models\ProductSizeColorInventory::upsert(
-                            $rows,
-                            ['product_id', 'size_id', 'color_id'],
-                            ['stock', 'price', 'is_available']
-                        );
+                        // 3. تحديث أو إضافة البيانات الجديدة - تأكد من أن color_id صحيح
+                        $validRows = array_filter($rows, function($row) {
+                            return !empty($row['color_id']) && $row['color_id'] !== null && $row['color_id'] !== 'null';
+                        });
+                        
+                        if (!empty($validRows)) {
+                            \App\Models\ProductSizeColorInventory::upsert(
+                                $validRows,
+                                ['product_id', 'size_id', 'color_id'],
+                                ['stock', 'price', 'is_available']
+                            );
+                        } else {
+                            \Log::warning('No valid variants to update (all had null color_id)', [
+                                'product_id' => $product->id,
+                                'original_rows_count' => count($rows)
+                            ]);
+                        }
                         
                         \Log::info('ProductSizeColorInventory update completed successfully', [
                             'product_id' => $product->id,
@@ -872,14 +901,19 @@ class ProductController extends Controller
         $basePrice = $product->base_price ?? 0;
         $defaultStock = $product->stock ?? 10;
 
-        \Log::info('normalizeVariantsFromRequest called', [
+        \Log::info('🔍 [NORMALIZE_VARIANTS] Starting normalization', [
             'product_id' => $productId,
             'has_variants' => $request->filled('variants'),
             'has_inventory' => $request->filled('inventory'),
             'has_selected_sizes' => $request->has('selected_sizes'),
             'has_selected_colors' => $request->has('selected_colors'),
             'base_price' => $basePrice,
-            'default_stock' => $defaultStock
+            'default_stock' => $defaultStock,
+            'all_request_keys' => array_keys($request->all()),
+            'selected_sizes' => $request->get('selected_sizes'),
+            'selected_colors' => $request->get('selected_colors'),
+            'stock_data' => $request->get('stock'),
+            'price_data' => $request->get('price')
         ]);
 
         if ($request->filled('variants') && is_array($request->variants)) {
@@ -946,20 +980,28 @@ class ProductController extends Controller
                             $price = $priceData[$sizeId][$colorId];
                         }
                         
-                        $out[] = [
-                            'product_id'   => $productId,
-                            'size_id'      => (int)$sizeId,
-                            'color_id'     => (int)$colorId,
-                            'stock'        => $stock,
-                            'price'        => $price,
-                            'is_available' => true,
-                        ];
-                        \Log::info('Added size+color variant', [
-                            'size_id' => $sizeId, 
-                            'color_id' => $colorId, 
-                            'stock' => $stock,
-                            'price' => $price
-                        ]);
+                        // تأكد من أن color_id ليس null أو فارغ
+                        if (!empty($colorId) && $colorId !== 'null' && $colorId !== null) {
+                            $out[] = [
+                                'product_id'   => $productId,
+                                'size_id'      => (int)$sizeId,
+                                'color_id'     => (int)$colorId,
+                                'stock'        => $stock,
+                                'price'        => $price,
+                                'is_available' => true,
+                            ];
+                            \Log::info('Added size+color variant', [
+                                'size_id' => $sizeId, 
+                                'color_id' => $colorId, 
+                                'stock' => $stock,
+                                'price' => $price
+                            ]);
+                        } else {
+                            \Log::warning('Skipping variant with null/empty color_id', [
+                                'size_id' => $sizeId,
+                                'color_id' => $colorId
+                            ]);
+                        }
                     }
                 }
             } elseif ($hasSizes) {
@@ -978,14 +1020,10 @@ class ProductController extends Controller
                         }
                     }
                     
-                    $out[] = [
-                        'product_id'   => $productId,
-                        'size_id'      => (int)$sizeId,
-                        'color_id'     => null, // مقاس بدون لون
-                        'stock'        => $stock,
-                        'price'        => $price,
-                        'is_available' => true,
-                    ];
+                    // لا نضيف سجلات بدون color_id
+                    \Log::warning('Skipping size-only variant (no color_id)', [
+                        'size_id' => $sizeId
+                    ]);
                     \Log::info('Added size-only variant', [
                         'size_id' => $sizeId, 
                         'stock' => $stock,
@@ -1008,14 +1046,10 @@ class ProductController extends Controller
                         }
                     }
                     
-                    $out[] = [
-                        'product_id'   => $productId,
-                        'size_id'      => null, // لون بدون مقاس
-                        'color_id'     => (int)$colorId,
-                        'stock'        => $stock,
-                        'price'        => $price,
-                        'is_available' => true,
-                    ];
+                    // لا نضيف سجلات بدون size_id
+                    \Log::warning('Skipping color-only variant (no size_id)', [
+                        'color_id' => $colorId
+                    ]);
                     \Log::info('Added color-only variant', [
                         'color_id' => $colorId, 
                         'stock' => $stock,
@@ -1039,21 +1073,30 @@ class ProductController extends Controller
                             $priceKey = "price[{$matches[1]}][{$matches[2]}]";
                             $price = isset($allInputs[$priceKey]) ? $allInputs[$priceKey] : $basePrice;
                             
-                            $out[] = [
-                                'product_id'   => $productId,
-                                'size_id'      => $sizeId,
-                                'color_id'     => $colorId,
-                                'stock'        => (int)($value ?: $defaultStock),
-                                'price'        => $price,
-                                'is_available' => true,
-                            ];
-                            \Log::info('Added variant from direct field matching', [
-                                'field' => $key, 
-                                'size_id' => $sizeId, 
-                                'color_id' => $colorId,
-                                'stock' => $value,
-                                'price' => $price
-                            ]);
+                            // تأكد من أن color_id ليس null أو فارغ
+                            if (!empty($colorId) && $colorId !== 'null' && $colorId !== null) {
+                                $out[] = [
+                                    'product_id'   => $productId,
+                                    'size_id'      => $sizeId,
+                                    'color_id'     => $colorId,
+                                    'stock'        => (int)($value ?: $defaultStock),
+                                    'price'        => $price,
+                                    'is_available' => true,
+                                ];
+                                \Log::info('Added variant from direct field matching', [
+                                    'field' => $key, 
+                                    'size_id' => $sizeId, 
+                                    'color_id' => $colorId,
+                                    'stock' => $value,
+                                    'price' => $price
+                                ]);
+                            } else {
+                                \Log::warning('Skipping variant with null/empty color_id from direct field matching', [
+                                    'field' => $key,
+                                    'size_id' => $sizeId,
+                                    'color_id' => $colorId
+                                ]);
+                            }
                         }
                     }
                 }
@@ -1069,14 +1112,23 @@ class ProductController extends Controller
             
             if ($existingInventory->isNotEmpty()) {
                 foreach ($existingInventory as $item) {
-                    $out[] = [
-                        'product_id'   => $productId,
-                        'size_id'      => $item->size_id,
-                        'color_id'     => $item->color_id,
-                        'stock'        => $defaultStock, // نستخدم المخزون الافتراضي لأن مخزون القديم ما يصحش نستخدمه
-                        'price'        => $item->price ?? $basePrice,
-                        'is_available' => true,
-                    ];
+                    // تأكد من أن color_id صحيح
+                    if (!empty($item->color_id) && $item->color_id !== null && $item->color_id !== 'null') {
+                        $out[] = [
+                            'product_id'   => $productId,
+                            'size_id'      => $item->size_id,
+                            'color_id'     => $item->color_id,
+                            'stock'        => $defaultStock, // نستخدم المخزون الافتراضي لأن مخزون القديم ما يصحش نستخدمه
+                            'price'        => $item->price ?? $basePrice,
+                            'is_available' => true,
+                        ];
+                    } else {
+                        \Log::warning('Skipping existing inventory item with null color_id', [
+                            'item_id' => $item->id,
+                            'size_id' => $item->size_id,
+                            'color_id' => $item->color_id
+                        ]);
+                    }
                 }
                 \Log::info('Created variants based on existing inventory', [
                     'count' => count($out),
@@ -1097,54 +1149,32 @@ class ProductController extends Controller
                         // اصنع variant واحد لكل مقاس×لون
                         foreach ($request->selected_sizes as $sizeId) {
                             foreach ($request->selected_colors as $colorId) {
-                                $out[] = [
-                                    'product_id'   => $productId,
-                                    'size_id'      => (int)$sizeId,
-                                    'color_id'     => (int)$colorId,
-                                    'stock'        => $defaultStock,
-                                    'price'        => $basePrice,
-                                    'is_available' => true,
-                                ];
+                                // تأكد من أن color_id صحيح
+                                if (!empty($colorId) && $colorId !== 'null' && $colorId !== null) {
+                                    $out[] = [
+                                        'product_id'   => $productId,
+                                        'size_id'      => (int)$sizeId,
+                                        'color_id'     => (int)$colorId,
+                                        'stock'        => $defaultStock,
+                                        'price'        => $basePrice,
+                                        'is_available' => true,
+                                    ];
+                                }
                             }
                         }
                         \Log::info('Created default variants for all size×color combinations', ['count' => count($out)]);
                     } elseif ($hasSizes) {
-                        // اصنع variant لكل مقاس
-                        foreach ($request->selected_sizes as $sizeId) {
-                            $out[] = [
-                                'product_id'   => $productId,
-                                'size_id'      => (int)$sizeId,
-                                'color_id'     => null,
-                                'stock'        => $defaultStock,
-                                'price'        => $basePrice,
-                                'is_available' => true,
-                            ];
-                        }
+                        // لا نضيف سجلات بدون color_id
+                        \Log::warning('Skipping size-only variants in fallback (no color_id)');
                         \Log::info('Created default variants for all sizes', ['count' => count($out)]);
                     } elseif ($hasColors) {
-                        // اصنع variant لكل لون
-                        foreach ($request->selected_colors as $colorId) {
-                            $out[] = [
-                                'product_id'   => $productId,
-                                'size_id'      => null,
-                                'color_id'     => (int)$colorId,
-                                'stock'        => $defaultStock,
-                                'price'        => $basePrice,
-                                'is_available' => true,
-                            ];
-                        }
+                        // لا نضيف سجلات بدون size_id
+                        \Log::warning('Skipping color-only variants in fallback (no size_id)');
                         \Log::info('Created default variants for all colors', ['count' => count($out)]);
                     }
                 } else {
-                    // في حالة عدم وجود مقاسات أو ألوان، نصنع variant واحد عام
-                    $out[] = [
-                        'product_id'   => $productId,
-                        'size_id'      => null,
-                        'color_id'     => null,
-                        'stock'        => $defaultStock,
-                        'price'        => $basePrice,
-                        'is_available' => true,
-                    ];
+                    // لا نضيف سجلات بدون size_id و color_id
+                    \Log::warning('Skipping generic variant (no size_id and no color_id)');
                     \Log::info('Created single generic variant as last resort', ['base_price' => $basePrice, 'stock' => $defaultStock]);
                 }
             }

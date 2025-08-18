@@ -209,7 +209,7 @@ function safeOldInt($key, $default = 0) {
                                                         @endforeach
                                                     @endif
                                                 </div>
-                                                <button type="button" class="btn btn-light-secondary btn-sm mt-2" onclick="addDetailInput()">
+                                                <button type="button" class="btn btn-light-secondary btn-sm mt-2" onclick="window.addDetailInput()">
                                                     <i class="fas fa-plus"></i>
                                                     إضافة تفاصيل
                                                 </button>
@@ -236,7 +236,7 @@ function safeOldInt($key, $default = 0) {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button type="button" class="btn btn-light-secondary btn-sm mt-2" onclick="addImageInput()">
+                                                <button type="button" class="btn btn-light-secondary btn-sm mt-2" onclick="window.addImageInput()">
                                                     <i class="fas fa-plus"></i>
                                                     إضافة صورة
                                                 </button>
@@ -287,7 +287,7 @@ function safeOldInt($key, $default = 0) {
                                             </div>
                                             
                                             <div class="text-center mt-3">
-                                                <button type="button" class="btn btn-primary" onclick="addInventoryRow()">
+                                                <button type="button" class="btn btn-primary" onclick="window.addInventoryRow()">
                                                     <i class="fas fa-plus me-2"></i>
                                                     إضافة مقاس ولون جديد
                                                 </button>
@@ -310,7 +310,7 @@ function safeOldInt($key, $default = 0) {
                                         </div>
                                         
                                         <!-- زر تشخيص مؤقت -->
-                                        <button type="button" class="btn btn-warning btn-sm mt-2" onclick="debugFormData()" style="display: block;">
+                                        <button type="button" class="btn btn-warning btn-sm mt-2" onclick="window.debugFormData()" style="display: block;">
                                             <i class="fas fa-bug me-2"></i>
                                             تشخيص البيانات
                                         </button>
@@ -321,7 +321,7 @@ function safeOldInt($key, $default = 0) {
                                 <div class="col-12">
                                     <div class="card border-0 shadow-sm">
                                         <div class="card-body">
-                                            <button type="submit" class="btn btn-primary" onclick="return prepareFormData()">
+                                            <button type="submit" class="btn btn-primary" onclick="return window.prepareFormData()">
                                                 <i class="fas fa-save me-2"></i>
                                                 حفظ المنتج
                                             </button>
@@ -860,12 +860,12 @@ function safeOldInt($key, $default = 0) {
 @section('scripts')
 <script>
     // المتغيرات العامة
-    let selectedSizes = [];
-    let availableSizes = [];
-    let availableColors = [];
-    let imageCount = 1;
-    let inventoryRows = [];
-    let inventoryRowCounter = 0;
+    window.selectedSizes = [];
+    window.availableSizes = [];
+    window.availableColors = [];
+    window.imageCount = 1;
+    window.inventoryRows = [];
+    window.inventoryRowCounter = 0;
 
     // Function to generate slug from product name
     function generateSlug(name) {
@@ -880,7 +880,7 @@ function safeOldInt($key, $default = 0) {
 
 
 
-    function addImageInput() {
+    window.addImageInput = function() {
         const container = document.getElementById('imagesContainer');
         const div = document.createElement('div');
         div.className = 'mb-2';
@@ -899,12 +899,12 @@ function safeOldInt($key, $default = 0) {
         </div>
     `;
         container.appendChild(div);
-        imageCount++;
+        window.imageCount++;
     }
 
 
 
-    function addDetailInput() {
+    window.addDetailInput = function() {
         const container = document.getElementById('detailsContainer');
         const div = document.createElement('div');
         div.className = 'input-group mb-2 shadow-sm';
@@ -957,36 +957,134 @@ function safeOldInt($key, $default = 0) {
         
         // تحميل المقاسات المتاحة من البيانات المرسلة من الخادم
         @if(isset($availableSizes))
-            availableSizes = @json($availableSizes);
+            window.availableSizes = @json($availableSizes);
         @endif
         
         // تحميل الألوان المتاحة من البيانات المرسلة من الخادم
         @if(isset($availableColors) && $availableColors->count() > 0)
-            availableColors = @json($availableColors);
+            window.availableColors = @json($availableColors);
         @else
-            availableColors = [];
+            window.availableColors = [];
         @endif
         
-        console.log('Available sizes:', availableSizes);
-        console.log('Available colors:', availableColors);
+        console.log('Available sizes:', window.availableSizes);
+        console.log('Available colors:', window.availableColors);
         
         // إظهار تفاصيل أكثر في console للمساعدة في التصحيح
-        if (availableSizes.length === 0) {
+        if (window.window.availableSizes.length === 0) {
             console.warn('⚠️ لا توجد مقاسات متاحة في قاعدة البيانات');
         } else {
-            console.log('✅ المقاسات المتاحة:', availableSizes.map(s => `${s.name} (ID: ${s.id})`));
+            console.log('✅ المقاسات المتاحة:', window.window.availableSizes.map(s => `${s.name} (ID: ${s.id})`));
         }
         
-        if (availableColors.length === 0) {
+        if (window.window.availableColors.length === 0) {
             console.warn('⚠️ لا توجد ألوان متاحة في قاعدة البيانات');
         } else {
-            console.log('✅ الألوان المتاحة:', availableColors.map(c => `${c.name} (ID: ${c.id})`));
+            console.log('✅ الألوان المتاحة:', window.window.availableColors.map(c => `${c.name} (ID: ${c.id})`));
         }
+        
+        // تعريف المتغيرات العامة للمخزون
+        if (typeof window.inventoryRows === 'undefined') {
+            window.inventoryRows = [];
+        }
+        
+        if (typeof window.inventoryRowCounter === 'undefined') {
+            window.inventoryRowCounter = 0;
+        }
+        
+        // دالة إضافة صف مخزون جديد
+        window.addInventoryRow = function() {
+            const matrixContainer = document.getElementById('inventoryMatrix');
+            const rowId = 'inventory-row-' + window.inventoryRowCounter++;
+            
+            const rowHtml = `
+                <div class="inventory-row card mb-3" id="${rowId}">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <label class="form-label">المقاس</label>
+                                <select class="form-select size-select" name="inventories[${rowId}][size_id]" required>
+                                    <option value="">اختر المقاس...</option>
+                                    ${window.window.availableSizes.map(size => `
+                                        <option value="${size.id}">${size.name} - ${size.description || ''}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">اللون</label>
+                                <select class="form-select color-select" name="inventories[${rowId}][color_id]" required>
+                                    <option value="">اختر اللون...</option>
+                                    ${window.window.availableColors.map(color => `
+                                        <option value="${color.id}">${color.name} - ${color.description || ''}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">المخزون</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       name="inventories[${rowId}][stock]" 
+                                       placeholder="50"
+                                       min="0"
+                                       required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">السعر (ر.س)</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       name="inventories[${rowId}][price]" 
+                                       placeholder="150"
+                                       step="0.01"
+                                       min="0">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-danger d-block w-100" onclick="window.removeInventoryRow('${rowId}')">
+                                    <i class="fas fa-trash"></i>
+                                    حذف
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            matrixContainer.insertAdjacentHTML('beforeend', rowHtml);
+            window.inventoryRows.push(rowId);
+            
+            console.log('Added inventory row:', rowId);
+        };
+        
+        // دالة حذف صف مخزون
+        window.removeInventoryRow = function(rowId) {
+            if (confirm('هل أنت متأكد من حذف هذا الصف؟')) {
+                const row = document.getElementById(rowId);
+                if (row) {
+                    row.remove();
+                    window.inventoryRows = window.inventoryRows.filter(id => id !== rowId);
+                    console.log('Removed inventory row:', rowId);
+                }
+            }
+        };
+        
+        // دالة تحديث مصفوفة المخزون
+        window.updateInventoryMatrix = function() {
+            const matrixContainer = document.getElementById('inventoryMatrix');
+            if (matrixContainer) {
+                matrixContainer.innerHTML = '';
+                window.inventoryRows = [];
+                window.inventoryRowCounter = 0;
+                
+                // إضافة صف افتراضي واحد
+                window.addInventoryRow();
+                console.log('Inventory matrix updated successfully');
+            }
+        };
         
         // تهيئة النظام الجديد لإدارة المخزون
         console.log('Initializing new inventory system...');
         try {
-            updateInventoryMatrix();
+            window.updateInventoryMatrix();
             console.log('New inventory system initialized successfully');
         } catch (error) {
             console.error('Error initializing new inventory system:', error);
@@ -995,10 +1093,10 @@ function safeOldInt($key, $default = 0) {
         // إضافة مقاس افتراضي عند تحميل الصفحة إذا لم تكن هناك مقاسات (للنظام القديم)
         console.log('Checking if we need to add a default size...');
         try {
-            if (!selectedSizes || selectedSizes.length === 0) {
+            if (!window.selectedSizes || window.selectedSizes.length === 0) {
                 console.log('Adding default size on page load');
                 setTimeout(function() {
-                    addNewSize();
+                    window.addNewSize();
                 }, 500);
             }
         } catch (error) {
@@ -1006,12 +1104,12 @@ function safeOldInt($key, $default = 0) {
         }
         
         // إظهار رسالة للمستخدم إذا لم تكن هناك مقاسات أو ألوان متاحة
-        if (availableSizes.length === 0 || availableColors.length === 0) {
+        if (window.window.availableSizes.length === 0 || window.window.availableColors.length === 0) {
             const message = [];
-            if (availableSizes.length === 0) {
+            if (window.window.availableSizes.length === 0) {
                 message.push('مقاسات');
             }
-            if (availableColors.length === 0) {
+            if (window.window.availableColors.length === 0) {
                 message.push('ألوان');
             }
             
@@ -1033,22 +1131,22 @@ function safeOldInt($key, $default = 0) {
         }
         
         // إذا لم تكن هناك مقاسات متاحة، أضف مقاس افتراضي
-        if (availableSizes.length === 0) {
+        if (window.availableSizes.length === 0) {
             console.log('No available sizes, adding default size');
             addNewSize();
         }
         
         // إذا لم تكن هناك ألوان متاحة، أضف لون افتراضي للمقاس الأول
-        if (availableColors.length === 0 && selectedSizes.length > 0) {
+        if (window.window.availableColors.length === 0 && window.selectedSizes.length > 0) {
             console.log('No available colors, adding default color to first size');
-            const firstSize = selectedSizes[0];
+            const firstSize = window.selectedSizes[0];
             if (firstSize && (!firstSize.colors || firstSize.colors.length === 0)) {
                 addColorToSize(firstSize.id);
             }
         }
         
         // التحقق من وجود مقاسات وألوان متاحة
-        if (availableSizes.length === 0) {
+        if (window.availableSizes.length === 0) {
             console.warn('لا توجد مقاسات متاحة');
             // إظهار رسالة للمستخدم
             const sizeWarning = document.createElement('div');
@@ -1060,7 +1158,7 @@ function safeOldInt($key, $default = 0) {
             }
         }
         
-        if (availableColors.length === 0) {
+        if (window.availableColors.length === 0) {
             console.warn('لا توجد ألوان متاحة');
             // إظهار رسالة للمستخدم
             const colorWarning = document.createElement('div');
@@ -1080,7 +1178,7 @@ function safeOldInt($key, $default = 0) {
             console.log('Found size selects:', sizeSelects.length);
             console.log('Found color selects:', colorSelects.length);
             
-            if (availableSizes.length === 0) {
+            if (window.availableSizes.length === 0) {
                 sizeSelects.forEach(select => {
                     if (select.options.length <= 1) { // فقط "اختر المقاس..."
                         const option = document.createElement('option');
@@ -1093,7 +1191,7 @@ function safeOldInt($key, $default = 0) {
                 });
             }
             
-            if (availableColors.length === 0) {
+            if (window.availableColors.length === 0) {
                 colorSelects.forEach(select => {
                     if (select.options.length <= 1) { // فقط "اختر اللون..."
                         const option = document.createElement('option');
@@ -1108,12 +1206,12 @@ function safeOldInt($key, $default = 0) {
         }, 100);
         
         // إضافة رسالة في أعلى الصفحة إذا لم تكن هناك مقاسات أو ألوان متاحة
-        if (availableSizes.length === 0 || availableColors.length === 0) {
+        if (window.availableSizes.length === 0 || window.availableColors.length === 0) {
             const message = [];
-            if (availableSizes.length === 0) {
+            if (window.availableSizes.length === 0) {
                 message.push('مقاسات');
             }
-            if (availableColors.length === 0) {
+            if (window.availableColors.length === 0) {
                 message.push('ألوان');
             }
             
@@ -1143,7 +1241,7 @@ function safeOldInt($key, $default = 0) {
             console.log('Found size selects:', sizeSelects.length);
             console.log('Found color selects:', colorSelects.length);
             
-            if (availableSizes.length === 0) {
+            if (window.availableSizes.length === 0) {
                 sizeSelects.forEach(select => {
                     if (select.options.length <= 1) { // فقط "اختر المقاس..."
                         const option = document.createElement('option');
@@ -1156,7 +1254,7 @@ function safeOldInt($key, $default = 0) {
                 });
             }
             
-            if (availableColors.length === 0) {
+            if (window.availableColors.length === 0) {
                 colorSelects.forEach(select => {
                     if (select.options.length <= 1) { // فقط "اختر اللون..."
                         const option = document.createElement('option');
@@ -1188,7 +1286,7 @@ function safeOldInt($key, $default = 0) {
     });
 
     // تحديث مصفوفة المقاسات والألوان - التصميم الجديد المبسط
-    function updateSizeColorMatrix() {
+    window.updateSizeColorMatrix = function() {
         try {
             const matrixContainer = document.getElementById('sizeColorMatrix');
             if (!matrixContainer) {
@@ -1308,7 +1406,7 @@ function safeOldInt($key, $default = 0) {
                         المقاس ${sizeIndex + 1}
                         <span class="size-number">${sizeIndex + 1}</span>
                     </div>
-                    <button type="button" class="size-remove-btn" onclick="removeSizeFromCard(${sizeIndex})">
+                    <button type="button" class="size-remove-btn" onclick="window.removeSizeFromCard(${sizeIndex})">
                         <i class="fas fa-times"></i>
                         حذف المقاس
                     </button>
@@ -1316,7 +1414,7 @@ function safeOldInt($key, $default = 0) {
                 
                 <select class="size-select" onchange="updateSizeName(${sizeIndex}, this.value)">
                     <option value="">اختر المقاس...</option>
-                    ${availableSizes.map(s => `
+                    ${window.availableSizes.map(s => `
                         <option value="${s.id}" ${s.id == size.id ? 'selected' : ''}>
                             ${s.name} - ${s.description || ''}
                         </option>
@@ -1333,7 +1431,7 @@ function safeOldInt($key, $default = 0) {
                             <div class="color-item" data-color-id="${color.id}">
                                 <select class="color-select" onchange="updateColorName(this, '${size.id}')">
                                     <option value="">اختر اللون...</option>
-                                    ${availableColors.map(c => `
+                                    ${window.availableColors.map(c => `
                                         <option value="${c.id}" data-hex="${c.code || '#007bff'}" ${c.id == color.id ? 'selected' : ''}>
                                             ${c.name} - ${c.description || ''}
                                         </option>
@@ -1361,13 +1459,13 @@ function safeOldInt($key, $default = 0) {
                                     </div>
                                 </div>
                                 
-                                <button type="button" class="color-remove-btn" onclick="removeColorFromSize('${size.id}', '${color.id}')">
+                                <button type="button" class="color-remove-btn" onclick="window.removeColorFromSize('${size.id}', '${color.id}')">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         `).join('')}
                     </div>
-                    <button type="button" class="add-color-btn" onclick="addColorToSize('${size.id}')">
+                    <button type="button" class="add-color-btn" onclick="window.addColorToSize('${size.id}')">
                         <i class="fas fa-plus me-1"></i>
                         إضافة لون آخر
                     </button>
@@ -1400,15 +1498,15 @@ function safeOldInt($key, $default = 0) {
     }
 
     // حذف مقاس من البطاقة
-    function removeSizeFromCard(sizeIndex) {
+    window.removeSizeFromCard = function(sizeIndex) {
         if (confirm('هل أنت متأكد من حذف هذا المقاس؟')) {
-            selectedSizes.splice(sizeIndex, 1);
-            updateSizeColorMatrix();
+            window.selectedSizes.splice(sizeIndex, 1);
+            window.updateSizeColorMatrix();
         }
     }
 
     // إضافة لون لمقاس معين - التصميم الجديد
-    function addColorToSize(sizeId) {
+    window.addColorToSize = function(sizeId) {
         console.log('Adding color to size:', sizeId);
         console.log('Available sizes:', selectedSizes);
         
@@ -1486,8 +1584,8 @@ function safeOldInt($key, $default = 0) {
         let newColor;
         
         // إذا كانت هناك ألوان متاحة، استخدم أول لون
-        if (availableColors.length > 0) {
-            const firstColor = availableColors[0];
+        if (window.availableColors.length > 0) {
+            const firstColor = window.availableColors[0];
             newColor = {
                 id: firstColor.id,
                 name: firstColor.name,
@@ -1571,7 +1669,7 @@ function safeOldInt($key, $default = 0) {
             
             // إعادة إنشاء المصفوفة كاملة كحل بديل
             console.log('Falling back to full matrix update');
-            updateSizeColorMatrix();
+            window.updateSizeColorMatrix();
             return;
         }
         
@@ -1585,7 +1683,7 @@ function safeOldInt($key, $default = 0) {
         colorItem.innerHTML = `
             <select class="color-select" onchange="updateColorName(this, '${size.id}')">
                 <option value="">اختر اللون...</option>
-                ${availableColors.map(c => `
+                ${window.availableColors.map(c => `
                     <option value="${c.id}" data-hex="${c.code || '#4A5568'}" ${c.id == color.id ? 'selected' : ''}>
                         ${c.name} ${c.description ? '- ' + c.description : ''}
                     </option>
@@ -1613,7 +1711,7 @@ function safeOldInt($key, $default = 0) {
                 </div>
             </div>
             
-            <button type="button" class="color-remove-btn" onclick="removeColorFromSize('${size.id}', '${color.id}')">
+            <button type="button" class="color-remove-btn" onclick="window.removeColorFromSize('${size.id}', '${color.id}')">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -1733,7 +1831,7 @@ function safeOldInt($key, $default = 0) {
     }
 
     // حذف لون من مقاس معين
-    function removeColorFromSize(sizeId, colorId) {
+    window.removeColorFromSize = function(sizeId, colorId) {
         if (confirm('هل أنت متأكد من حذف هذا اللون من المقاس؟')) {
             // العثور على المقاس المحدد - البحث بالـ ID أو بالـ index
             let size = selectedSizes.find(s => s.id === sizeId);
@@ -1772,20 +1870,20 @@ function safeOldInt($key, $default = 0) {
             const colorIndex = size.colors.findIndex(c => c.id === colorId);
             if (colorIndex !== -1) {
                 size.colors.splice(colorIndex, 1);
-                updateSizeColorMatrix();
+                window.updateSizeColorMatrix();
             }
         }
     }
 
     // إضافة مقاس جديد
-    function addNewSize() {
+    window.addNewSize = function() {
         try {
             console.log('Adding new size...');
             let newSize;
             
             // إذا كانت هناك مقاسات متاحة، استخدم أول مقاس
-            if (availableSizes && availableSizes.length > 0) {
-                const firstSize = availableSizes[0];
+            if (window.availableSizes && window.availableSizes.length > 0) {
+                const firstSize = window.availableSizes[0];
                 newSize = {
                     id: firstSize.id,
                     name: firstSize.name,
@@ -1803,17 +1901,17 @@ function safeOldInt($key, $default = 0) {
             }
             
             // التأكد من أن مصفوفة المقاسات المختارة موجودة
-            if (!selectedSizes) {
-                selectedSizes = [];
+            if (!window.selectedSizes) {
+                window.selectedSizes = [];
                 console.log('Initialized selectedSizes array');
             }
             
-            selectedSizes.push(newSize);
+            window.selectedSizes.push(newSize);
             console.log('New size added:', newSize);
-            console.log('Total sizes:', selectedSizes.length);
+            console.log('Total sizes:', window.selectedSizes.length);
             
             // تحديث المصفوفة في واجهة المستخدم
-            updateSizeColorMatrix();
+            window.updateSizeColorMatrix();
             
             return true;
         } catch (error) {
@@ -1910,9 +2008,9 @@ function safeOldInt($key, $default = 0) {
     }
 
     // إعداد البيانات قبل الإرسال
-    function prepareFormData() {
+    window.prepareFormData = function() {
         console.log('🔍 [DEBUG] Preparing form data...');
-        console.log('Selected sizes:', selectedSizes);
+        console.log('Selected sizes:', window.selectedSizes);
         
         const form = document.querySelector('form');
         if (!form) {
@@ -2082,6 +2180,8 @@ function safeOldInt($key, $default = 0) {
         console.log('✅ Form data prepared successfully');
         return true;
     }
+    
+    }); // إغلاق document.addEventListener('DOMContentLoaded') الأول
 
     // إعداد النموذج قبل الإرسال عند التحميل
     document.addEventListener('DOMContentLoaded', function() {
@@ -2089,18 +2189,18 @@ function safeOldInt($key, $default = 0) {
             console.log('DOM loaded, setting up form...');
             
             // تهيئة المتغيرات العامة
-            if (typeof selectedSizes === 'undefined') {
-                selectedSizes = [];
+            if (typeof window.selectedSizes === 'undefined') {
+                window.selectedSizes = [];
                 console.log('Initialized selectedSizes array');
             }
             
-            if (typeof availableSizes === 'undefined') {
-                availableSizes = [];
+            if (typeof window.availableSizes === 'undefined') {
+                window.availableSizes = [];
                 console.log('Initialized availableSizes array');
             }
             
-            if (typeof availableColors === 'undefined') {
-                availableColors = [];
+            if (typeof window.availableColors === 'undefined') {
+                window.availableColors = [];
                 console.log('Initialized availableColors array');
             }
             
@@ -2110,12 +2210,16 @@ function safeOldInt($key, $default = 0) {
                 console.log('Form found, adding submit listener...');
                 form.addEventListener('submit', function(e) {
                     console.log('Form submitted, preparing data...');
+                    // منع إرسال النموذج بشكل افتراضي
+                    e.preventDefault();
+                    
                     const success = prepareFormData();
                     if (success) {
                         console.log('Data prepared successfully, form will be submitted');
+                        form.submit(); // إرسال النموذج يدوياً بعد إعداد البيانات
                     } else {
                         console.error('Failed to prepare form data');
-                        e.preventDefault();
+                        alert('حدث خطأ في إعداد البيانات. يرجى المحاولة مرة أخرى.');
                     }
                 });
             } else {
@@ -2125,110 +2229,102 @@ function safeOldInt($key, $default = 0) {
             console.error('Error in DOMContentLoaded event:', error);
         }
         
-        // إضافة event listener للنموذج نفسه
-        const formElement = document.querySelector('form');
-        if (formElement) {
-            formElement.addEventListener('submit', function(e) {
-                // منع إرسال النموذج بشكل افتراضي
-                e.preventDefault();
-                
-                // إظهار رسالة تحميل
-                const loadingAlert = document.createElement('div');
-                loadingAlert.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-4';
-                loadingAlert.style.zIndex = '9999';
-                loadingAlert.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-2" role="status">
-                            <span class="visually-hidden">جاري التحميل...</span>
-                        </div>
-                        <div>جاري حفظ المنتج...</div>
-                    </div>
-                `;
-                document.body.appendChild(loadingAlert);
-                
-                // التحقق من صحة البيانات
-                if (!validateForm()) {
-                    loadingAlert.remove();
-                    return false;
-                }
-                
-                // إعداد البيانات للمقاسات والألوان
-                prepareFormData();
-                
-                // جمع بيانات النموذج
-                const formData = new FormData(formElement);
-                
-                // إرسال البيانات باستخدام AJAX
-                fetch(formElement.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    loadingAlert.remove();
-                    
-                    if (!response.ok) {
-                        if (response.status === 422) {
-                            // أخطاء التحقق
-                            return response.json().then(data => {
-                                throw new Error(Object.values(data.errors).flat().join('\n'));
-                            });
-                        }
-                        throw new Error('حدث خطأ أثناء حفظ المنتج (رمز الخطأ: ' + response.status + ')');
-                    }
-                    
-                    return response.text();
-                })
-                .then(data => {
-                    // إظهار رسالة نجاح
-                    const successAlert = document.createElement('div');
-                    successAlert.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-4';
-                    successAlert.style.zIndex = '9999';
-                    successAlert.innerHTML = `
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <div>تم إضافة المنتج بنجاح</div>
-                        </div>
-                    `;
-                    document.body.appendChild(successAlert);
-                    
-                    // إزالة الرسالة بعد ثانيتين
-                    setTimeout(() => {
-                        successAlert.remove();
-                        // إعادة توجيه المستخدم إلى صفحة المنتجات
-                        window.location.href = '{{ route("admin.products.index") }}';
-                    }, 2000);
-                })
-                .catch(error => {
-                    loadingAlert.remove();
-                    
-                    // إظهار رسالة خطأ
-                    const errorAlert = document.createElement('div');
-                    errorAlert.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-4';
-                    errorAlert.style.zIndex = '9999';
-                    errorAlert.innerHTML = `
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <div>حدث خطأ أثناء حفظ المنتج: ${error.message}</div>
-                        </div>
-                    `;
-                    document.body.appendChild(errorAlert);
-                    
-                    // إزالة الرسالة بعد 5 ثوان
-                    setTimeout(() => {
-                        errorAlert.remove();
-                    }, 5000);
-                    
-                    console.error('Error:', error);
-                });
-            });
+        // إظهار رسالة تحميل
+        const loadingAlert = document.createElement('div');
+        loadingAlert.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-4';
+        loadingAlert.style.zIndex = '9999';
+        loadingAlert.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <div>جاري حفظ المنتج...</div>
+            </div>
+        `;
+        document.body.appendChild(loadingAlert);
+        
+        // التحقق من صحة البيانات
+        if (!validateForm()) {
+            loadingAlert.remove();
+            return false;
         }
+        
+        // إعداد البيانات للمقاسات والألوان
+        prepareFormData();
+        
+        // جمع بيانات النموذج
+        const formData = new FormData(form);
+        
+        // إرسال البيانات باستخدام AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            loadingAlert.remove();
+            
+            if (!response.ok) {
+                if (response.status === 422) {
+                    // أخطاء التحقق
+                    return response.json().then(data => {
+                        throw new Error(Object.values(data.errors).flat().join('\n'));
+                    });
+                }
+                throw new Error('حدث خطأ أثناء حفظ المنتج (رمز الخطأ: ' + response.status + ')');
+            }
+            
+            return response.text();
+        })
+        .then(data => {
+            // إظهار رسالة نجاح
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-4';
+            successAlert.style.zIndex = '9999';
+            successAlert.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>تم إضافة المنتج بنجاح</div>
+                </div>
+            `;
+            document.body.appendChild(successAlert);
+            
+            // إزالة الرسالة بعد ثانيتين
+            setTimeout(() => {
+                successAlert.remove();
+                // إعادة توجيه المستخدم إلى صفحة المنتجات
+                window.location.href = '{{ route("admin.products.index") }}';
+            }, 2000);
+        })
+        .catch(error => {
+            loadingAlert.remove();
+            
+            // إظهار رسالة خطأ
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-4';
+            errorAlert.style.zIndex = '9999';
+            errorAlert.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div>حدث خطأ أثناء حفظ المنتج: ${error.message}</div>
+                </div>
+            `;
+            document.body.appendChild(errorAlert);
+            
+            // إزالة الرسالة بعد 5 ثوان
+            setTimeout(() => {
+                errorAlert.remove();
+            }, 5000);
+            
+            console.error('Error:', error);
+        });
+    });
 
-        // Add at least one detail input field if none exists
+    // Add at least one detail input field if none exists
         if (document.querySelectorAll('#detailsContainer .input-group').length === 0) {
             addDetailInput();
         }
@@ -2270,320 +2366,66 @@ function safeOldInt($key, $default = 0) {
             }
         }, 1000);
         
-            // دالة إضافة صف مخزون جديد
-    function addInventoryRow() {
-        const matrixContainer = document.getElementById('inventoryMatrix');
-        const rowId = 'inventory-row-' + inventoryRowCounter++;
-        
-        const rowHtml = `
-            <div class="inventory-row card mb-3" id="${rowId}">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-3">
-                            <label class="form-label">المقاس</label>
-                            <select class="form-select size-select" name="inventories[${rowId}][size_id]" required>
-                                <option value="">اختر المقاس...</option>
-                                ${availableSizes.map(size => `
-                                    <option value="${size.id}">${size.name} - ${size.description || ''}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">اللون</label>
-                            <select class="form-select color-select" name="inventories[${rowId}][color_id]" required>
-                                <option value="">اختر اللون...</option>
-                                ${availableColors.map(color => `
-                                    <option value="${color.id}">${color.name} - ${color.description || ''}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">المخزون</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   name="inventories[${rowId}][stock]" 
-                                   placeholder="50"
-                                   min="0"
-                                   required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">السعر (ر.س)</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   name="inventories[${rowId}][price]" 
-                                   placeholder="150"
-                                   step="0.01"
-                                   min="0">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button" class="btn btn-danger d-block w-100" onclick="removeInventoryRow('${rowId}')">
-                                <i class="fas fa-trash"></i>
-                                حذف
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        matrixContainer.insertAdjacentHTML('beforeend', rowHtml);
-        inventoryRows.push(rowId);
-        
-        console.log('Added inventory row:', rowId);
-    }
-    
-    // دالة حذف صف مخزون
-    function removeInventoryRow(rowId) {
-        if (confirm('هل أنت متأكد من حذف هذا الصف؟')) {
-            const row = document.getElementById(rowId);
-            if (row) {
-                row.remove();
-                inventoryRows = inventoryRows.filter(id => id !== rowId);
-                console.log('Removed inventory row:', rowId);
-            }
-        }
-    }
-    
-    // دالة تحديث مصفوفة المخزون
-    function updateInventoryMatrix() {
-        const matrixContainer = document.getElementById('inventoryMatrix');
-        matrixContainer.innerHTML = '';
-        inventoryRows = [];
-        inventoryRowCounter = 0;
-        
-        // إضافة صف افتراضي واحد
-        addInventoryRow();
-    }
+    });
     
     // دالة تشخيص البيانات
     window.debugFormData = function() {
-            console.log('🔍 === تشخيص البيانات ===');
-            console.log('selectedSizes:', selectedSizes);
-            console.log('availableSizes:', availableSizes);
-            console.log('availableColors:', availableColors);
+        console.log('🔍 === تشخيص البيانات ===');
+        console.log('selectedSizes:', window.selectedSizes);
+        console.log('availableSizes:', window.availableSizes);
+        console.log('availableColors:', window.availableColors);
+    };
+    
+    // دالة فحص النموذج
+    window.checkFormInputs = function() {
+        const form = document.querySelector('form');
+        if (form) {
+            const selectedSizesInputs = form.querySelectorAll('input[name="selected_sizes[]"]');
+            const selectedColorsInputs = form.querySelectorAll('input[name="selected_colors[]"]');
+            const stockInputs = form.querySelectorAll('input[name*="stock["]');
+            const priceInputs = form.querySelectorAll('input[name*="price["]');
             
-            const form = document.querySelector('form');
-            if (form) {
-                const selectedSizesInputs = form.querySelectorAll('input[name="selected_sizes[]"]');
-                const selectedColorsInputs = form.querySelectorAll('input[name="selected_colors[]"]');
-                const stockInputs = form.querySelectorAll('input[name*="stock["]');
-                const priceInputs = form.querySelectorAll('input[name*="price["]');
-                
-                console.log('🔍 Inputs found:');
-                console.log('- selected_sizes[]:', selectedSizesInputs.length);
-                console.log('- selected_colors[]:', selectedColorsInputs.length);
-                console.log('- stock inputs:', stockInputs.length);
-                console.log('- price inputs:', priceInputs.length);
-                
-                // طباعة تفاصيل الحقول
-                selectedSizesInputs.forEach((input, index) => {
-                    console.log(`Size ${index + 1}:`, input.value);
-                });
-                
-                selectedColorsInputs.forEach((input, index) => {
-                    console.log(`Color ${index + 1}:`, input.value);
-                });
-                
-                stockInputs.forEach((input, index) => {
-                    console.log(`Stock ${index + 1}:`, input.name, '=', input.value);
-                });
-                
-                priceInputs.forEach((input, index) => {
-                    console.log(`Price ${index + 1}:`, input.name, '=', input.value);
-                });
-                
-                // إظهار النتائج للمستخدم
-                alert(`
+            console.log('🔍 Inputs found:');
+            console.log('- selected_sizes[]:', selectedSizesInputs.length);
+            console.log('- selected_colors[]:', selectedColorsInputs.length);
+            console.log('- stock inputs:', stockInputs.length);
+            console.log('- price inputs:', priceInputs.length);
+            
+            // طباعة تفاصيل الحقول
+            selectedSizesInputs.forEach((input, index) => {
+                console.log(`Size ${index + 1}:`, input.value);
+            });
+            
+            selectedColorsInputs.forEach((input, index) => {
+                console.log(`Color ${index + 1}:`, input.value);
+            });
+            
+            stockInputs.forEach((input, index) => {
+                console.log(`Stock ${index + 1}:`, input.name, '=', input.value);
+            });
+            
+            priceInputs.forEach((input, index) => {
+                console.log(`Price ${index + 1}:`, input.name, '=', input.value);
+            });
+            
+            // إظهار النتائج للمستخدم
+            alert(`
 🔍 تشخيص النموذج:
-- المقاسات في الذاكرة: ${selectedSizes.length}
+- المقاسات في الذاكرة: ${window.selectedSizes.length}
 - حقول selected_sizes: ${selectedSizesInputs.length}
 - حقول selected_colors: ${selectedColorsInputs.length}
 - حقول stock: ${stockInputs.length}
 - حقول price: ${priceInputs.length}
 
 راجع Console للتفاصيل الكاملة
-                `);
-            }
-            
-            // إعداد البيانات تلقائياً
-            console.log('🔍 تحضير البيانات...');
-            prepareFormData();
-            console.log('✅ تم تحضير البيانات!');
-        };
-
-        // دالة إعداد البيانات قبل الإرسال
-        function prepareFormData() {
-            console.log('🔍 [DEBUG] Preparing form data...');
-            console.log('Selected sizes:', selectedSizes);
-            
-            const form = document.getElementById('product-form');
-            if (!form) {
-                console.error('Form not found!');
-                return false;
-            }
-            
-            // إزالة البيانات القديمة
-            const oldInputs = form.querySelectorAll('.dynamic-field');
-            oldInputs.forEach(input => {
-                console.log('Removing old input:', input.name, input.value);
-                input.remove();
-            });
-            
-            // جمع البيانات من DOM مباشرة - تحسين البحث
-            const sizeContainers = document.querySelectorAll('.size-container');
-            const collectedSizes = new Set();
-            const collectedColors = new Set();
-            const collectedStockData = {};
-            const collectedPriceData = {};
-            
-            console.log('Found size containers:', sizeContainers.length);
-            
-            sizeContainers.forEach((container, index) => {
-                const sizeSelect = container.querySelector('.size-select');
-                if (sizeSelect && sizeSelect.value) {
-                    const sizeId = sizeSelect.value;
-                    collectedSizes.add(sizeId);
-                    console.log(`Processing size ${index + 1}:`, sizeId);
-                    
-                    // البحث عن الألوان بطرق مختلفة
-                    let colorItems = container.querySelectorAll('.color-item');
-                    
-                    // إذا لم نجد color-item، جرب البحث في size-colors-container
-                    if (colorItems.length === 0) {
-                        const colorsContainer = container.querySelector('.size-colors-container');
-                        if (colorsContainer) {
-                            colorItems = colorsContainer.querySelectorAll('.color-item');
-                            console.log(`Found ${colorItems.length} colors in size-colors-container`);
-                        }
-                    }
-                    
-                    // إذا لم نجد color-item، جرب البحث في colors-section
-                    if (colorItems.length === 0) {
-                        const colorsSection = container.querySelector('.colors-section');
-                        if (colorsSection) {
-                            colorItems = colorsSection.querySelectorAll('.color-item');
-                            console.log(`Found ${colorItems.length} colors in colors-section`);
-                        }
-                    }
-                    
-                    // إذا لم نجد color-item، جرب البحث في جميع العناصر التي تحتوي على color-select
-                    if (colorItems.length === 0) {
-                        colorItems = container.querySelectorAll('[class*="color"]');
-                        console.log(`Found ${colorItems.length} color-related elements`);
-                    }
-                    
-                    console.log(`Processing ${colorItems.length} color items for size ${sizeId}`);
-                    
-                    colorItems.forEach((colorItem, colorIndex) => {
-                        const colorSelect = colorItem.querySelector('.color-select');
-                        if (colorSelect && colorSelect.value) {
-                            const colorId = colorSelect.value;
-                            collectedColors.add(colorId);
-                            console.log(`Found color ${colorIndex + 1}: ${colorId}`);
-                            
-                            // جمع بيانات المخزون والسعر
-                            const stockInput = colorItem.querySelector('input[name*="stock"]');
-                            const priceInput = colorItem.querySelector('input[name*="price"]');
-                            
-                            if (stockInput && stockInput.value) {
-                                if (!collectedStockData[sizeId]) collectedStockData[sizeId] = {};
-                                collectedStockData[sizeId][colorId] = stockInput.value;
-                                console.log(`Collected stock: ${sizeId}-${colorId} = ${stockInput.value}`);
-                            } else {
-                                console.warn(`No stock value found for size ${sizeId}, color ${colorId}`);
-                            }
-                            
-                            if (priceInput && priceInput.value) {
-                                if (!collectedPriceData[sizeId]) collectedPriceData[sizeId] = {};
-                                collectedPriceData[sizeId][colorId] = priceInput.value;
-                                console.log(`Collected price: ${sizeId}-${colorId} = ${priceInput.value}`);
-                            } else {
-                                console.warn(`No price value found for size ${sizeId}, color ${colorId}`);
-                            }
-                        } else {
-                            console.warn(`Color select not found or empty in color item ${colorIndex + 1}`);
-                        }
-                    });
-                } else {
-                    console.warn(`Size select not found or empty in container ${index + 1}`);
-                }
-            });
-            
-            // إضافة المقاسات المختارة
-            Array.from(collectedSizes).forEach(sizeId => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'selected_sizes[]';
-                input.value = sizeId;
-                input.classList.add('dynamic-field');
-                form.appendChild(input);
-                console.log('Added size input:', sizeId);
-            });
-            
-            // إضافة الألوان المختارة - التنسيق الصحيح للـ Controller
-            Array.from(collectedColors).forEach(colorId => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'selected_colors[]';
-                input.value = colorId;
-                input.classList.add('dynamic-field');
-                form.appendChild(input);
-                console.log('Added color input:', colorId);
-            });
-            
-            // إضافة بيانات المخزون
-            Object.keys(collectedStockData).forEach(sizeId => {
-                Object.keys(collectedStockData[sizeId]).forEach(colorId => {
-                    const stockValue = collectedStockData[sizeId][colorId];
-                    const priceValue = collectedPriceData[sizeId]?.[colorId] || '';
-                    
-                    // إضافة المخزون
-                    const stockInput = document.createElement('input');
-                    stockInput.type = 'hidden';
-                    stockInput.name = `stock[${sizeId}][${colorId}]`;
-                    stockInput.value = stockValue;
-                    stockInput.classList.add('dynamic-field');
-                    form.appendChild(stockInput);
-                    console.log(`Added stock input: stock[${sizeId}][${colorId}] = ${stockValue}`);
-                    
-                    // إضافة السعر إذا كان موجود
-                    if (priceValue) {
-                        const priceInput = document.createElement('input');
-                        priceInput.type = 'hidden';
-                        priceInput.name = `price[${sizeId}][${colorId}]`;
-                        priceInput.value = priceValue;
-                        priceInput.classList.add('dynamic-field');
-                        form.appendChild(priceInput);
-                        console.log(`Added price input: price[${sizeId}][${colorId}] = ${priceValue}`);
-                    }
-                });
-            });
-            
-            // التحقق من البيانات النهائية
-            const finalSizes = form.querySelectorAll('input[name="selected_sizes[]"]');
-            const finalColors = form.querySelectorAll('input[name="selected_colors[]"]');
-            const finalStock = form.querySelectorAll('input[name*="stock["]');
-            const finalPrice = form.querySelectorAll('input[name*="price["]');
-            
-            console.log('🔍 [DEBUG] Final form data summary:');
-            console.log('- Sizes:', finalSizes.length);
-            console.log('- Colors:', finalColors.length);
-            console.log('- Stock fields:', finalStock.length);
-            console.log('- Price fields:', finalPrice.length);
-            
-            // طباعة تفاصيل البيانات
-            finalSizes.forEach(input => console.log('Size:', input.value));
-            finalColors.forEach(input => console.log('Color:', input.value));
-            finalStock.forEach(input => console.log('Stock field:', input.name, '=', input.value));
-            finalPrice.forEach(input => console.log('Price field:', input.name, '=', input.value));
-            
-            console.log('✅ Form data prepared successfully');
-            return true;
+            `);
         }
+    };
+
+        // تم حذف الدالة المكررة - سيتم استخدام الدالة الموجودة أدناه
         
         // دالة إعداد البيانات قبل الإرسال - النظام الجديد
-        function prepareFormData() {
+        window.prepareFormData = function() {
             console.log('🔍 [DEBUG] Preparing form data...');
             
             const form = document.getElementById('product-form');
@@ -2800,70 +2642,10 @@ function safeOldInt($key, $default = 0) {
             return true;
         }
         
-        // إضافة event listener للنموذج
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                console.log('Form submit detected, preparing data...');
-                const success = prepareFormData();
-                if (!success) {
-                    e.preventDefault();
-                    alert('حدث خطأ في إعداد البيانات. يرجى المحاولة مرة أخرى.');
-                    return false;
-                }
-                console.log('Form data prepared, submitting...');
-            });
-        }
-    });
+        // تم نقل event listener للنموذج إلى الأعلى لتجنب التكرار
+    }); // إغلاق document.addEventListener('DOMContentLoaded')
 
-    // الكود الجديد لإعداد البيانات بالشكل المطلوب لـ Laravel
-    function prepareFormDataForLaravel() {
-        // امسح أي hidden inputs قديمة
-        document.querySelectorAll(".dynamic-hidden").forEach(el => el.remove());
-
-        let form = document.getElementById("product-form"); // غيّر ID لو مختلف
-
-        selectedSizes.forEach(size => {
-            // hidden input للمقاس
-            let sizeInput = document.createElement("input");
-            sizeInput.type = "hidden";
-            sizeInput.name = "selected_sizes[]";
-            sizeInput.value = size.id;
-            sizeInput.classList.add("dynamic-hidden");
-            form.appendChild(sizeInput);
-
-            // loop على الألوان
-            size.colors.forEach(color => {
-                // hidden input للون
-                let colorInput = document.createElement("input");
-                colorInput.type = "hidden";
-                colorInput.name = `selected_colors[${size.id}][]`;
-                colorInput.value = color.id;
-                colorInput.classList.add("dynamic-hidden");
-                form.appendChild(colorInput);
-
-                // stock
-                let stockInput = document.createElement("input");
-                stockInput.type = "hidden";
-                stockInput.name = `stock[${size.id}][${color.id}]`;
-                stockInput.value = color.stock || 0;
-                stockInput.classList.add("dynamic-hidden");
-                form.appendChild(stockInput);
-
-                // price
-                let priceInput = document.createElement("input");
-                priceInput.type = "hidden";
-                priceInput.name = `price[${size.id}][${color.id}]`;
-                priceInput.value = color.price || 0;
-                priceInput.classList.add("dynamic-hidden");
-                form.appendChild(priceInput);
-            });
-        });
-    }
-
-    // اربطها قبل السبميت
-    document.getElementById("product-form").addEventListener("submit", function(e) {
-        prepareFormDataForLaravel();
-    });
+    // نهاية كود JavaScript
+    console.log('✅ JavaScript loaded successfully');
 </script>
 @endsection

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار صفحة إنشاء المنتج</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 اختبار صفحة إنشاء المنتج</h1>
+        
+        <div class="test-item info">
+            <h3>📋 خطوات الاختبار:</h3>
+            <ol>
+                <li>افتح صفحة إنشاء منتج جديد</li>
+                <li>تحقق من عدم وجود أخطاء في Console</li>
+                <li>اختر مقاسات وألوان</li>
+                <li>أدخل قيم stock و price</li>
+                <li>اضغط على "تشخيص البيانات"</li>
+                <li>احفظ المنتج</li>
+                <li>تحقق من قاعدة البيانات</li>
+            </ol>
+        </div>
+        
+        <div class="test-item success">
+            <h3>✅ الإصلاحات المطبقة:</h3>
+            <ul>
+                <li>إصلاح مشكلة `updateInventoryMatrix is not defined`</li>
+                <li>إضافة تعريفات مؤقتة للدوال</li>
+                <li>تحسين معالجة الأخطاء</li>
+                <li>إضافة تشخيص شامل</li>
+            </ul>
+        </div>
+        
+        <div class="test-item info">
+            <h3>🔧 كيفية التشخيص:</h3>
+            <p>1. اضغط F12 لفتح Developer Tools</p>
+            <p>2. انتقل إلى تبويب Console</p>
+            <p>3. ابحث عن رسائل الخطأ</p>
+            <p>4. راجع الـ logs في `storage/logs/laravel.log`</p>
+        </div>
+        
+        <div class="test-item">
+            <h3>🧪 اختبار سريع:</h3>
+            <button onclick="testJavaScript()">اختبار JavaScript</button>
+            <button onclick="testFormData()">اختبار البيانات</button>
+            <div id="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        function testJavaScript() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="test-item info">جاري اختبار JavaScript...</div>';
+            
+            try {
+                // اختبار الدوال الأساسية
+                if (typeof updateInventoryMatrix === 'undefined') {
+                    results.innerHTML = '<div class="test-item error">❌ updateInventoryMatrix غير معرفة</div>';
+                } else {
+                    results.innerHTML = '<div class="test-item success">✅ updateInventoryMatrix معرفة</div>';
+                }
+                
+                if (typeof addInventoryRow === 'undefined') {
+                    results.innerHTML += '<div class="test-item error">❌ addInventoryRow غير معرفة</div>';
+                } else {
+                    results.innerHTML += '<div class="test-item success">✅ addInventoryRow معرفة</div>';
+                }
+                
+            } catch (error) {
+                results.innerHTML = '<div class="test-item error">❌ خطأ في الاختبار: ' + error.message + '</div>';
+            }
+        }
+        
+        function testFormData() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="test-item info">اختبار البيانات يتطلب فتح صفحة إنشاء المنتج</div>';
+        }
+    </script>
+</body>
+</html>
+

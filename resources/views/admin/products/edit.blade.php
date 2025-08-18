@@ -799,22 +799,29 @@ function safeOldArray($key, $default = []) {
     // ملء البيانات الموجودة من قاعدة البيانات
     @if(isset($selectedSizes) && count($selectedSizes) > 0)
         // تحضير البيانات للمقاسات والألوان الموجودة
+        console.log('🔍 Loading existing inventory data...');
         @foreach($product->inventory->groupBy('size_id') as $sizeId => $sizeInventories)
+            console.log('Processing size group: {{ $sizeId }}');
             selectedSizes.push({
                 id: {{ $sizeId }},
                 name: '{{ $sizeInventories->first()->size->name ?? "" }}',
                 colors: [
                     @foreach($sizeInventories as $inventory)
+                    @if($inventory->color_id)
                     {
-                        id: {{ $inventory->color_id ?? 'null' }},
+                        id: {{ $inventory->color_id }},
                         name: '{{ $inventory->color->name ?? "" }}',
                         stock: {{ $inventory->stock ?? 0 }},
                         price: {{ $inventory->price ?? 0 }}
                     },
+                    @endif
                     @endforeach
                 ]
             });
         @endforeach
+        console.log('✅ Loaded selectedSizes:', selectedSizes);
+    @else
+        console.log('⚠️ No existing inventory data found');
     @endif
 
     // تحميل المقاسات والألوان المتاحة
@@ -2023,14 +2030,14 @@ function safeOldArray($key, $default = []) {
                 }
                 
                 // إعداد البيانات للمقاسات والألوان
-                prepareFormData(form);
+                prepareFormDataForLaravel();
                 
-                // استعادة بيانات المخزون والأسعار المحفوظة
+                // استعادة بيانات المخزون والأسعار المحفوظة بالشكل الجديد
                 for (const sizeId in stockPriceData) {
                     for (const colorId in stockPriceData[sizeId]) {
                         const data = stockPriceData[sizeId][colorId];
                         
-                        // إضافة أو تحديث حقل المخزون
+                        // إضافة أو تحديث حقل المخزون بالشكل الجديد
                         let stockInput = form.querySelector(`input[name="stock[${sizeId}][${colorId}]"]`);
                         if (!stockInput) {
                             stockInput = document.createElement('input');
@@ -2040,7 +2047,7 @@ function safeOldArray($key, $default = []) {
                         }
                         stockInput.value = data.stock;
                         
-                        // إضافة أو تحديث حقل السعر
+                        // إضافة أو تحديث حقل السعر بالشكل الجديد
                         let priceInput = form.querySelector(`input[name="price[${sizeId}][${colorId}]"]`);
                         if (!priceInput) {
                             priceInput = document.createElement('input');
@@ -2824,31 +2831,47 @@ function safeOldArray($key, $default = []) {
             return true;
         }
         
-        // إضافة event listener للنموذج عند التحميل
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    console.log('Form submit detected, preparing data...');
-                    const success = prepareFormData();
-                    if (!success) {
-                        e.preventDefault();
-                        alert('حدث خطأ في إعداد البيانات. يرجى المحاولة مرة أخرى.');
-                        return false;
-                    }
-                    console.log('Form data prepared, submitting...');
-                });
-            }
-        });
+        // إضافة event listener للنموذج عند التحميل - تم إزالتها لتجنب التضارب
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     const form = document.querySelector('form');
+        //     if (form) {
+        //         form.addEventListener('submit', function(e) {
+        //             console.log('Form submit detected, preparing data...');
+        //             const success = prepareFormData();
+        //             if (!success) {
+        //                 e.preventDefault();
+        //                 alert('حدث خطأ في إعداد البيانات. يرجى المحاولة مرة أخرى.');
+        //                 return false;
+        //             }
+        //             console.log('Form data prepared, submitting...');
+        //         });
+        //     }
+        // });
 
         // الكود الجديد لإعداد البيانات بالشكل المطلوب لـ Laravel
         function prepareFormDataForLaravel() {
+            console.log('🔍 [DEBUG] prepareFormDataForLaravel called');
+            console.log('selectedSizes:', selectedSizes);
+            
             // امسح أي hidden inputs قديمة
             document.querySelectorAll(".dynamic-hidden").forEach(el => el.remove());
 
             let form = document.getElementById("product-form");
+            if (!form) {
+                console.error('Form not found!');
+                return;
+            }
 
+            let totalSizes = 0;
+            let totalColors = 0;
+            let totalStock = 0;
+            let totalPrice = 0;
+
+            // إضافة البيانات بالشكل المتوافق مع Controller
             selectedSizes.forEach(size => {
+                console.log(`Processing size: ${size.id} - ${size.name}`);
+                totalSizes++;
+                
                 // hidden input للمقاس
                 let sizeInput = document.createElement("input");
                 sizeInput.type = "hidden";
@@ -2856,39 +2879,72 @@ function safeOldArray($key, $default = []) {
                 sizeInput.value = size.id;
                 sizeInput.classList.add("dynamic-hidden");
                 form.appendChild(sizeInput);
+                console.log(`Added size input: ${size.id}`);
 
                 // loop على الألوان
-                size.colors.forEach(color => {
-                    // hidden input للون
-                    let colorInput = document.createElement("input");
-                    colorInput.type = "hidden";
-                    colorInput.name = `selected_colors[${size.id}][]`;
-                    colorInput.value = color.id;
-                    colorInput.classList.add("dynamic-hidden");
-                    form.appendChild(colorInput);
+                if (size.colors && Array.isArray(size.colors)) {
+                    size.colors.forEach(color => {
+                        console.log(`Processing color: ${color.id} - ${color.name}`);
+                        totalColors++;
+                        
+                        // hidden input للون - التنسيق الصحيح للـ Controller
+                        let colorInput = document.createElement("input");
+                        colorInput.type = "hidden";
+                        colorInput.name = "selected_colors[]";
+                        colorInput.value = color.id;
+                        colorInput.classList.add("dynamic-hidden");
+                        form.appendChild(colorInput);
+                        console.log(`Added color input: ${color.id}`);
 
-                    // stock
-                    let stockInput = document.createElement("input");
-                    stockInput.type = "hidden";
-                    stockInput.name = `stock[${size.id}][${color.id}]`;
-                    stockInput.value = color.stock || 0;
-                    stockInput.classList.add("dynamic-hidden");
-                    form.appendChild(stockInput);
+                        // إضافة البيانات بالشكل المتوافق مع Controller
+                        // stock[size_id][color_id] - الشكل المطلوب للـ Controller
+                        let stockInput = document.createElement("input");
+                        stockInput.type = "hidden";
+                        stockInput.name = `stock[${size.id}][${color.id}]`;
+                        stockInput.value = color.stock || 0;
+                        stockInput.classList.add("dynamic-hidden");
+                        form.appendChild(stockInput);
+                        totalStock++;
+                        console.log(`Added stock input: stock[${size.id}][${color.id}] = ${color.stock || 0}`);
 
-                    // price
-                    let priceInput = document.createElement("input");
-                    priceInput.type = "hidden";
-                    priceInput.name = `price[${size.id}][${color.id}]`;
-                    priceInput.value = color.price || 0;
-                    priceInput.classList.add("dynamic-hidden");
-                    form.appendChild(priceInput);
-                });
+                        // price[size_id][color_id] - الشكل المطلوب للـ Controller
+                        let priceInput = document.createElement("input");
+                        priceInput.type = "hidden";
+                        priceInput.name = `price[${size.id}][${color.id}]`;
+                        priceInput.value = color.price || 0;
+                        priceInput.classList.add("dynamic-hidden");
+                        form.appendChild(priceInput);
+                        totalPrice++;
+                        console.log(`Added price input: price[${size.id}][${color.id}] = ${color.price || 0}`);
+                    });
+                } else {
+                    console.warn(`No colors array for size: ${size.id}`);
+                }
             });
+            
+            console.log(`✅ prepareFormDataForLaravel completed:`);
+            console.log(`- Sizes added: ${totalSizes}`);
+            console.log(`- Colors added: ${totalColors}`);
+            console.log(`- Stock fields added: ${totalStock}`);
+            console.log(`- Price fields added: ${totalPrice}`);
         }
 
         // اربطها قبل السبميت
         document.getElementById("product-form").addEventListener("submit", function(e) {
+            console.log('🔍 Form submit event triggered');
+            console.log('Preparing form data for Laravel...');
             prepareFormDataForLaravel();
+            
+            // تشخيص إضافي - عدد الحقول المُنشأة
+            let hiddenInputs = document.querySelectorAll('.dynamic-hidden');
+            console.log(`🔍 Total hidden inputs created: ${hiddenInputs.length}`);
+            
+            // عرض تفاصيل الحقول
+            hiddenInputs.forEach((input, index) => {
+                console.log(`Input ${index + 1}: ${input.name} = ${input.value}`);
+            });
+            
+            console.log('✅ Form data prepared, submitting form...');
         });
 
         // دالة لملء البيانات الموجودة عند تحميل الصفحة
@@ -2913,8 +2969,13 @@ function safeOldArray($key, $default = []) {
 
         // تشغيل دالة ملء البيانات عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 DOMContentLoaded event fired');
+            console.log('Initial selectedSizes:', selectedSizes);
+            
             // تأخير قليل للتأكد من تحميل جميع العناصر
             setTimeout(function() {
+                console.log('🔍 Calling populateExistingData after timeout');
+                console.log('selectedSizes before populate:', selectedSizes);
                 populateExistingData();
             }, 500);
         });
@@ -3595,12 +3656,14 @@ function safeOldArray($key, $default = []) {
                 const selectedColorsInputs = form.querySelectorAll('input[name="selected_colors[]"]');
                 const stockInputs = form.querySelectorAll('input[name*="stock["]');
                 const priceInputs = form.querySelectorAll('input[name*="price["]');
+                const inventoriesInputs = form.querySelectorAll('input[name*="inventories["]');
                 
                 console.log('🔍 Inputs found:');
                 console.log('- selected_sizes[]:', selectedSizesInputs.length);
                 console.log('- selected_colors[]:', selectedColorsInputs.length);
                 console.log('- stock inputs:', stockInputs.length);
                 console.log('- price inputs:', priceInputs.length);
+                console.log('- inventories inputs:', inventoriesInputs.length);
                 
                 // طباعة تفاصيل الحقول
                 selectedSizesInputs.forEach((input, index) => {
@@ -3619,6 +3682,10 @@ function safeOldArray($key, $default = []) {
                     console.log(`Price ${index + 1}:`, input.name, '=', input.value);
                 });
                 
+                inventoriesInputs.forEach((input, index) => {
+                    console.log(`Inventory ${index + 1}:`, input.name, '=', input.value);
+                });
+                
                 // إظهار النتائج للمستخدم
                 alert(`
 🔍 تشخيص النموذج:
@@ -3627,6 +3694,7 @@ function safeOldArray($key, $default = []) {
 - حقول selected_colors: ${selectedColorsInputs.length}
 - حقول stock: ${stockInputs.length}
 - حقول price: ${priceInputs.length}
+- حقول inventories: ${inventoriesInputs.length}
 
 راجع Console للتفاصيل الكاملة
                 `);
@@ -3634,8 +3702,23 @@ function safeOldArray($key, $default = []) {
             
             // إعداد البيانات تلقائياً
             console.log('🔍 تحضير البيانات...');
+            console.log('selectedSizes before prepareFormDataForLaravel:', selectedSizes);
             prepareFormDataForLaravel();
             console.log('✅ تم تحضير البيانات!');
+            
+            // التحقق من النتائج بعد التحضير
+            const finalSizes = form.querySelectorAll('input[name="selected_sizes[]"]');
+            const finalColors = form.querySelectorAll('input[name="selected_colors[]"]');
+            const finalStock = form.querySelectorAll('input[name*="stock["]');
+            const finalPrice = form.querySelectorAll('input[name*="price["]');
+            const finalInventories = form.querySelectorAll('input[name*="inventories["]');
+            
+            console.log('🔍 Results after prepareFormDataForLaravel:');
+            console.log('- selected_sizes[]:', finalSizes.length);
+            console.log('- selected_colors[]:', finalColors.length);
+            console.log('- stock inputs:', finalStock.length);
+            console.log('- price inputs:', finalPrice.length);
+            console.log('- inventories inputs:', finalInventories.length);
         };
 </script>
 @endsection
