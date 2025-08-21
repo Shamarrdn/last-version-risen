@@ -83,6 +83,9 @@ class ProductSizeColorInventory extends Model
         
         $this->save();
         
+        // تحديث حالة توفر المنتج الأساسي
+        $this->updateProductAvailability();
+        
         return $this;
     }
     
@@ -100,6 +103,19 @@ class ProductSizeColorInventory extends Model
         
         $this->save();
         
+        // تحديث حالة توفر المنتج الأساسي
+        $this->updateProductAvailability();
+        
         return $this;
+    }
+    
+    /**
+     * تحديث حالة توفر المنتج الأساسي
+     */
+    public function updateProductAvailability()
+    {
+        if ($this->product) {
+            $this->product->updateAvailabilityStatus();
+        }
     }
 }

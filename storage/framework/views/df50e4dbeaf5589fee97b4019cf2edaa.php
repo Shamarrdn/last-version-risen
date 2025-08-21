@@ -1,10 +1,8 @@
-@extends('layouts.customer')
+<?php $__env->startSection('title', 'سلة التسوق'); ?>
 
-@section('title', 'سلة التسوق')
-
-@section('styles')
+<?php $__env->startSection('styles'); ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-<link rel="stylesheet" href="{{ asset('assets/css/customer/cart.css') }}">
+<link rel="stylesheet" href="<?php echo e(asset('assets/css/customer/cart.css')); ?>">
 <style>
   /* Ensure right-to-left (RTL) layout */
   html {
@@ -60,66 +58,66 @@
     }
   }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container py-4">
   <div id="alerts-container"></div>
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="page-title mb-0">سلة التسوق</h2>
-    <span class="text-muted">{{ $cart_items_count ?? 0 }} منتجات</span>
+    <span class="text-muted"><?php echo e($cart_items_count ?? 0); ?> منتجات</span>
   </div>
 
   <div class="cart-container">
-    @if(isset($cart_items) && count($cart_items) > 0)
+    <?php if(isset($cart_items) && count($cart_items) > 0): ?>
     <div class="row">
       <div class="col-12 col-lg-8">
-        @foreach($cart_items as $item)
-        @php
+        <?php $__currentLoopData = $cart_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php
           $itemPrice = $item->unit_price;
           $itemSubtotal = $item->subtotal;
           // Get any available image for the product, not just primary
           $productImage = $item->product->images->first();
           $imagePath = $productImage ? url('storage/' . $productImage->image_path) : url('images/no-image.png');
-        @endphp
-        <div class="cart-item" data-item-id="{{ $item->id }}">
-          <button type="button" class="remove-item" onclick="removeCartItem({{ $item->id }})">
+        ?>
+        <div class="cart-item" data-item-id="<?php echo e($item->id); ?>">
+          <button type="button" class="remove-item" onclick="removeCartItem(<?php echo e($item->id); ?>)">
             <i class="bi bi-x-circle"></i>
           </button>
 
-          <img src="{{ $imagePath }}" alt="{{ $item->product->name }}" class="cart-item-image">
+          <img src="<?php echo e($imagePath); ?>" alt="<?php echo e($item->product->name); ?>" class="cart-item-image">
 
           <div class="cart-item-details">
             <div class="d-flex justify-content-between align-items-start w-100">
               <div>
-                <h5 class="cart-item-title">{{ $item->product->name }}</h5>
+                <h5 class="cart-item-title"><?php echo e($item->product->name); ?></h5>
                 <div class="cart-item-meta">
-                  @if($item->product->category)
-                  <span>{{ $item->product->category->name }}</span>
-                  @endif
-                  @if($item->size)
-                  <span>المقاس: {{ $item->size }}</span>
-                  @endif
-                  @if($item->color)
-                  <span>اللون: {{ $item->color }}</span>
-                  @endif
+                  <?php if($item->product->category): ?>
+                  <span><?php echo e($item->product->category->name); ?></span>
+                  <?php endif; ?>
+                  <?php if($item->size): ?>
+                  <span>المقاس: <?php echo e($item->size); ?></span>
+                  <?php endif; ?>
+                  <?php if($item->color): ?>
+                  <span>اللون: <?php echo e($item->color); ?></span>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
 
             <div class="cart-item-bottom">
               <div class="quantity-control">
-                <button type="button" class="quantity-btn decrease" onclick="updateQuantity({{ $item->id }}, -1)">
+                <button type="button" class="quantity-btn decrease" onclick="updateQuantity(<?php echo e($item->id); ?>, -1)">
                   <i class="bi bi-dash"></i>
                 </button>
-                <input type="number" value="{{ $item->quantity }}" min="1" class="quantity-input"
-                       onchange="updateQuantity({{ $item->id }}, 0, this.value)" readonly>
+                <input type="number" value="<?php echo e($item->quantity); ?>" min="1" class="quantity-input"
+                       onchange="updateQuantity(<?php echo e($item->id); ?>, 0, this.value)" readonly>
                 <button type="button" class="quantity-btn increase" 
-                        onclick="updateQuantity({{ $item->id }}, 1)"
-                        data-product-id="{{ $item->product_id }}"
-                        data-size="{{ $item->size ?? '' }}"
-                        data-color="{{ $item->color ?? '' }}">
+                        onclick="updateQuantity(<?php echo e($item->id); ?>, 1)"
+                        data-product-id="<?php echo e($item->product_id); ?>"
+                        data-size="<?php echo e($item->size ?? ''); ?>"
+                        data-color="<?php echo e($item->color ?? ''); ?>">
                   <i class="bi bi-plus"></i>
                 </button>
               </div>
@@ -128,20 +126,20 @@
                 <div class="d-flex align-items-center">
                   <span class="price-label">سعر الوحدة:</span>
                   <div class="price-box unit-price">
-                    {{ number_format($itemPrice, 2) }} ريال
+                    <?php echo e(number_format($itemPrice, 2)); ?> ريال
                   </div>
                 </div>
                 <div class="d-flex align-items-center">
                   <span class="price-label">الإجمالي الفرعي:</span>
-                  <div class="price-box subtotal" id="price-{{ $item->id }}">
-                    {{ number_format($itemSubtotal, 2) }} ريال
+                  <div class="price-box subtotal" id="price-<?php echo e($item->id); ?>">
+                    <?php echo e(number_format($itemSubtotal, 2)); ?> ريال
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
       </div>
 
       <div class="col-lg-4">
@@ -149,17 +147,17 @@
           <h4>ملخص الطلب</h4>
           <div class="summary-item">
             <span class="summary-label">إجمالي المنتجات</span>
-            <span class="summary-value" id="subtotal">{{ number_format($subtotal, 2) }} ريال</span>
+            <span class="summary-value" id="subtotal"><?php echo e(number_format($subtotal, 2)); ?> ريال</span>
           </div>
           <div class="summary-item">
             <span class="summary-label">الإجمالي الكلي</span>
-            <span class="total-amount" id="total">{{ number_format($total, 2) }} ريال</span>
+            <span class="total-amount" id="total"><?php echo e(number_format($total, 2)); ?> ريال</span>
           </div>
-          <a href="{{ route('checkout.index') }}" class="checkout-btn">
+          <a href="<?php echo e(route('checkout.index')); ?>" class="checkout-btn">
             متابعة الشراء
           </a>
           <div class="continue-shopping">
-            <a href="{{ route('products.index') }}">
+            <a href="<?php echo e(route('products.index')); ?>">
               <i class="bi bi-arrow-right"></i>
               متابعة التسوق
             </a>
@@ -167,24 +165,24 @@
         </div>
       </div>
     </div>
-    @else
+    <?php else: ?>
     <div class="empty-cart">
       <div class="empty-cart-icon">
         <i class="bi bi-cart-x"></i>
       </div>
       <h3>السلة فارغة</h3>
       <p>لم تقم بإضافة أي منتجات إلى سلة التسوق بعد</p>
-      <a href="{{ route('products.index') }}" class="btn">
+      <a href="<?php echo e(route('products.index')); ?>" class="btn">
         تصفح المنتجات
       </a>
     </div>
-    @endif
+    <?php endif; ?>
   </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
 function showAlert(message, type = 'success') {
     const alertsContainer = document.getElementById('alerts-container');
@@ -544,4 +542,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.customer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\ADMIN\Desktop\projects\risenn\RISEN\resources\views/cart/index.blade.php ENDPATH**/ ?>

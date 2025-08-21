@@ -1,6 +1,4 @@
-@extends($adminLayout)
-
-@php
+<?php
 function safeOld($key, $default = '') {
     $value = old($key, $default);
     if (is_array($value)) {
@@ -21,12 +19,12 @@ function safeOldArray($key, $default = []) {
     }
     return $value;
 }
-@endphp
+?>
 
-@section('title', 'تعديل المنتج - ' . $product->name)
-@section('page_title', 'تعديل المنتج: ' . $product->name)
+<?php $__env->startSection('title', 'تعديل المنتج - ' . $product->name); ?>
+<?php $__env->startSection('page_title', 'تعديل المنتج: ' . $product->name); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="content-wrapper">
     <div class="content-header">
         <div class="container-fluid px-0">
@@ -43,11 +41,11 @@ function safeOldArray($key, $default = []) {
                                             تعديل المنتج
                                         </h5>
                                         <div class="actions">
-                                            <a href="{{ route('admin.products.show', $product) }}" class="btn btn-light-info me-2">
+                                            <a href="<?php echo e(route('admin.products.show', $product)); ?>" class="btn btn-light-info me-2">
                                                 <i class="fas fa-eye me-1"></i>
                                                 عرض المنتج
                                             </a>
-                                            <a href="{{ route('admin.products.index') }}" class="btn btn-light-secondary">
+                                            <a href="<?php echo e(route('admin.products.index')); ?>" class="btn btn-light-secondary">
                                                 <i class="fas fa-arrow-right me-1"></i>
                                                 عودة للمنتجات
                                             </a>
@@ -58,34 +56,34 @@ function safeOldArray($key, $default = []) {
                         </div>
 
                         <!-- Add this after the form opening tag -->
-                        @if($errors->any())
+                        <?php if($errors->any()): ?>
                         <div class="alert alert-danger mb-4">
                             <h5 class="alert-heading mb-2">يوجد أخطاء في النموذج:</h5>
                             <ul class="mb-0 ps-3">
-                                @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                                @endforeach
+                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <li><?php echo e($error); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
                         </div>
 
                         <!-- Debug information -->
-                        @if(config('app.debug'))
+                        <?php if(config('app.debug')): ?>
                         <div class="alert alert-info mb-4">
                             <h6>Debug Information:</h6>
-                            <pre>{{ print_r($errors->toArray(), true) }}</pre>
+                            <pre><?php echo e(print_r($errors->toArray(), true)); ?></pre>
                             <h6>Request Data:</h6>
-                            <pre>{{ print_r(request()->all(), true) }}</pre>
+                            <pre><?php echo e(print_r(request()->all(), true)); ?></pre>
                         </div>
-                        @endif
-                        @endif
+                        <?php endif; ?>
+                        <?php endif; ?>
 
                         <!-- Form -->
-                        <form id="product-form" action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data">
-                                            @csrf
-                @method('PUT')
+                        <form id="product-form" action="<?php echo e(route('admin.products.update', $product)); ?>" method="POST" enctype="multipart/form-data">
+                                            <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
                 
                 <!-- حقل مخفي للمخزون العام لتجنب أخطاء JavaScript -->
-                <input type="hidden" name="stock" value="{{ $product->stock ?? 0 }}">
+                <input type="hidden" name="stock" value="<?php echo e($product->stock ?? 0); ?>">
 
                             <div class="row g-4">
                                 <!-- Basic Information -->
@@ -99,59 +97,96 @@ function safeOldArray($key, $default = []) {
                                             <div class="mb-3">
                                                 <label class="form-label">اسم المنتج</label>
                                                 <input type="text" name="name"
-                                                    class="form-control shadow-sm @error('name') is-invalid @enderror"
-                                                    value="{{ safeOld('name', $product->name) }}">
-                                                @error('name')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                    class="form-control shadow-sm <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                                    value="<?php echo e(safeOld('name', $product->name)); ?>">
+                                                <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                             </div>
 
                                             <div class="form-group mb-3">
                                                 <label for="category_id" class="form-label required">التصنيف الرئيسي</label>
-                                                <select id="category_id" name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
+                                                <select id="category_id" name="category_id" class="form-select <?php $__errorArgs = ['category_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
                                                     <option value="">اختر التصنيف الرئيسي</option>
-                                                    @foreach($categories as $category)
-                                                    <option value="{{ $category->id }}" {{ safeOld('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->name }}
+                                                    <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($category->id); ?>" <?php echo e(safeOld('category_id', $product->category_id) == $category->id ? 'selected' : ''); ?>>
+                                                        <?php echo e($category->name); ?>
+
                                                     </option>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
-                                                @error('category_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                <?php $__errorArgs = ['category_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                             </div>
 
                                             <div class="form-group mb-3">
                                                 <label class="form-label">التصنيفات الإضافية (اختياري)</label>
                                                 <div class="card border shadow-sm p-3">
                                                     <div class="row g-2">
-                                                        @foreach($categories as $category)
+                                                        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                         <div class="col-md-4 col-sm-6">
                                                             <div class="form-check">
                                                                 <input type="checkbox"
                                                                     class="form-check-input"
-                                                                    id="category-{{ $category->id }}"
+                                                                    id="category-<?php echo e($category->id); ?>"
                                                                     name="categories[]"
-                                                                    value="{{ $category->id }}"
-                                                                    {{ in_array($category->id, safeOldArray('categories', $selectedCategories)) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="category-{{ $category->id }}">
-                                                                    {{ $category->name }}
+                                                                    value="<?php echo e($category->id); ?>"
+                                                                    <?php echo e(in_array($category->id, safeOldArray('categories', $selectedCategories)) ? 'checked' : ''); ?>>
+                                                                <label class="form-check-label" for="category-<?php echo e($category->id); ?>">
+                                                                    <?php echo e($category->name); ?>
+
                                                                 </label>
                                                             </div>
                                                         </div>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </div>
                                                 </div>
                                                 <small class="form-text text-muted">اختر التصنيفات الإضافية التي تريد إضافة المنتج إليها</small>
-                                                @error('categories')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                <?php $__errorArgs = ['categories'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                             </div>
 
                                             <div class="mb-3">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" id="isAvailable"
-                                                        name="is_available" value="1" {{ safeOld('is_available', $product->is_available) ? 'checked' : '' }}>
+                                                        name="is_available" value="1" <?php echo e(safeOld('is_available', $product->is_available) ? 'checked' : ''); ?>>
                                                     <label class="form-check-label" for="isAvailable">متاح للبيع</label>
                                                 </div>
                                             </div>
@@ -159,11 +194,25 @@ function safeOldArray($key, $default = []) {
                                             <div class="mb-3">
                                                 <label class="form-label">الرابط المختصر (Slug)</label>
                                                 <input type="text" name="slug"
-                                                    class="form-control shadow-sm @error('slug') is-invalid @enderror"
-                                                    value="{{ safeOld('slug', $product->slug) }}" readonly disabled>
-                                                @error('slug')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                    class="form-control shadow-sm <?php $__errorArgs = ['slug'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                                    value="<?php echo e(safeOld('slug', $product->slug)); ?>" readonly disabled>
+                                                <?php $__errorArgs = ['slug'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                                 <div class="form-text">يتم إنشاء الرابط المختصر تلقائياً من اسم المنتج</div>
                                             </div>
                                         </div>
@@ -181,10 +230,17 @@ function safeOldArray($key, $default = []) {
                                             <div class="mb-3">
                                                 <label class="form-label">الوصف</label>
                                                 <textarea name="description" class="form-control shadow-sm"
-    rows="4">{{ safeOld('description', $product->description) }}</textarea>
-                                                @error('description')
-                                                <div class="text-danger small mt-1">{{ $message }}</div>
-                                                @enderror
+    rows="4"><?php echo e(safeOld('description', $product->description)); ?></textarea>
+                                                <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="text-danger small mt-1"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                             </div>
 
                                             <div class="mb-3">
@@ -193,15 +249,29 @@ function safeOldArray($key, $default = []) {
                                                     السعر الأساسي
                                                 </label>
                                                 <div class="input-group shadow-sm">
-                                                    <input type="number" name="base_price" class="form-control @error('base_price') is-invalid @enderror"
+                                                    <input type="number" name="base_price" class="form-control <?php $__errorArgs = ['base_price'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                                         placeholder="السعر الأساسي" step="0.01" min="0"
-                                                        value="{{ safeOld('base_price', $product->base_price) }}">
+                                                        value="<?php echo e(safeOld('base_price', $product->base_price)); ?>">
                                                     <span class="input-group-text">ر.س</span>
                                                 </div>
                                                 <small class="text-muted">سيتم استخدام هذا السعر إذا لم تكن هناك مقاسات بأسعار محددة</small>
-                                                @error('base_price')
-                                                <div class="text-danger small mt-1">{{ $message }}</div>
-                                                @enderror
+                                                <?php $__errorArgs = ['base_price'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="text-danger small mt-1"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                             </div>
 
                                             <!-- تمت إزالة حقل المخزون الفردي - يتم الاعتماد على إدارة المقاسات والألوان والمخزون التفصيلية -->
@@ -216,27 +286,27 @@ function safeOldArray($key, $default = []) {
                                                     <small class="text-muted">أضف تفاصيل إضافية للمنتج مثل الأبعاد، البراند، بلد المنشأ، إلخ...</small>
                                                 </div>
                                                 <div id="detailsContainer">
-                                                    @if(safeOldArray('detail_keys'))
-@foreach(safeOldArray('detail_keys') as $index => $key)
+                                                    <?php if(safeOldArray('detail_keys')): ?>
+<?php $__currentLoopData = safeOldArray('detail_keys'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $key): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <div class="input-group mb-2 shadow-sm">
-                                                                <input type="text" name="detail_keys[]" class="form-control" placeholder="الخاصية" value="{{ $key }}">
-                                                                <input type="text" name="detail_values[]" class="form-control" placeholder="القيمة" value="{{ safeOldArray('detail_values')[$index] ?? '' }}">
+                                                                <input type="text" name="detail_keys[]" class="form-control" placeholder="الخاصية" value="<?php echo e($key); ?>">
+                                                                <input type="text" name="detail_values[]" class="form-control" placeholder="القيمة" value="<?php echo e(safeOldArray('detail_values')[$index] ?? ''); ?>">
                                                                 <button type="button" class="btn btn-light-danger" onclick="this.closest('.input-group').remove()">
                                                                     <i class="fas fa-times"></i>
                                                                 </button>
                                                             </div>
-                                                        @endforeach
-                                                    @elseif($product->details)
-                                                        @foreach($product->details as $key => $value)
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php elseif($product->details): ?>
+                                                        <?php $__currentLoopData = $product->details; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <div class="input-group mb-2 shadow-sm">
-                                                                <input type="text" name="detail_keys[]" class="form-control" placeholder="الخاصية" value="{{ $key }}">
-                                                                <input type="text" name="detail_values[]" class="form-control" placeholder="القيمة" value="{{ $value }}">
+                                                                <input type="text" name="detail_keys[]" class="form-control" placeholder="الخاصية" value="<?php echo e($key); ?>">
+                                                                <input type="text" name="detail_values[]" class="form-control" placeholder="القيمة" value="<?php echo e($value); ?>">
                                                                 <button type="button" class="btn btn-light-danger" onclick="this.closest('.input-group').remove()">
                                                                     <i class="fas fa-times"></i>
                                                                 </button>
                                                             </div>
-                                                        @endforeach
-                                                    @endif
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <button type="button" class="btn btn-light-secondary btn-sm mt-2" onclick="addDetailInput()">
                                                     <i class="fas fa-plus"></i>
@@ -248,28 +318,28 @@ function safeOldArray($key, $default = []) {
                                             <div class="mb-3">
                                                 <label class="form-label">الصور الحالية</label>
                                                 <div class="row g-2 mb-2">
-                                                    @foreach($product->images as $image)
+                                                    <?php $__currentLoopData = $product->images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="col-auto">
                                                         <div class="position-relative">
-                                                            <img src="{{ url('storage/' . $image->image_path) }}"
+                                                            <img src="<?php echo e(url('storage/' . $image->image_path)); ?>"
                                                                 alt="صورة المنتج"
                                                                 class="rounded"
                                                                 style="width: 80px; height: 80px; object-fit: cover;">
                                                             <div class="position-absolute top-0 end-0 p-1">
                                                                 <div class="form-check">
-                                                                    <input type="radio" name="is_primary" value="{{ $image->id }}"
-                                                                        class="form-check-input" @checked($image->is_primary)>
+                                                                    <input type="radio" name="is_primary" value="<?php echo e($image->id); ?>"
+                                                                        class="form-check-input" <?php if($image->is_primary): echo 'checked'; endif; ?>>
                                                                 </div>
                                                             </div>
                                                             <div class="position-absolute bottom-0 start-0 p-1">
                                                                 <div class="form-check">
-                                                                    <input type="checkbox" name="remove_images[]" value="{{ $image->id }}"
+                                                                    <input type="checkbox" name="remove_images[]" value="<?php echo e($image->id); ?>"
                                                                         class="form-check-input">
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </div>
                                                 <div class="small text-muted">
                                                     * حدد الصور للحذف
@@ -281,12 +351,26 @@ function safeOldArray($key, $default = []) {
                                             <!-- New Images -->
                                             <div class="mb-3">
                                                 <label class="form-label">إضافة صور جديدة</label>
-                                                @error('new_images.*')
-                                                <div class="alert alert-danger">{{ $message }}</div>
-                                                @enderror
-                                                @error('is_primary.*')
-                                                <div class="alert alert-danger">{{ $message }}</div>
-                                                @enderror
+                                                <?php $__errorArgs = ['new_images.*'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="alert alert-danger"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                                <?php $__errorArgs = ['is_primary.*'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="alert alert-danger"><?php echo e($message); ?></div>
+                                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                                 <div id="newImagesContainer">
                                                     <div class="mb-2">
                                                         <div class="input-group shadow-sm">
@@ -325,19 +409,19 @@ function safeOldArray($key, $default = []) {
                                             <small class="text-muted">اختر المقاسات والألوان المتاحة وأدخل بيانات المخزون</small>
                                         </div>
 
-                                        @if(isset($availableSizes) && $availableSizes->isEmpty() || isset($availableColors) && $availableColors->isEmpty())
+                                        <?php if(isset($availableSizes) && $availableSizes->isEmpty() || isset($availableColors) && $availableColors->isEmpty()): ?>
                                         <div class="alert alert-warning mt-3">
                                             <i class="fas fa-exclamation-triangle me-2"></i>
                                             <strong>تنبيه:</strong>
-                                            @if(isset($availableSizes) && $availableSizes->isEmpty())
+                                            <?php if(isset($availableSizes) && $availableSizes->isEmpty()): ?>
                                                 لا توجد مقاسات متاحة.
-                                            @endif
-                                            @if(isset($availableColors) && $availableColors->isEmpty())
+                                            <?php endif; ?>
+                                            <?php if(isset($availableColors) && $availableColors->isEmpty()): ?>
                                                 لا توجد ألوان متاحة.
-                                            @endif
+                                            <?php endif; ?>
                                             سيتم إنشاء مقاسات وألوان افتراضية تلقائياً.
                                         </div>
-                                        @endif
+                                        <?php endif; ?>
 
                                         <!-- النظام الجديد لإدارة المخزون -->
                                         <div id="newInventorySystem" class="mt-4">
@@ -401,9 +485,9 @@ function safeOldArray($key, $default = []) {
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('styles')
+<?php $__env->startSection('styles'); ?>
 <link rel="stylesheet" href="/assets/css/admin/products.css">
 <style>
     .color-circle {
@@ -765,15 +849,15 @@ function safeOldArray($key, $default = []) {
         box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
-<script src="{{ asset('assets/js/admin/products.js') }}"></script>
+<?php $__env->startSection('scripts'); ?>
+<script src="<?php echo e(asset('assets/js/admin/products.js')); ?>"></script>
 <script>
-    window.availableSizes = @json($availableSizes ?? []);
-    window.availableColors = @json($availableColors ?? []);
+    window.availableSizes = <?php echo json_encode($availableSizes ?? [], 15, 512) ?>;
+    window.availableColors = <?php echo json_encode($availableColors ?? [], 15, 512) ?>;
 
-    window.existingInventoryData = @json($inventoryMap ?? []);
+    window.existingInventoryData = <?php echo json_encode($inventoryMap ?? [], 15, 512) ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -853,4 +937,6 @@ function safeOldArray($key, $default = []) {
         });
     }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make($adminLayout, array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\ADMIN\Desktop\projects\risenn\RISEN\resources\views/admin/products/edit.blade.php ENDPATH**/ ?>

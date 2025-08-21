@@ -128,6 +128,14 @@ class CartController extends Controller
      */
     protected function findOrCreateVariant($product, $colorId, $sizeId, $variantId = null)
     {
+        // Debug: لوقين المعاملات المرسلة
+        \Log::info('findOrCreateVariant called with:', [
+            'product_id' => $product->id,
+            'color_id' => $colorId,
+            'size_id' => $sizeId,
+            'variant_id' => $variantId
+        ]);
+
         // إذا تم تمرير variant_id مباشرة
         if ($variantId) {
             return \App\Models\ProductSizeColorInventory::find($variantId);
@@ -258,6 +266,16 @@ class CartController extends Controller
         try {
             $product = Product::findOrFail($request->product_id);
 
+            // Debug: لوقين البيانات المستلمة
+            \Log::info('Cart Add Request Data:', [
+                'product_id' => $request->product_id,
+                'color_id' => $request->color_id,
+                'size_id' => $request->size_id,
+                'color' => $request->color,
+                'size' => $request->size,
+                'quantity' => $request->quantity
+            ]);
+
             if (!$product->is_available) {
                 return response()->json([
                     'success' => false,
@@ -266,7 +284,7 @@ class CartController extends Controller
             }
 
             // البحث عن الـ variant المناسب
-            $variant = $this->findOrCreateVariant($product, $request->size_id, $request->color_id);
+            $variant = $this->findOrCreateVariant($product, $request->color_id, $request->size_id);
 
             if (!$variant || !$variant->is_available) {
                 return response()->json([
@@ -309,7 +327,7 @@ class CartController extends Controller
                 $cartItem->save();
             } else {
                 // إنشاء عنصر جديد
-                $cartItem = CartItem::create([
+                $cartItemData = [
                     'cart_id' => $cart->id,
                     'product_id' => $product->id,
                     'variant_id' => $variant->id,
@@ -320,7 +338,15 @@ class CartController extends Controller
                     'color_id' => $request->color_id,
                     'unit_price' => $variant->price,
                     'subtotal' => $variant->price * $request->quantity
-                ]);
+                ];
+
+                // Debug: لوقين البيانات قبل الحفظ
+                \Log::info('Creating CartItem with data:', $cartItemData);
+
+                $cartItem = CartItem::create($cartItemData);
+
+                // Debug: لوقين البيانات بعد الحفظ
+                \Log::info('Created CartItem:', $cartItem->toArray());
             }
 
             // تحديث إجمالي السلة

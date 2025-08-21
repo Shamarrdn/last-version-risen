@@ -454,4 +454,35 @@ class Product extends Model
   {
     return $this->available_stock <= 0;
   }
+
+  /**
+   * حساب التوفر الفعلي من الـ inventory
+   */
+  public function getActualAvailabilityAttribute()
+  {
+    $totalStock = $this->inventory()->sum(\DB::raw('GREATEST(0, stock - consumed_stock)'));
+    return $totalStock > 0;
+  }
+
+  /**
+   * حساب إجمالي المخزون المتاح من الـ inventory
+   */
+  public function getTotalAvailableStockAttribute()
+  {
+    return $this->inventory()->sum(\DB::raw('GREATEST(0, stock - consumed_stock)'));
+  }
+
+  /**
+   * تحديث حالة التوفر تلقائياً
+   */
+  public function updateAvailabilityStatus()
+  {
+    $hasStock = $this->total_available_stock > 0;
+    
+    if ($this->is_available !== $hasStock) {
+      $this->update(['is_available' => $hasStock]);
+    }
+    
+    return $hasStock;
+  }
 }

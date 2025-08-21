@@ -61,6 +61,9 @@ function safeOldInt($key, $default = 0) {
                         <!-- Form -->
                         <form id="product-form" action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
+                            
+                            <!-- حقل مخفي للمخزون العام لتجنب أخطاء JavaScript -->
+                            <input type="hidden" name="stock" value="0">
 
                             <div class="row g-4">
                                 <!-- Basic Information -->
@@ -175,17 +178,7 @@ function safeOldInt($key, $default = 0) {
                                                 @enderror
                                             </div>
 
-                                            <div class="mb-3">
-                                                <label class="form-label">
-                                                    <i class="fas fa-boxes text-primary me-2"></i>
-                                                    المخزون
-                                                </label>
-                                                <input type="number" name="stock" class="form-control @error('stock') is-invalid @enderror" placeholder="كمية المخزون" min="0" step="1" value="{{ safeOldInt('stock', 0) }}" required onchange="this.value = Math.max(0, parseInt(this.value) || 0)">
-                                                <small class="text-muted">حدد كمية المخزون المتاحة لهذا المنتج</small>
-                                                @error('stock')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
+                                            <!-- تمت إزالة حقل المخزون الفردي - يتم الاعتماد على إدارة المقاسات والألوان والمخزون التفصيلية -->
 
                                             <!-- Product Details -->
                                             <div class="mb-3">

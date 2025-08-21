@@ -1,13 +1,11 @@
-@extends('layouts.customer')
+<?php $__env->startSection('title', 'تفاصيل الطلب #' . $order->order_number); ?>
 
-@section('title', 'تفاصيل الطلب #' . $order->order_number)
-
-@section('styles')
+<?php $__env->startSection('styles'); ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <link rel="stylesheet" href="/assets/css/customer/orders.css">
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
 $(document).ready(function() {
     // Setup CSRF token for AJAX requests
@@ -37,14 +35,14 @@ $(document).ready(function() {
     }
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <header class="header-container">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="page-title">تفاصيل الطلب #{{ $order->order_number }}</h2>
-            <a href="{{ route('orders.index') }}" class="btn btn-secondary">
+            <h2 class="page-title">تفاصيل الطلب #<?php echo e($order->order_number); ?></h2>
+            <a href="<?php echo e(route('orders.index')); ?>" class="btn btn-secondary">
                 <i class="bi bi-arrow-right"></i>
                 العودة للطلبات
             </a>
@@ -57,8 +55,8 @@ $(document).ready(function() {
         <div class="order-header">
             <div class="status-section">
                 <h3 class="section-title">حالة الطلب</h3>
-                <span class="status-badge status-{{ $order->order_status }}">
-                    {{ match($order->order_status) {
+                <span class="status-badge status-<?php echo e($order->order_status); ?>">
+                    <?php echo e(match($order->order_status) {
                         'completed' => 'مكتمل',
                         'cancelled' => 'ملغي',
                         'processing' => 'قيد المعالجة',
@@ -68,18 +66,19 @@ $(document).ready(function() {
                         'delivered' => 'تم التوصيل',
                         'returned' => 'مرتجع',
                         default => 'غير معروف'
-                    } }}
+                    }); ?>
+
                 </span>
             </div>
             <div class="order-info mt-3">
-                <p class="order-date">تاريخ الطلب: {{ $order->created_at->format('Y/m/d') }}</p>
+                <p class="order-date">تاريخ الطلب: <?php echo e($order->created_at->format('Y/m/d')); ?></p>
             </div>
-            @if($order->notes)
+            <?php if($order->notes): ?>
             <div class="order-notes mt-3">
                 <h4>ملاحظات:</h4>
-                <p>{{ $order->notes }}</p>
+                <p><?php echo e($order->notes); ?></p>
             </div>
-            @endif
+            <?php endif; ?>
         </div>
 
         <div class="order-details">
@@ -91,11 +90,11 @@ $(document).ready(function() {
                         <div class="shipping-info">
                             <div class="info-item">
                                 <span class="info-label">العنوان:</span>
-                                <span class="info-value">{{ $order->shipping_address }}</span>
+                                <span class="info-value"><?php echo e($order->shipping_address); ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">رقم الهاتف:</span>
-                                <span class="info-value">{{ $order->phone }}</span>
+                                <span class="info-value"><?php echo e($order->phone); ?></span>
                             </div>
                         </div>
                     </div>
@@ -106,34 +105,35 @@ $(document).ready(function() {
                     <div class="info-group">
                         <h3 class="section-title">ملخص الطلب</h3>
                         <div class="order-items">
-                            @foreach($order->items as $item)
+                            <?php $__currentLoopData = $order->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="order-item">
-                                @if($item->product->images->first())
-                                <img src="{{ url('storage/' . $item->product->images->first()->image_path) }}"
-                                    alt="{{ $item->product->name }}"
+                                <?php if($item->product->images->first()): ?>
+                                <img src="<?php echo e(url('storage/' . $item->product->images->first()->image_path)); ?>"
+                                    alt="<?php echo e($item->product->name); ?>"
                                     class="item-image">
-                                @endif
+                                <?php endif; ?>
                                 <div class="item-details">
-                                    <h4 class="item-name">{{ $item->product->name }}</h4>
+                                    <h4 class="item-name"><?php echo e($item->product->name); ?></h4>
                                     <p class="item-price">
-                                        {{ $item->unit_price }} ريال × {{ $item->quantity }}
+                                        <?php echo e($item->unit_price); ?> ريال × <?php echo e($item->quantity); ?>
+
                                     </p>
-                                    @if($item->color || $item->size)
+                                    <?php if($item->color || $item->size): ?>
                                     <p class="item-options">
-                                        @if($item->color)
-                                        <span class="item-color">اللون: {{ $item->color }}</span>
-                                        @endif
-                                        @if($item->size)
-                                        <span class="item-size">المقاس: {{ $item->size }}</span>
-                                        @endif
+                                        <?php if($item->color): ?>
+                                        <span class="item-color">اللون: <?php echo e($item->color); ?></span>
+                                        <?php endif; ?>
+                                        <?php if($item->size): ?>
+                                        <span class="item-size">المقاس: <?php echo e($item->size); ?></span>
+                                        <?php endif; ?>
                                     </p>
-                                    @endif
+                                    <?php endif; ?>
                                     <p class="item-subtotal">
-                                        الإجمالي: {{ $item->subtotal }} ريال
+                                        الإجمالي: <?php echo e($item->subtotal); ?> ريال
                                     </p>
                                 </div>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
 
                         <div class="order-summary mt-4">
@@ -143,48 +143,48 @@ $(document).ready(function() {
                                     <div class="summary-items">
                                         <div class="summary-item d-flex justify-content-between mb-3">
                                             <span>السعر الأصلي:</span>
-                                            <span class="fw-bold">{{ number_format($order->original_amount, 2) }} ريال</span>
+                                            <span class="fw-bold"><?php echo e(number_format($order->original_amount, 2)); ?> ريال</span>
                                         </div>
 
-                                        @if($order->quantity_discount > 0)
+                                        <?php if($order->quantity_discount > 0): ?>
                                         <div class="summary-item d-flex justify-content-between mb-3 text-success">
                                             <span>خصم الكمية:</span>
-                                            <span class="fw-bold">- {{ number_format($order->quantity_discount, 2) }} ريال</span>
+                                            <span class="fw-bold">- <?php echo e(number_format($order->quantity_discount, 2)); ?> ريال</span>
                                         </div>
-                                        @endif
+                                        <?php endif; ?>
 
-                                        @if($order->coupon_discount > 0)
+                                        <?php if($order->coupon_discount > 0): ?>
                                         <div class="summary-item d-flex justify-content-between mb-3 text-success">
                                             <span>خصم الكوبون:</span>
-                                            <span class="fw-bold">- {{ number_format($order->coupon_discount, 2) }} ريال</span>
+                                            <span class="fw-bold">- <?php echo e(number_format($order->coupon_discount, 2)); ?> ريال</span>
                                         </div>
 
-                                        @if($order->coupon_code)
+                                        <?php if($order->coupon_code): ?>
                                         <div class="summary-item d-flex justify-content-between mb-3">
                                             <span>كود الخصم:</span>
-                                            <span class="badge badge-primary">{{ $order->coupon_code }}</span>
+                                            <span class="badge badge-primary"><?php echo e($order->coupon_code); ?></span>
                                         </div>
-                                        @endif
-                                        @endif
+                                        <?php endif; ?>
+                                        <?php endif; ?>
 
                                         <div class="summary-item d-flex justify-content-between fw-bold total-row">
                                             <span>الإجمالي:</span>
-                                            <span>{{ number_format($order->total_amount, 2) }} ريال</span>
+                                            <span><?php echo e(number_format($order->total_amount, 2)); ?> ريال</span>
                                         </div>
                                     </div>
 
-                                    @if($order->quantity_discount > 0 || $order->coupon_discount > 0)
+                                    <?php if($order->quantity_discount > 0 || $order->coupon_discount > 0): ?>
                                     <div class="alert alert-info mt-3 mb-0">
                                         <i class="bi bi-info-circle me-2"></i>
-                                        @if($order->quantity_discount > $order->coupon_discount)
-                                            <span>تم تطبيق خصم الكمية ({{ number_format($order->quantity_discount, 2) }} ريال) لأنه أكبر من خصم الكوبون.</span>
-                                        @elseif($order->coupon_discount > $order->quantity_discount)
-                                            <span>تم تطبيق خصم الكوبون ({{ number_format($order->coupon_discount, 2) }} ريال) لأنه أكبر من خصم الكمية.</span>
-                                        @elseif($order->coupon_discount == $order->quantity_discount && $order->coupon_discount > 0)
-                                            <span>تم تطبيق خصم متساوٍ ({{ number_format($order->coupon_discount, 2) }} ريال) من كلا النوعين.</span>
-                                        @endif
+                                        <?php if($order->quantity_discount > $order->coupon_discount): ?>
+                                            <span>تم تطبيق خصم الكمية (<?php echo e(number_format($order->quantity_discount, 2)); ?> ريال) لأنه أكبر من خصم الكوبون.</span>
+                                        <?php elseif($order->coupon_discount > $order->quantity_discount): ?>
+                                            <span>تم تطبيق خصم الكوبون (<?php echo e(number_format($order->coupon_discount, 2)); ?> ريال) لأنه أكبر من خصم الكمية.</span>
+                                        <?php elseif($order->coupon_discount == $order->quantity_discount && $order->coupon_discount > 0): ?>
+                                            <span>تم تطبيق خصم متساوٍ (<?php echo e(number_format($order->coupon_discount, 2)); ?> ريال) من كلا النوعين.</span>
+                                        <?php endif; ?>
                                     </div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -198,7 +198,7 @@ $(document).ready(function() {
             <h3 class="tracking-title text-center mb-4">تتبع الطلب</h3>
 
             <div class="tracking-stepper">
-                <div class="tracking-step {{ $order->order_status != 'pending' ? 'completed' : '' }}">
+                <div class="tracking-step <?php echo e($order->order_status != 'pending' ? 'completed' : ''); ?>">
                     <div class="step-icon">
                         <i class="bi bi-check-circle-fill"></i>
                     </div>
@@ -209,7 +209,7 @@ $(document).ready(function() {
                     </div>
                 </div>
 
-                <div class="tracking-step {{ in_array($order->order_status, ['processing', 'out_for_delivery', 'on_the_way', 'delivered', 'completed']) ? 'completed' : '' }}">
+                <div class="tracking-step <?php echo e(in_array($order->order_status, ['processing', 'out_for_delivery', 'on_the_way', 'delivered', 'completed']) ? 'completed' : ''); ?>">
                     <div class="step-icon">
                         <i class="bi bi-gear-fill"></i>
                     </div>
@@ -220,7 +220,7 @@ $(document).ready(function() {
                     </div>
                 </div>
 
-                <div class="tracking-step {{ in_array($order->order_status, ['out_for_delivery', 'on_the_way', 'delivered', 'completed']) ? 'completed' : '' }}">
+                <div class="tracking-step <?php echo e(in_array($order->order_status, ['out_for_delivery', 'on_the_way', 'delivered', 'completed']) ? 'completed' : ''); ?>">
                     <div class="step-icon">
                         <i class="bi bi-box-seam-fill"></i>
                     </div>
@@ -231,7 +231,7 @@ $(document).ready(function() {
                     </div>
                 </div>
 
-                <div class="tracking-step {{ in_array($order->order_status, ['on_the_way', 'delivered', 'completed']) ? 'completed' : '' }}">
+                <div class="tracking-step <?php echo e(in_array($order->order_status, ['on_the_way', 'delivered', 'completed']) ? 'completed' : ''); ?>">
                     <div class="step-icon">
                         <i class="bi bi-truck"></i>
                     </div>
@@ -242,7 +242,7 @@ $(document).ready(function() {
                     </div>
                 </div>
 
-                <div class="tracking-step {{ in_array($order->order_status, ['delivered', 'completed']) ? 'completed' : '' }}">
+                <div class="tracking-step <?php echo e(in_array($order->order_status, ['delivered', 'completed']) ? 'completed' : ''); ?>">
                     <div class="step-icon">
                         <i class="bi bi-house-check-fill"></i>
                     </div>
@@ -257,4 +257,6 @@ $(document).ready(function() {
 
 
 </main>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.customer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\ADMIN\Desktop\projects\risenn\RISEN\resources\views/orders/show.blade.php ENDPATH**/ ?>

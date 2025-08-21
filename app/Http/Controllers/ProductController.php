@@ -43,20 +43,137 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        if (!$product->is_available) {
-            abort(404, 'المنتج غير متوفر حالياً');
+        // تحميل البيانات من النظام الجديد مع جميع العلاقات
+        $product->load([
+            'category', 
+            'images', 
+            'inventory.color', 
+            'inventory.size', 
+            'quantityDiscounts'
+        ]);
+
+        // الحصول على معلومات الـ inventory مع التفاصيل الكاملة
+        $inventoryData = $product->inventory()
+            ->with(['color', 'size'])
+            ->get();
+
+        // حساب التوفر الفعلي من الـ inventory
+        $totalAvailableStock = $inventoryData->sum(function($item) {
+            return max(0, $item->stock - $item->consumed_stock);
+        });
+
+        $hasAnyStock = $totalAvailableStock > 0;
+
+        // Debug: إذا لم يكن هناك مخزون، تحقق من النظام القديم
+        if (!$hasAnyStock) {
+            // تحقق من وجود stock في الجدول الأساسي
+            $productHasOldStock = $product->stock && ($product->stock - ($product->consumed_stock ?? 0)) > 0;
+            
+            if ($productHasOldStock) {
+                // استخدم النظام القديم مؤقتاً
+                $hasAnyStock = true;
+                $totalAvailableStock = max(0, $product->stock - ($product->consumed_stock ?? 0));
+            }
         }
 
-        // تحميل البيانات من النظام الجديد
-        $product->load(['category', 'images', 'inventory.color', 'inventory.size', 'quantityDiscounts']);
+        // الحصول على العناصر المتاحة فقط
+        $availableInventoryData = $inventoryData->filter(function($item) {
+            return $item->is_available && ($item->stock - $item->consumed_stock) > 0;
+        });
 
-        // الحصول على الألوان والمقاسات من النظام الجديد
-        $availableColors = $product->available_colors;
-        $availableSizes = $product->available_sizes;
+        // إذا لم توجد بيانات inventory، استخدم النظام القديم
+        if ($availableInventoryData->isEmpty() && $hasAnyStock) {
+            // إنشاء بيانات وهمية للنظام القديم
+            $availableColors = collect();
+            $availableSizes = collect();
+            
+            // إذا كان المنتج يدعم اختيار الألوان، اجلب الألوان العامة
+            if ($product->enable_color_selection) {
+                $availableColors = \App\Models\ProductColor::take(5)->get();
+            }
+            
+            // إذا كان المنتج يدعم اختيار المقاسات، اجلب المقاسات العامة
+            if ($product->enable_size_selection) {
+                $availableSizes = \App\Models\ProductSize::take(6)->get();
+            }
+        } else {
+            // الحصول على الألوان والمقاسات المتاحة
+            $availableColors = $availableInventoryData->pluck('color')->unique('id')->filter();
+            $availableSizes = $availableInventoryData->pluck('size')->unique('id')->filter();
+        }
+
+        // تجميع البيانات لسهولة الوصول - فقط العناصر المتاحة
+        $sizeColorMatrix = [];
+        
+        if ($availableInventoryData->isNotEmpty()) {
+            // النظام الجديد
+            foreach($availableInventoryData as $item) {
+                $sizeId = $item->size_id;
+                $colorId = $item->color_id;
+                
+                if (!isset($sizeColorMatrix[$sizeId])) {
+                    $sizeColorMatrix[$sizeId] = [
+                        'size' => $item->size,
+                        'colors' => []
+                    ];
+                }
+                
+                $sizeColorMatrix[$sizeId]['colors'][$colorId] = [
+                    'color' => $item->color,
+                    'price' => $item->price,
+                    'available_stock' => max(0, $item->stock - $item->consumed_stock),
+                    'variant_id' => $item->id
+                ];
+            }
+        } else if ($hasAnyStock) {
+            // النظام القديم - إنشاء matrix مبسط
+            foreach($availableSizes as $size) {
+                $sizeColorMatrix[$size->id] = [
+                    'size' => $size,
+                    'colors' => []
+                ];
+                
+                foreach($availableColors as $color) {
+                    $sizeColorMatrix[$size->id]['colors'][$color->id] = [
+                        'color' => $color,
+                        'price' => $product->base_price ?? 0,
+                        'available_stock' => $totalAvailableStock,
+                        'variant_id' => null
+                    ];
+                }
+            }
+        }
+
+        // تحديث حالة التوفر في قاعدة البيانات إذا لزم الأمر
+        if (!$hasAnyStock && $product->is_available) {
+            $product->update(['is_available' => false]);
+        } elseif ($hasAnyStock && !$product->is_available) {
+            $product->update(['is_available' => true]);
+        }
+
+        // تحديث قيمة is_available للعرض
+        $product->is_available = $hasAnyStock;
 
         $availableFeatures = $this->productService->getAvailableFeatures($product);
         $relatedProducts = $this->productService->getRelatedProducts($product);
-        $quantityDiscounts = $product->quantityDiscounts()->where('is_active', true)->orderBy('min_quantity')->get();
+        $quantityDiscounts = $product->quantityDiscounts()
+            ->where('is_active', true)
+            ->orderBy('min_quantity')
+            ->get();
+
+        // تحديد السعر للعرض
+        $minPrice = null;
+        $maxPrice = null;
+        
+        if ($availableInventoryData->isNotEmpty()) {
+            // النظام الجديد - من الـ inventory
+            $prices = $availableInventoryData->pluck('price')->filter();
+            $minPrice = $prices->min();
+            $maxPrice = $prices->max();
+        } elseif ($hasAnyStock) {
+            // النظام القديم - من الجدول الأساسي
+            $minPrice = $maxPrice = $product->base_price ?? $product->price ?? 0;
+        }
 
         return view('products.show', compact(
             'product',
@@ -64,7 +181,13 @@ class ProductController extends Controller
             'availableFeatures',
             'quantityDiscounts',
             'availableColors',
-            'availableSizes'
+            'availableSizes',
+            'inventoryData',
+            'availableInventoryData',
+            'sizeColorMatrix',
+            'totalAvailableStock',
+            'minPrice',
+            'maxPrice'
         ));
     }
 
@@ -133,7 +256,9 @@ class ProductController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'color' => 'nullable|string|max:50',
-            'size' => 'nullable|string|max:50'
+            'size' => 'nullable|string|max:50',
+            'color_id' => 'nullable|integer|exists:product_colors,id',
+            'size_id' => 'nullable|integer|exists:product_sizes,id'
         ]);
 
         $result = $this->cartService->addToCart($request);
@@ -197,15 +322,14 @@ class ProductController extends Controller
     /**
      * الحصول على المقاسات المتاحة للون محدد
      */
-    public function getSizesForColor(Request $request)
+    public function getSizesForColor(Request $request, Product $product)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
             'color_id' => 'required|exists:color_options,id'
         ]);
 
         try {
-            $variants = \App\Models\ProductSizeColorInventory::where('product_id', $request->product_id)
+            $variants = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
                 ->where('color_id', $request->color_id)
                 ->where('is_available', true)
                 ->where('stock', '>', 0)
@@ -237,15 +361,14 @@ class ProductController extends Controller
     /**
      * الحصول على الألوان المتاحة للمقاس محدد
      */
-    public function getColorsForSize(Request $request)
+    public function getColorsForSize(Request $request, Product $product)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
             'size_id' => 'required|exists:size_options,id'
         ]);
 
         try {
-            $variants = \App\Models\ProductSizeColorInventory::where('product_id', $request->product_id)
+            $variants = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
                 ->where('size_id', $request->size_id)
                 ->where('is_available', true)
                 ->where('stock', '>', 0)
@@ -256,6 +379,7 @@ class ProductController extends Controller
                 return [
                     'id' => $variant->color_id,
                     'name' => $variant->color->name ?? 'غير محدد',
+                    'code' => $variant->color->code ?? '#007bff',
                     'price' => $variant->price,
                     'available_stock' => $variant->available_stock,
                     'variant_id' => $variant->id
@@ -277,16 +401,15 @@ class ProductController extends Controller
     /**
      * الحصول على تفاصيل الـ variant
      */
-    public function getVariantDetails(Request $request)
+    public function getVariantDetails(Request $request, Product $product)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
             'size_id' => 'nullable|exists:size_options,id',
             'color_id' => 'nullable|exists:color_options,id'
         ]);
 
         try {
-            $variant = \App\Models\ProductSizeColorInventory::where('product_id', $request->product_id)
+            $variant = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
                 ->where('size_id', $request->size_id)
                 ->where('color_id', $request->color_id)
                 ->first();
@@ -314,4 +437,6 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+
 }

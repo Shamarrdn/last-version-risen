@@ -154,6 +154,92 @@ window.removeInventoryRow = function(rowId) {
     }
 };
 
+window.removeExistingInventoryRow = function(rowId, existingId) {
+    if (confirm('هل أنت متأكد من حذف هذا الصف؟ سيتم حذفه نهائياً من قاعدة البيانات.')) {
+        const row = document.getElementById(rowId);
+        if (row && existingId) {
+            // Show loading state
+            const button = row.querySelector('button');
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف...';
+            button.disabled = true;
+
+            // Get product ID from URL
+            const pathParts = window.location.pathname.split('/');
+            const productSlug = pathParts[pathParts.length - 2]; // Get product slug from URL
+
+            // Make AJAX request to delete
+            fetch(`/admin/products/${productSlug}/inventory/${existingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove from DOM
+                    row.remove();
+                    
+                    // Remove from tracking array
+                    if (window.inventoryRows) {
+                        window.inventoryRows = window.inventoryRows.filter(id => id !== rowId);
+                    }
+                    
+                    console.log('Successfully deleted inventory row:', existingId);
+                    
+                    // Show success message
+                    showAlert('تم حذف العنصر بنجاح', 'success');
+                } else {
+                    throw new Error(data.message || 'حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting inventory:', error);
+                
+                // Restore button state
+                button.innerHTML = originalHtml;
+                button.disabled = false;
+                
+                // Show error message
+                showAlert('حدث خطأ أثناء الحذف: ' + error.message, 'error');
+            });
+        } else if (!existingId) {
+            // For new rows (no existing ID), just remove from DOM
+            if (row) {
+                row.remove();
+                if (window.inventoryRows) {
+                    window.inventoryRows = window.inventoryRows.filter(id => id !== rowId);
+                }
+                console.log('Removed new inventory row:', rowId);
+            }
+        }
+    }
+};
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} position-fixed top-0 start-50 translate-middle-x mt-4`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} me-2"></i>
+            <div>${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+
 window.updateInventoryMatrix = function() {
     const matrixContainer = document.getElementById('inventoryMatrix');
     if (matrixContainer) {
@@ -161,8 +247,8 @@ window.updateInventoryMatrix = function() {
         window.inventoryRows = [];
         window.inventoryRowCounter = 0;
 
-        window.addInventoryRow();
-        console.log('Inventory matrix updated successfully');
+        // Removed automatic inventory row addition - user will add manually if needed
+        console.log('Inventory matrix cleared - ready for manual additions');
     }
 };
 
@@ -589,20 +675,17 @@ function validateForm() {
         return false;
     }
 
-    if (!stockInput) {
-        alert('خطأ: لم يتم العثور على حقل المخزون');
-        return false;
+    // إزالة التحقق من حقل المخزون العام - الاعتماد على المخزون التفصيلي
+    if (stockInput && stockInput.offsetParent !== null) {
+        const stockValue = parseInt(stockInput.value) || 0;
+        if (stockValue < 0) {
+            alert('يرجى إدخال قيمة صحيحة للمخزون (0 أو أكثر)');
+            stockInput.focus();
+            return false;
+        }
+        stockInput.value = Math.max(0, stockValue);
+        console.log('Stock value updated to:', stockInput.value);
     }
-
-    const stockValue = parseInt(stockInput.value) || 0;
-    if (stockValue < 0) {
-        alert('يرجى إدخال قيمة صحيحة للمخزون (0 أو أكثر)');
-        stockInput.focus();
-        return false;
-    }
-
-    stockInput.value = Math.max(0, stockValue);
-    console.log('Stock value updated to:', stockInput.value);
 
     const isCreatePage = window.location.href.includes('/create');
     if (isCreatePage) {
@@ -633,8 +716,10 @@ function validateForm() {
         }
 
         if (!hasValidInventory) {
-            alert('يرجى إدخال بيانات صحيحة للمقاسات والألوان والمخزون');
-            return false;
+            const confirmProceed = confirm('لم تقم بإضافة مخزون تفصيلي. هل تريد المتابعة بالمخزون العام فقط؟');
+            if (!confirmProceed) {
+                return false;
+            }
         }
     }
 
@@ -1067,6 +1152,12 @@ document.addEventListener('DOMContentLoaded', function() {
         window.inventoryRowCounter = 0;
     }
 
+    // تحديد نوع الصفحة أولاً
+    const isEditPage = window.location.href.includes('/edit');
+    const isCreatePage = window.location.href.includes('/create');
+
+    console.log('Page type detected:', isEditPage ? 'Edit' : isCreatePage ? 'Create' : 'Unknown');
+
     if (isCreatePage) {
         console.log('Initializing new inventory system for create page...');
         try {
@@ -1077,19 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-
     console.log('Checking if we need to add a default size...');
-    try {
-        if (!window.selectedSizes || window.selectedSizes.length === 0) {
-            console.log('Adding default size on page load');
-            setTimeout(function() {
-                window.addNewSize();
-            }, 500);
-        }
-    } catch (error) {
-        console.error('Error adding default size:', error);
-    }
-
+    // Removed automatic size addition on page load - user will add manually if needed
+    console.log('Auto-add disabled - user will add sizes manually');
 
     const addSizeButton = document.getElementById('addSizeButton');
     if (addSizeButton) {
@@ -1098,52 +1179,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-    const isEditPage = window.location.href.includes('/edit');
-    const isCreatePage = window.location.href.includes('/create');
-
-    console.log('Page type:', isEditPage ? 'Edit' : isCreatePage ? 'Create' : 'Unknown');
-
-
     if (isEditPage) {
 
         setupEditForm();
     } else if (isCreatePage) {
 
-        const form = document.querySelector('form');
+                const form = document.querySelector('form');
         if (form) {
             console.log('Form found, adding submit listener...');
             form.addEventListener('submit', function(e) {
-                console.log('Form submitted, preparing data...');
+                console.log('Form submitted, validating...');
 
-
+                // التحقق من صحة النموذج
                 if (!validateForm()) {
                     e.preventDefault();
+                    console.log('Form validation failed');
                     return false;
                 }
 
+                console.log('✅ Form validation passed');
 
-                e.preventDefault();
-
+                // إعداد البيانات قبل الإرسال
                 try {
+                    console.log('Preparing form data...');
                     const success = window.prepareFormData();
-                    if (success) {
-                        console.log('Data prepared successfully, form will be submitted');
-
-                                
-                        setTimeout(() => {
-
-                            const newForm = form.cloneNode(true);
-                            form.parentNode.replaceChild(newForm, form);
-                            newForm.submit();
-                        }, 100);
-                    } else {
-                        console.error('Failed to prepare form data');
+                    if (!success) {
+                        e.preventDefault();
                         alert('حدث خطأ في إعداد البيانات. يرجى المحاولة مرة أخرى.');
+                        return false;
                     }
+                    console.log('✅ Form data prepared successfully, submitting...');
+                    // السماح للنموذج بالإرسال الطبيعي
                 } catch (error) {
+                    e.preventDefault();
                     console.error('Error preparing form data:', error);
                     alert('حدث خطأ أثناء معالجة البيانات: ' + error.message);
+                    return false;
                 }
             });
         } else {

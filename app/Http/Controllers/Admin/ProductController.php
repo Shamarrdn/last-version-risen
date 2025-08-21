@@ -92,6 +92,11 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('Product store method called', [
+            'data' => $request->all(),
+            'files' => $request->hasFile('images') ? 'Has images' : 'No images'
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -108,7 +113,7 @@ class ProductController extends Controller
             'detail_keys.*' => 'nullable|string|max:255',
             'detail_values.*' => 'nullable|string|max:255',
             'base_price' => 'nullable|numeric|min:0',
-            'stock' => 'required|numeric|min:0|max:999999',
+            'stock' => 'nullable|integer|min:0',
 
             'selected_sizes' => 'nullable|array',
             'selected_sizes.*' => 'exists:size_options,id',
@@ -126,6 +131,7 @@ class ProductController extends Controller
 
             'inventories' => 'nullable|array',
             'inventories.*.*.color_id' => 'nullable|exists:color_options,id',
+            'inventories.*.*.size_id' => 'nullable|exists:size_options,id',
             'inventories.*.*.stock' => 'nullable|integer|min:0',
             'inventories.*.*.price' => 'nullable|numeric|min:0',
         ]);
@@ -155,7 +161,7 @@ class ProductController extends Controller
             $validated['enable_color_selection'] = $request->has('enable_color_selection');
             $validated['enable_size_selection'] = $request->has('enable_size_selection');
             $validated['is_available'] = $request->has('is_available');
-            $validated['stock'] = intval($validated['stock']);
+            $validated['stock'] = intval($request->input('stock', 0));
 
             $product = Product::create($validated);
 
@@ -220,7 +226,16 @@ class ProductController extends Controller
                 }
             }
 
+            // تحديث المخزون العام بناءً على المخزون التفصيلي
+            $totalStock = $product->inventory->sum('stock');
+            $product->update(['stock' => $totalStock]);
+            
             DB::commit();
+            \Log::info('Product created successfully', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'total_stock' => $totalStock
+            ]);
             return redirect()->route('admin.products.index')
                 ->with('success', 'تم إضافة المنتج بنجاح');
         } catch (\Exception $e) {
@@ -315,6 +330,12 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        \Log::info('Product update method called', [
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'request_data' => $request->all()
+        ]);
+        
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -333,7 +354,7 @@ class ProductController extends Controller
                 'detail_keys.*' => 'nullable|string|max:255',
                 'detail_values.*' => 'nullable|string|max:255',
                 'base_price' => 'nullable|numeric|min:0',
-                'stock' => 'required|integer|min:0',
+                // تم إزالة stock validation في التحديث أيضاً
 
                 'selected_sizes' => 'nullable|array',
                 'selected_sizes.*' => 'exists:size_options,id',
@@ -351,8 +372,12 @@ class ProductController extends Controller
 
                 'inventories' => 'nullable|array',
                 'inventories.*.*.color_id' => 'nullable|exists:color_options,id',
+                'inventories.*.*.size_id' => 'nullable|exists:size_options,id',
                 'inventories.*.*.stock' => 'nullable|integer|min:0',
                 'inventories.*.*.price' => 'nullable|numeric|min:0',
+                
+                'delete_inventory_ids' => 'nullable|array',
+                'delete_inventory_ids.*' => 'nullable|integer',
             ]);
 
             DB::beginTransaction();
@@ -385,41 +410,62 @@ class ProductController extends Controller
                 'enable_color_selection' => $request->has('enable_color_selection'),
                 'enable_size_selection' => $request->has('enable_size_selection'),
                 'is_available' => $request->has('is_available'),
-                'stock' => $request->input('stock', 0),
+                // تم إزالة حقل stock - الاعتماد على المخزون التفصيلي فقط
             ]);
 
             $product->categories()->sync(is_array($request->categories) ? $request->categories : []);
 
             if ($request->has('inventories') && is_array($request->inventories)) {
-                foreach ($request->inventories as $rowKey => $inventoryData) {
-                    if (!is_array($inventoryData) || !isset($inventoryData['size_id']) || !isset($inventoryData['color_id'])) {
+                \Log::info('Processing inventories for update', ['inventories' => $request->inventories]);
+                
+                foreach ($request->inventories as $sizeId => $sizeData) {
+                    if (!is_array($sizeData)) {
                         continue;
                     }
+                    
+                    foreach ($sizeData as $colorId => $inventoryData) {
+                        if (!is_array($inventoryData)) {
+                            continue;
+                        }
 
-                    $sizeId = $inventoryData['size_id'];
-                    $colorId = $inventoryData['color_id'];
-                    $stock = $inventoryData['stock'] ?? 0;
-                    $price = $inventoryData['price'] ?? 0;
+                        $actualSizeId = $inventoryData['size_id'] ?? $sizeId;
+                        $actualColorId = $inventoryData['color_id'] ?? $colorId;
+                        $stock = $inventoryData['stock'] ?? 0;
+                        $price = $inventoryData['price'] ?? 0;
 
-                    if (empty($sizeId) || empty($colorId)) {
-                        continue;
-                    }
+                        if (empty($actualSizeId) || empty($actualColorId)) {
+                            continue;
+                        }
 
-                    try {
-                        \App\Models\ProductSizeColorInventory::updateOrCreate(
-                            [
+                        try {
+                            \App\Models\ProductSizeColorInventory::updateOrCreate(
+                                [
+                                    'product_id' => $product->id,
+                                    'size_id'    => $actualSizeId,
+                                    'color_id'   => $actualColorId,
+                                ],
+                                [
+                                    'stock'        => $stock,
+                                    'price'        => $price,
+                                    'is_available' => 1,
+                                ]
+                            );
+                            
+                            \Log::info('Updated inventory', [
                                 'product_id' => $product->id,
-                                'size_id'    => $sizeId,
-                                'color_id'   => $colorId,
-                            ],
-                            [
-                                'stock'        => $stock,
-                                'price'        => $price,
-                                'is_available' => 1,
-                            ]
-                        );
-                    } catch (\Exception $e) {
-                        throw $e;
+                                'size_id' => $actualSizeId,
+                                'color_id' => $actualColorId,
+                                'stock' => $stock,
+                                'price' => $price
+                            ]);
+                        } catch (\Exception $e) {
+                            \Log::error('Failed to update inventory', [
+                                'error' => $e->getMessage(),
+                                'size_id' => $actualSizeId,
+                                'color_id' => $actualColorId
+                            ]);
+                            throw $e;
+                        }
                     }
                 }
             } else {
@@ -502,11 +548,47 @@ class ProductController extends Controller
                 $product->images()->where('id', $request->is_primary)->update(['is_primary' => true]);
             }
 
+            // Handle deletion of existing inventory rows
+            if ($request->has('delete_inventory_ids') && is_array($request->delete_inventory_ids)) {
+                $idsToDelete = array_filter($request->delete_inventory_ids, function($id) {
+                    return !empty($id) && is_numeric($id);
+                });
+                
+                if (!empty($idsToDelete)) {
+                    $deletedCount = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
+                        ->whereIn('id', $idsToDelete)
+                        ->delete();
+                    
+                    \Log::info("Deleted {$deletedCount} inventory rows for product {$product->id}");
+                }
+            }
+
+            // تحديث المخزون العام بناءً على المخزون التفصيلي
+            $totalStock = $product->inventory->sum('stock');
+            $product->update(['stock' => $totalStock]);
+            
             DB::commit();
+            \Log::info('Product updated successfully', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'total_stock' => $totalStock
+            ]);
             return redirect()->route('admin.products.index')
                 ->with('success', 'تم تحديث المنتج بنجاح');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            \Log::error('Product update validation failed', [
+                'product_id' => $product->id,
+                'errors' => $e->errors()
+            ]);
+            return back()->withInput()->withErrors($e->errors());
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Product update failed', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return back()->withInput()
                 ->with('error', 'فشل تحديث المنتج. ' . $e->getMessage());
         }
@@ -900,6 +982,41 @@ class ProductController extends Controller
             if (!empty($ids)) {
                 $deleteCount = $product->inventory()->whereIn('id', $ids)->delete();
             }
+        }
+    }
+
+    public function deleteInventory(Product $product, $inventory)
+    {
+        try {
+            // Find the inventory item by ID and ensure it belongs to this product
+            $inventoryItem = \App\Models\ProductSizeColorInventory::where('product_id', $product->id)
+                ->where('id', $inventory)
+                ->first();
+
+            if (!$inventoryItem) {
+                \Log::warning("Inventory item not found: product_id={$product->id}, inventory_id={$inventory}");
+                return response()->json([
+                    'success' => false,
+                    'message' => 'عنصر المخزون غير موجود'
+                ], 404);
+            }
+
+            // Log the deletion
+            \Log::info("Deleting inventory item: ID={$inventoryItem->id}, Product={$product->name}, Size={$inventoryItem->size_id}, Color={$inventoryItem->color_id}");
+            
+            $inventoryItem->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حذف عنصر المخزون بنجاح'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error deleting inventory: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء حذف عنصر المخزون: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

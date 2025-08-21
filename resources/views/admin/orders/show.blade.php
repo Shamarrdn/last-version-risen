@@ -1258,7 +1258,7 @@ $(document).ready(function() {
         
         if (confirm('هل أنت متأكد من إزالة هذا الصديق؟')) {
             $.ajax({
-                url: '{{ route("admin.orders.friends.remove", [$order->uuid, ""]) }}'.replace('/friends/', '/friends/' + friendId + '/'),
+                url: '{{ url("admin/orders/" . $order->uuid . "/friends") }}/' + friendId,
                 type: 'DELETE',
                 data: {
                     _token: $('meta[name="csrf-token"]').attr('content')

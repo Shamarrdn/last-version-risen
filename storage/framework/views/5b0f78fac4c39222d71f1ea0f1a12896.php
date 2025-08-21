@@ -1,22 +1,20 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', $product->name . ' - risen born in ksa'); ?>
 
-@section('title', $product->name . ' - risen born in ksa')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $product->name }} - risen born in ksa</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo e($product->name); ?> - risen born in ksa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/clothes-platform/style.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/customer/products-show.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/customer/products.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/customer/custom-black-theme.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/clothes-platform/style.css')); ?>?v=<?php echo e(time()); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/customer/products-show.css')); ?>?v=<?php echo e(time()); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/customer/products.css')); ?>?v=<?php echo e(time()); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/customer/custom-black-theme.css')); ?>?v=<?php echo e(time()); ?>">
 
 
     <style>
@@ -609,8 +607,8 @@
         }
     </style>
 </head>
-<body class="{{ auth()->check() ? 'user-logged-in' : '' }}">
-    @include('parts.navbar')
+<body class="<?php echo e(auth()->check() ? 'user-logged-in' : ''); ?>">
+    <?php echo $__env->make('parts.navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <!-- Fixed Buttons Group -->
     <div class="fixed-buttons-group">
@@ -620,12 +618,12 @@
                 0
             </span>
         </button>
-        @auth
+        <?php if(auth()->guard()->check()): ?>
         <a href="/dashboard" class="fixed-dashboard-btn">
             <i class="fas fa-tachometer-alt"></i>
             Dashboard
         </a>
-        @endauth
+        <?php endif; ?>
     </div>
 
 
@@ -648,7 +646,7 @@
                 <span>الإجمالي:</span>
                 <span id="cartTotal">0 ر.س</span>
             </div>
-            <a href="{{ route('checkout.index') }}" class="checkout-btn">
+            <a href="<?php echo e(route('checkout.index')); ?>" class="checkout-btn">
                 <i class="fas fa-shopping-cart ml-2"></i>
                 إتمام الشراء
             </a>
@@ -664,8 +662,8 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/">الرئيسية</a></li>
                 <li class="breadcrumb-item"><a href="/products">المنتجات</a></li>
-                <li class="breadcrumb-item"><a href="/products?category={{ $product->category->slug }}">{{ $product->category->name }}</a></li>
-                <li class="breadcrumb-item active">{{ $product->name }}</li>
+                <li class="breadcrumb-item"><a href="/products?category=<?php echo e($product->category->slug); ?>"><?php echo e($product->category->name); ?></a></li>
+                <li class="breadcrumb-item active"><?php echo e($product->name); ?></li>
             </ol>
         </nav>
 
@@ -674,31 +672,31 @@
             <div class="col-md-6">
                 <div class="product-gallery card">
                     <div class="card-body">
-                        @if($product->images->count() > 0)
+                        <?php if($product->images->count() > 0): ?>
                             <div class="main-image-wrapper mb-3">
-                                <img src="{{ url('storage/' . $product->primary_image->image_path) }}"
-                                    alt="{{ $product->name }}"
+                                <img src="<?php echo e(url('storage/' . $product->primary_image->image_path)); ?>"
+                                    alt="<?php echo e($product->name); ?>"
                                     class="main-product-image"
                                     id="mainImage">
                             </div>
-                            @if($product->images->count() > 1)
+                            <?php if($product->images->count() > 1): ?>
                                 <div class="image-thumbnails">
-                                    @foreach($product->images as $image)
-                                        <div class="thumbnail-wrapper {{ $image->is_primary ? 'active' : '' }}"
-                                            onclick="updateMainImage('{{ url('storage/' . $image->image_path) }}', this)">
-                                            <img src="{{ url('storage/' . $image->image_path) }}"
+                                    <?php $__currentLoopData = $product->images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <div class="thumbnail-wrapper <?php echo e($image->is_primary ? 'active' : ''); ?>"
+                                            onclick="updateMainImage('<?php echo e(url('storage/' . $image->image_path)); ?>', this)">
+                                            <img src="<?php echo e(url('storage/' . $image->image_path)); ?>"
                                                 alt="Product thumbnail"
                                                 class="thumbnail-image">
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @endif
-                        @else
+                            <?php endif; ?>
+                        <?php else: ?>
                             <div class="no-image-placeholder">
                                 <i class="fas fa-image"></i>
                                 <p>لا توجد صور متاحة</p>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -706,61 +704,61 @@
             <!-- Product Details -->
             <div class="col-md-6">
                 <div class="product-info">
-                    <h1 class="product-title">{{ $product->name }}</h1>
+                    <h1 class="product-title"><?php echo e($product->name); ?></h1>
 
                     <div class="product-category d-flex flex-wrap gap-1 align-items-center mb-3">
-                        <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" class="text-decoration-none">
-                            <span class="badge rounded-pill bg-primary">{{ $product->category->name }}</span>
+                        <a href="<?php echo e(route('products.index', ['category' => $product->category->slug])); ?>" class="text-decoration-none">
+                            <span class="badge rounded-pill bg-primary"><?php echo e($product->category->name); ?></span>
                         </a>
-                        @if($product->categories->isNotEmpty())
-                            @foreach($product->categories as $additionalCategory)
-                                @if($additionalCategory->id != $product->category_id)
-                                    <a href="{{ route('products.index', ['category' => $additionalCategory->slug]) }}" class="text-decoration-none">
-                                        <span class="badge rounded-pill bg-light text-dark border">{{ $additionalCategory->name }}</span>
+                        <?php if($product->categories->isNotEmpty()): ?>
+                            <?php $__currentLoopData = $product->categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $additionalCategory): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if($additionalCategory->id != $product->category_id): ?>
+                                    <a href="<?php echo e(route('products.index', ['category' => $additionalCategory->slug])); ?>" class="text-decoration-none">
+                                        <span class="badge rounded-pill bg-light text-dark border"><?php echo e($additionalCategory->name); ?></span>
                                     </a>
-                                @endif
-                            @endforeach
-                        @endif
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Available Coupons Section -->
-                    @php
+                    <?php
                         $availableCoupons = $product->getAvailableCoupons();
-                    @endphp
+                    ?>
 
-                    @if($availableCoupons->isNotEmpty())
+                    <?php if($availableCoupons->isNotEmpty()): ?>
                         <div class="available-coupons mb-4">
                             <h5><i class="fas fa-tags"></i> كوبونات خصم متاحة</h5>
                             <div class="coupon-list">
-                                @foreach($availableCoupons as $coupon)
+                                <?php $__currentLoopData = $availableCoupons; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coupon): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <div class="coupon-item">
                                         <div class="coupon-content">
-                                            <div class="coupon-code">{{ $coupon->code }}</div>
+                                            <div class="coupon-code"><?php echo e($coupon->code); ?></div>
                                             <div class="coupon-value">
-                                                @if($coupon->type === 'percentage')
-                                                    <span class="badge">خصم {{ $coupon->value }}%</span>
-                                                @else
-                                                    <span class="badge">خصم {{ $coupon->value }} ر.س</span>
-                                                @endif
+                                                <?php if($coupon->type === 'percentage'): ?>
+                                                    <span class="badge">خصم <?php echo e($coupon->value); ?>%</span>
+                                                <?php else: ?>
+                                                    <span class="badge">خصم <?php echo e($coupon->value); ?> ر.س</span>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="copy-btn-wrapper">
-                                            <button class="copy-btn" data-code="{{ $coupon->code }}">
+                                            <button class="copy-btn" data-code="<?php echo e($coupon->code); ?>">
                                                 <i class="fas fa-copy"></i> نسخ
                                             </button>
                                         </div>
                                     </div>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                             <small>
                                 <i class="fas fa-info-circle"></i>
                                 يمكنك استخدام هذه الكوبونات عند إتمام الطلب
                             </small>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Quantity Discounts Section -->
-                    @if(isset($quantityDiscounts) && $quantityDiscounts->isNotEmpty())
+                    <?php if(isset($quantityDiscounts) && $quantityDiscounts->isNotEmpty()): ?>
                         <div class="quantity-discounts mb-4">
                             <h5><i class="fas fa-percent"></i> خصومات الكميات</h5>
                             <div class="table-responsive">
@@ -772,24 +770,25 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($quantityDiscounts as $discount)
+                                        <?php $__currentLoopData = $quantityDiscounts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $discount): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <tr>
                                                 <td>
-                                                    @if($discount->max_quantity)
-                                                        {{ $discount->min_quantity }} - {{ $discount->max_quantity }}
-                                                    @else
-                                                        {{ $discount->min_quantity }}+
-                                                    @endif
+                                                    <?php if($discount->max_quantity): ?>
+                                                        <?php echo e($discount->min_quantity); ?> - <?php echo e($discount->max_quantity); ?>
+
+                                                    <?php else: ?>
+                                                        <?php echo e($discount->min_quantity); ?>+
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    @if($discount->type === 'percentage')
-                                                        <span class="badge bg-success">{{ $discount->value }}%</span>
-                                                    @else
-                                                        <span class="badge bg-success">{{ $discount->value }} ر.س</span>
-                                                    @endif
+                                                    <?php if($discount->type === 'percentage'): ?>
+                                                        <span class="badge bg-success"><?php echo e($discount->value); ?>%</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-success"><?php echo e($discount->value); ?> ر.س</span>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -798,61 +797,57 @@
                                 يتم تطبيق خصم الكمية تلقائياً عند إضافة الكمية المطلوبة للسلة
                             </small>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Product Price -->
                     <div class="price-container mb-3">
                         <div class="product-price d-flex align-items-center gap-2">
-                            @php
+                            <?php
                                 $actuallyAvailable = isset($totalAvailableStock) && $totalAvailableStock > 0;
                                 $showPrice = $actuallyAvailable && isset($minPrice) && isset($maxPrice) && $minPrice > 0;
-                            @endphp
-                            @if($showPrice)
-                                @if($minPrice == $maxPrice)
-                                    <span class="amount fs-3 fw-bold text-primary">{{ number_format($minPrice, 2) }}</span>
+                            ?>
+                            <?php if($showPrice): ?>
+                                <?php if($minPrice == $maxPrice): ?>
+                                    <span class="amount fs-3 fw-bold text-primary"><?php echo e(number_format($minPrice, 2)); ?></span>
                                     <span class="currency fs-5 text-muted">ر.س</span>
-                                @else
-                                    <span class="amount fs-3 fw-bold text-primary">{{ number_format($minPrice, 2) }} - {{ number_format($maxPrice, 2) }}</span>
+                                <?php else: ?>
+                                    <span class="amount fs-3 fw-bold text-primary"><?php echo e(number_format($minPrice, 2)); ?> - <?php echo e(number_format($maxPrice, 2)); ?></span>
                                     <span class="currency fs-5 text-muted">ر.س</span>
-                                @endif
-                            @elseif($actuallyAvailable)
-                                @php
+                                <?php endif; ?>
+                            <?php elseif($actuallyAvailable): ?>
+                                <?php
                                     $fallbackPrice = $product->base_price ?? $product->price ?? 0;
-                                @endphp
-                                @if($fallbackPrice > 0)
-                                    <span class="amount fs-3 fw-bold text-primary">{{ number_format($fallbackPrice, 2) }}</span>
+                                ?>
+                                <?php if($fallbackPrice > 0): ?>
+                                    <span class="amount fs-3 fw-bold text-primary"><?php echo e(number_format($fallbackPrice, 2)); ?></span>
                                     <span class="currency fs-5 text-muted">ر.س</span>
                                     <small class="text-muted d-block">السعر الأساسي</small>
-                                @else
+                                <?php else: ?>
                                     <span class="amount fs-3 fw-bold text-warning">اتصل للاستفسار عن السعر</span>
-                                @endif
-                            @else
+                                <?php endif; ?>
+                            <?php else: ?>
                                 <span class="amount fs-3 fw-bold text-danger">غير متوفر</span>
-                            @endif
+                            <?php endif; ?>
                         </div>
-                        @if(isset($availableInventoryData) && $availableInventoryData->isNotEmpty())
+                        <?php if(isset($availableInventoryData) && $availableInventoryData->isNotEmpty()): ?>
                             <small class="text-muted d-block mt-1">
                                 <i class="fas fa-info-circle me-1"></i>
                                 السعر يتغير حسب المقاس واللون المختار
                             </small>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
                     <div class="stock-info mb-4">
-                        @php
+                        <?php
                             $actuallyAvailable = isset($totalAvailableStock) && $totalAvailableStock > 0;
-                        @endphp
-                        <span class="stock-badge {{ $actuallyAvailable ? 'in-stock' : 'out-of-stock' }}" id="productStockBadge">
-                            <i class="fas {{ $actuallyAvailable ? 'fa-check-circle' : 'fa-times-circle' }} me-1"></i>
-                            {{ $actuallyAvailable ? 'متوفر' : 'غير متوفر' }}
+                        ?>
+                        <span class="stock-badge <?php echo e($actuallyAvailable ? 'in-stock' : 'out-of-stock'); ?>" id="productStockBadge">
+                            <i class="fas <?php echo e($actuallyAvailable ? 'fa-check-circle' : 'fa-times-circle'); ?> me-1"></i>
+                            <?php echo e($actuallyAvailable ? 'متوفر' : 'غير متوفر'); ?>
+
                         </span>
-                        {{-- تم إخفاء عرض عدد القطع المتاحة --}}
-                        {{-- @if($actuallyAvailable && isset($totalAvailableStock))
-                            <small class="text-muted ms-2">
-                                <i class="fas fa-boxes me-1"></i>
-                                {{ $totalAvailableStock }} قطعة متاحة
-                            </small>
-                        @endif --}}
+                        
+                        
                     </div>
 
 
@@ -862,11 +857,11 @@
                             <i class="fas fa-info-circle me-2"></i>
                             وصف المنتج
                         </h5>
-                        <p>{{ $product->description }}</p>
+                        <p><?php echo e($product->description); ?></p>
                     </div>
 
                     <!-- Product Details Section -->
-                    @if($product->details && count($product->details) > 0)
+                    <?php if($product->details && count($product->details) > 0): ?>
                     <div class="product-details-section mb-4">
                         <h5 class="section-title">
                             <i class="fas fa-list-ul me-2"></i>
@@ -875,20 +870,20 @@
                         <div class="table-responsive">
                             <table class="table table-bordered table-striped">
                                 <tbody>
-                                    @foreach($product->details as $key => $value)
+                                    <?php $__currentLoopData = $product->details; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <th class="bg-light" style="width: 40%">{{ $key }}</th>
-                                        <td>{{ $value }}</td>
+                                        <th class="bg-light" style="width: 40%"><?php echo e($key); ?></th>
+                                        <td><?php echo e($value); ?></td>
                                     </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Product Features Guide -->
-                    @if(!empty($availableFeatures))
+                    <?php if(!empty($availableFeatures)): ?>
                     <div class="features-guide mb-4">
                         <div class="alert alert-info">
                             <h6 class="alert-heading mb-3">
@@ -896,84 +891,86 @@
                                 ميزات الطلب المتاحة
                             </h6>
                             <ul class="features-list mb-0">
-                                @if($availableFeatures['allow_custom_color'])
+                                <?php if($availableFeatures['allow_custom_color']): ?>
                                 <li class="mb-2">
                                     <i class="fas fa-palette me-2"></i>
                                     يمكنك تحديد لون مخصص
                                 </li>
-                                @endif
+                                <?php endif; ?>
 
-                                @if($availableFeatures['allow_custom_size'])
+                                <?php if($availableFeatures['allow_custom_size']): ?>
                                 <li class="mb-2">
                                     <i class="fas fa-ruler me-2"></i>
                                     يمكنك تحديد مقاس مخصص
                                 </li>
-                                @endif
+                                <?php endif; ?>
 
-                                @if(isset($availableFeatures['colors']) && !empty($availableFeatures['colors']))
+                                <?php if(isset($availableFeatures['colors']) && !empty($availableFeatures['colors'])): ?>
                                 <li class="mb-2">
                                     <i class="fas fa-palette me-2"></i>
-                                    {{ count($availableFeatures['colors']) }} لون متاح للاختيار
+                                    <?php echo e(count($availableFeatures['colors'])); ?> لون متاح للاختيار
                                 </li>
-                                @endif
+                                <?php endif; ?>
 
-                                @if(isset($availableFeatures['sizes']) && !empty($availableFeatures['sizes']))
+                                <?php if(isset($availableFeatures['sizes']) && !empty($availableFeatures['sizes'])): ?>
                                 <li class="mb-2">
                                     <i class="fas fa-ruler-combined me-2"></i>
-                                    {{ count($availableFeatures['sizes']) }} مقاس متاح للاختيار
+                                    <?php echo e(count($availableFeatures['sizes'])); ?> مقاس متاح للاختيار
                                 </li>
-                                @endif
+                                <?php endif; ?>
 
-                                @if($availableFeatures['has_discount'])
+                                <?php if($availableFeatures['has_discount']): ?>
                                 <li class="mb-2">
                                     <i class="fas fa-tags me-2"></i>
                                     خصومات متاحة على هذا المنتج
                                 </li>
-                                @endif
+                                <?php endif; ?>
                             </ul>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- اختيار المقاس -->
-                                @if(isset($sizeColorMatrix) && !empty($sizeColorMatrix))
+                                <?php if(isset($sizeColorMatrix) && !empty($sizeColorMatrix)): ?>
                         <div class="size-selection mb-4">
                             <h5 class="section-title">
                                 <i class="fas fa-ruler me-2"></i>
                                 اختر المقاس
                             </h5>
                             <div class="size-options-container">
-                                    @foreach($sizeColorMatrix as $sizeId => $sizeData)
-                                        @php
+                                    <?php $__currentLoopData = $sizeColorMatrix; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sizeId => $sizeData): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                         $totalStockForSize = collect($sizeData['colors'] ?? [])->sum('available_stock');
                                             $isAvailable = $totalStockForSize > 0;
                                         $sizeName = (isset($sizeData['size']) && $sizeData['size']) ? $sizeData['size']->name : "مقاس {$sizeId}";
-                                        @endphp
-                                    @if(isset($sizeData['size']) && $sizeData['size'])
+                                        ?>
+                                    <?php if(isset($sizeData['size']) && $sizeData['size']): ?>
                                         <div class="size-radio-wrapper">
                                             <input type="radio" 
-                                                   id="size_{{ $sizeId }}" 
+                                                   id="size_<?php echo e($sizeId); ?>" 
                                                    name="product_size" 
-                                                   value="{{ $sizeId }}"
-                                                   data-size-name="{{ $sizeName }}"
-                                                   data-colors="{{ json_encode($sizeData['colors'] ?? []) }}"
-                                                   {{ !$isAvailable ? 'disabled' : '' }}
+                                                   value="<?php echo e($sizeId); ?>"
+                                                   data-size-name="<?php echo e($sizeName); ?>"
+                                                   data-colors="<?php echo e(json_encode($sizeData['colors'] ?? [])); ?>"
+                                                   <?php echo e(!$isAvailable ? 'disabled' : ''); ?>
+
                                                    onchange="handleSizeSelection(this)">
-                                            <label for="size_{{ $sizeId }}" 
-                                                   class="size-radio-label {{ !$isAvailable ? 'disabled' : '' }}">
-                                                {{ $sizeName }}
-                                                @if(!$isAvailable)
+                                            <label for="size_<?php echo e($sizeId); ?>" 
+                                                   class="size-radio-label <?php echo e(!$isAvailable ? 'disabled' : ''); ?>">
+                                                <?php echo e($sizeName); ?>
+
+                                                <?php if(!$isAvailable): ?>
                                                     <small class="text-muted d-block">(غير متوفر)</small>
-                                                @else
-                                                    <small class="text-success d-block">({{ $totalStockForSize }} قطعة)</small>
-                                                @endif
+                                                <?php else: ?>
+                                                    <small class="text-success d-block">(<?php echo e($totalStockForSize); ?> قطعة)</small>
+                                                <?php endif; ?>
                                         </label>
                                         </div>
-                                @endif
-                                @endforeach
+                                <?php endif; ?>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- اختيار اللون - يظهر بعد اختيار المقاس -->
                     <div id="colorSelection" class="color-selection mb-4" style="display: none;">
@@ -999,7 +996,7 @@
                     <input type="hidden" id="selected_color_id" name="color_id" value="">
 
                     <!-- Custom Size Input -->
-                    @if($product->enable_custom_size)
+                    <?php if($product->enable_custom_size): ?>
                         <div class="custom-size-input mb-4">
                             <h5 class="section-title">
                                 <i class="fas fa-ruler me-2"></i>
@@ -1009,7 +1006,7 @@
                                 <input type="text" class="form-control" id="customSize" placeholder="اكتب المقاس المطلوب">
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Quantity Selector -->
                     <div class="quantity-selector mb-4">
@@ -1028,7 +1025,7 @@
                         </div>
                     </div>
 
-                    @auth
+                    <?php if(auth()->guard()->check()): ?>
                     <!-- Add to Cart Button -->
                     <button class="btn btn-primary btn-lg w-100 mb-3" onclick="addToCart()">
                         <i class="fas fa-shopping-cart me-2"></i>
@@ -1036,23 +1033,23 @@
                     </button>
                     
 
-                    @else
+                    <?php else: ?>
                         <!-- Login to Order Button -->
                         <button class="btn btn-primary btn-lg w-100 mb-4"
-                                data-login-url="{{ route('login') }}"
-                                onclick="showLoginPrompt('{{ route('login') }}')"
+                                data-login-url="<?php echo e(route('login')); ?>"
+                                onclick="showLoginPrompt('<?php echo e(route('login')); ?>')"
                                 type="button">
                             <i class="fas fa-shopping-cart me-2"></i>
                             تسجيل الدخول للطلب
                         </button>
-                    @endauth
+                    <?php endif; ?>
 
                 </div>
             </div>
         </div>
     </div>
 
-    @include('parts.footer')
+    <?php echo $__env->make('parts.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <!-- Login Prompt Modal -->
     <div class="modal fade" id="loginPromptModal" tabindex="-1" aria-hidden="true">
@@ -1080,14 +1077,14 @@
     </div>
 
     <!-- Add this hidden input for product ID -->
-    <input type="hidden" id="product-id" value="{{ $product->id }}">
+    <input type="hidden" id="product-id" value="<?php echo e($product->id); ?>">
 
     <!-- Add this hidden input for original product price -->
-    <input type="hidden" id="original-price" value="{{ $product->min_price_from_inventory }}">
+    <input type="hidden" id="original-price" value="<?php echo e($product->min_price_from_inventory); ?>">
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{{ asset('assets/js/index.js') }}?v={{ time() }}"></script>
+    <script src="<?php echo e(asset('assets/js/index.js')); ?>?v=<?php echo e(time()); ?>"></script>
 
     
     <script>
@@ -1097,14 +1094,14 @@
         let selectedVariantId = null;
         let selectedColorName = '';
         let selectedSizeName = '';
-        let currentPrice = {{ $minPrice ?? $product->price ?? 0 }};
+        let currentPrice = <?php echo e($minPrice ?? $product->price ?? 0); ?>;
         
         // متغير لتتبع المخزون المحلي (المخزون - ما تم إضافته للسلة محلياً)
         let localInventoryReduction = {};  // {colorId_sizeId: quantity}
         
         // تحميل المخزون المحلي من Local Storage عند تحميل الصفحة
         function loadLocalInventory() {
-            const productId = {{ $product->id }};
+            const productId = <?php echo e($product->id); ?>;
             const storageKey = `inventory_reduction_${productId}`;
             const savedData = localStorage.getItem(storageKey);
             
@@ -1167,7 +1164,7 @@
         
         // حفظ المخزون المحلي في Local Storage
         function saveLocalInventory() {
-            const productId = {{ $product->id }};
+            const productId = <?php echo e($product->id); ?>;
             const storageKey = `inventory_reduction_${productId}`;
             
             try {
@@ -1208,7 +1205,7 @@
                 return;
             }
 
-            fetch(`/products/{{ $product->slug }}/sizes-for-color?color_id=${colorId}`)
+            fetch(`/products/<?php echo e($product->slug); ?>/sizes-for-color?color_id=${colorId}`)
                 .then(response => response.json())
                 .then(sizesData => {
                     if (sizesData.success) {
@@ -1777,7 +1774,7 @@
 
                 // دالة للتحقق من صلاحية البيانات المحفوظة (بدون مسح تلقائي)
                 function validateLocalInventory() {
-                    const productId = {{ $product->id }};
+                    const productId = <?php echo e($product->id); ?>;
                     const storageKey = `inventory_reduction_${productId}`;
                     const savedData = localStorage.getItem(storageKey);
                     
@@ -1817,7 +1814,7 @@
                 // دالة لمسح بيانات المخزون عند إتمام الطلب فعلياً
                 // يجب استدعاؤها من صفحة إتمام الطلب أو بعد تأكيد الشراء
                 window.clearInventoryOnOrderComplete = function(productId = null) {
-                    const targetProductId = productId || {{ $product->id }};
+                    const targetProductId = productId || <?php echo e($product->id); ?>;
                     const storageKey = `inventory_reduction_${targetProductId}`;
                     
                     console.log('مسح بيانات المخزون للمنتج:', targetProductId);
@@ -1826,7 +1823,7 @@
                     localStorage.removeItem(`${storageKey}_session`);
                     
                     // إذا كان هذا هو المنتج الحالي، قم بإعادة تعيين المتغير
-                    if (targetProductId == {{ $product->id }}) {
+                    if (targetProductId == <?php echo e($product->id); ?>) {
                         localInventoryReduction = {};
                         console.log('تم مسح بيانات المخزون المحلي للمنتج الحالي');
                     }
@@ -1890,13 +1887,13 @@
             console.log('=== Add to Cart Called ===');
             
             // التحقق من تسجيل الدخول
-            @guest
+            <?php if(auth()->guard()->guest()): ?>
                 showToast('يجب تسجيل الدخول أولاً لإضافة المنتج للسلة', 'warning');
                 setTimeout(() => {
-                    window.location.href = '{{ route("login") }}';
+                    window.location.href = '<?php echo e(route("login")); ?>';
                 }, 2000);
                 return;
-            @endguest
+            <?php endif; ?>
             
             const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
             const customColor = document.getElementById('customColor')?.value || '';
@@ -1938,7 +1935,7 @@
             
             // إعداد بيانات المنتج للإرسال
             const cartData = {
-                product_id: {{ $product->id }},
+                product_id: <?php echo e($product->id); ?>,
                 quantity: quantity,
                 size: customSize || selectedSizeName || null,
                 color: customColor || selectedColorName || null
@@ -2035,5 +2032,7 @@
     </script>
 </body>
 </html>
-@endsection
+<?php $__env->stopSection(); ?>
 
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\ADMIN\Desktop\projects\risenn\RISEN\resources\views/products/show.blade.php ENDPATH**/ ?>

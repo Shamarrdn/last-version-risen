@@ -16,8 +16,8 @@ class CartService
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'color_id' => 'nullable|exists:color_options,id',
-            'size_id' => 'nullable|exists:size_options,id',
+            'color_id' => 'nullable|exists:product_colors,id',
+            'size_id' => 'nullable|exists:product_sizes,id',
             'variant_id' => 'nullable|exists:product_size_color_inventory,id'
         ]);
 

@@ -41,6 +41,159 @@ use App\Http\Controllers\OrderTransferController;
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Debug route - مؤقت للفحص
+Route::get('/debug-product-availability', function() {
+    $products = \App\Models\Product::where('name', 'like', '%أحمد%')
+        ->orWhere('slug', 'like', '%ahmd%')
+        ->with(['inventory.size', 'inventory.color'])
+        ->get();
+    
+    if ($products->isEmpty()) {
+        $products = \App\Models\Product::take(3)->with(['inventory.size', 'inventory.color'])->get();
+    }
+    
+    $html = '<h2>فحص حالة المنتجات</h2>';
+    
+    foreach ($products as $product) {
+        $html .= '<div style="border: 1px solid #ccc; padding: 20px; margin: 10px;">';
+        $html .= '<h3>' . $product->name . '</h3>';
+        $html .= '<p><strong>Slug:</strong> ' . $product->slug . '</p>';
+        $html .= '<p><strong>متوفر:</strong> ' . ($product->is_available ? 'نعم ✅' : 'لا ❌') . '</p>';
+        $html .= '<p><strong>المخزون الأساسي:</strong> ' . $product->stock . '</p>';
+        $html .= '<p><strong>المخزون المستهلك:</strong> ' . ($product->consumed_stock ?? 0) . '</p>';
+        $html .= '<p><strong>المخزون المتاح:</strong> ' . $product->available_stock . '</p>';
+        
+        $html .= '<h4>المخزون التفصيلي (' . $product->inventory->count() . ' عنصر):</h4>';
+        
+        if ($product->inventory->count() > 0) {
+            $html .= '<table border="1" style="width:100%; border-collapse:collapse;">';
+            $html .= '<tr><th>المقاس</th><th>اللون</th><th>الكمية</th><th>المستهلك</th><th>المتاح</th><th>متوفر</th><th>السعر</th></tr>';
+            
+            foreach ($product->inventory as $item) {
+                $html .= '<tr>';
+                $html .= '<td>' . ($item->size ? $item->size->name : 'غير محدد') . '</td>';
+                $html .= '<td>' . ($item->color ? $item->color->name : 'غير محدد') . '</td>';
+                $html .= '<td>' . $item->stock . '</td>';
+                $html .= '<td>' . ($item->consumed_stock ?? 0) . '</td>';
+                $html .= '<td>' . $item->available_stock . '</td>';
+                $html .= '<td>' . ($item->is_available ? 'نعم ✅' : 'لا ❌') . '</td>';
+                $html .= '<td>' . $item->price . '</td>';
+                $html .= '</tr>';
+            }
+            $html .= '</table>';
+        } else {
+            $html .= '<p>لا يوجد مخزون تفصيلي</p>';
+        }
+        
+        $html .= '</div>';
+    }
+    
+    return $html;
+});
+
+// Route لإصلاح حالة توفر المنتجات - مؤقت
+Route::get('/fix-product-availability', function() {
+    $fixedCount = 0;
+    $products = \App\Models\Product::with('inventory')->get();
+    
+    foreach ($products as $product) {
+        $oldStatus = $product->is_available;
+        
+        // التحقق من وجود مخزون متاح
+        $hasAvailableStock = $product->inventory()
+            ->where('is_available', true)
+            ->where('stock', '>', 0)
+            ->whereRaw('stock > COALESCE(consumed_stock, 0)')
+            ->exists();
+        
+        // إذا كان هناك مخزون متاح ولكن المنتج غير متوفر، قم بتفعيله
+        if ($hasAvailableStock && !$product->is_available) {
+            $product->is_available = true;
+            $product->save();
+            $fixedCount++;
+        }
+        // إذا لم يكن هناك مخزون متاح ولكن المنتج متوفر، قم بإلغاء تفعيله
+        elseif (!$hasAvailableStock && $product->is_available) {
+            $product->is_available = false;
+            $product->save();
+            $fixedCount++;
+        }
+    }
+    
+    return "تم إصلاح حالة $fixedCount منتج.";
+});
+
+// Route للتشخيص المباشر لمنتج محدد
+Route::get('/debug-product/{slug}', function($slug) {
+    $product = \App\Models\Product::where('slug', $slug)->with(['inventory.size', 'inventory.color'])->first();
+    
+    if (!$product) {
+        return "المنتج غير موجود: $slug";
+    }
+    
+    $html = '<div style="font-family: Arial; direction: rtl; text-align: right;">';
+    $html .= '<h2>تشخيص منتج: ' . $product->name . '</h2>';
+    
+    $html .= '<div style="background: #f8f9fa; padding: 20px; margin: 10px 0; border-radius: 5px;">';
+    $html .= '<h3>معلومات أساسية</h3>';
+    $html .= '<p><strong>الاسم:</strong> ' . $product->name . '</p>';
+    $html .= '<p><strong>Slug:</strong> ' . $product->slug . '</p>';
+    $html .= '<p><strong>متوفر:</strong> ' . ($product->is_available ? 'نعم ✅' : 'لا ❌') . '</p>';
+    $html .= '<p><strong>تمكين اختيار المقاس:</strong> ' . ($product->enable_size_selection ? 'نعم' : 'لا') . '</p>';
+    $html .= '<p><strong>تمكين اختيار اللون:</strong> ' . ($product->enable_color_selection ? 'نعم' : 'لا') . '</p>';
+    $html .= '</div>';
+    
+    $html .= '<div style="background: #e3f2fd; padding: 20px; margin: 10px 0; border-radius: 5px;">';
+    $html .= '<h3>الألوان المتاحة (' . $product->available_colors->count() . ')</h3>';
+    if ($product->available_colors->count() > 0) {
+        foreach ($product->available_colors as $color) {
+            $html .= '<p>- ' . $color->name . ' (ID: ' . $color->id . ')</p>';
+        }
+    } else {
+        $html .= '<p style="color: red;">لا توجد ألوان متاحة</p>';
+    }
+    $html .= '</div>';
+    
+    $html .= '<div style="background: #f3e5f5; padding: 20px; margin: 10px 0; border-radius: 5px;">';
+    $html .= '<h3>المقاسات المتاحة (' . $product->available_sizes->count() . ')</h3>';
+    if ($product->available_sizes->count() > 0) {
+        foreach ($product->available_sizes as $size) {
+            $html .= '<p>- ' . $size->name . ' (ID: ' . $size->id . ')</p>';
+        }
+    } else {
+        $html .= '<p style="color: red;">لا توجد مقاسات متاحة</p>';
+    }
+    $html .= '</div>';
+    
+    $html .= '<div style="background: #fff3e0; padding: 20px; margin: 10px 0; border-radius: 5px;">';
+    $html .= '<h3>تفاصيل المخزون (' . $product->inventory->count() . ' عنصر)</h3>';
+    if ($product->inventory->count() > 0) {
+        $html .= '<table border="1" style="width:100%; border-collapse:collapse; text-align: center;">';
+        $html .= '<tr><th>المقاس</th><th>اللون</th><th>الكمية</th><th>المستهلك</th><th>المتاح</th><th>متوفر</th><th>السعر</th></tr>';
+        
+        foreach ($product->inventory as $item) {
+            $availableStock = max(0, $item->stock - ($item->consumed_stock ?? 0));
+            $html .= '<tr>';
+            $html .= '<td>' . ($item->size ? $item->size->name : 'غير محدد') . '</td>';
+            $html .= '<td>' . ($item->color ? $item->color->name : 'غير محدد') . '</td>';
+            $html .= '<td>' . $item->stock . '</td>';
+            $html .= '<td>' . ($item->consumed_stock ?? 0) . '</td>';
+            $html .= '<td style="font-weight: bold; color: ' . ($availableStock > 0 ? 'green' : 'red') . '">' . $availableStock . '</td>';
+            $html .= '<td>' . ($item->is_available ? 'نعم ✅' : 'لا ❌') . '</td>';
+            $html .= '<td>' . $item->price . '</td>';
+            $html .= '</tr>';
+        }
+        $html .= '</table>';
+    } else {
+        $html .= '<p style="color: red;">لا يوجد مخزون</p>';
+    }
+    $html .= '</div>';
+    
+    $html .= '</div>';
+    
+    return $html;
+});
+
 // Static Pages Routes
 Route::get('/about', function () {
     return view('about');
@@ -66,8 +219,13 @@ Route::get('/shop', function () {
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('index');
     Route::post('/filter', [ProductController::class, 'filter'])->name('filter');
-    Route::get('/{product}/details', [ProductController::class, 'getProductDetails'])->name('details');
     Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+    Route::get('/{product}/details', [ProductController::class, 'getProductDetails'])->name('details');
+    
+    // Product Variants API (Public)
+    Route::get('/{product}/sizes-for-color', [ProductController::class, 'getSizesForColor'])->name('sizes-for-color');
+    Route::get('/{product}/colors-for-size', [ProductController::class, 'getColorsForSize'])->name('colors-for-size');
+    Route::get('/{product}/variant-details', [ProductController::class, 'getVariantDetails'])->name('variant-details');
 });
 
 // Auth Routes
@@ -117,12 +275,9 @@ Route::middleware([
             Route::post('/clear', [CartController::class, 'clear'])->name('clear');
         });
 
-        // Product Variants API
-        Route::prefix('products')->name('products.')->group(function () {
-            Route::get('/{product}/sizes-for-color', [ProductController::class, 'getSizesForColor'])->name('sizes-for-color');
-            Route::get('/{product}/colors-for-size', [ProductController::class, 'getColorsForSize'])->name('colors-for-size');
-            Route::get('/{product}/variant-details', [ProductController::class, 'getVariantDetails'])->name('variant-details');
-        });
+
+        
+
 
         // Checkout
         Route::controller(CheckoutController::class)->prefix('checkout')->name('checkout.')->group(function () {
@@ -135,6 +290,11 @@ Route::middleware([
         Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [OrderController::class, 'index'])->name('index');
             Route::get('/{order:uuid}', [OrderController::class, 'show'])->name('show');
+            
+            // Customer Order Friends Management
+            Route::post('/{order:uuid}/friends', [OrderFriendController::class, 'addFriend'])->name('friends.add');
+            Route::delete('/{order:uuid}/friends/{friend}', [OrderFriendController::class, 'removeFriend'])->name('friends.remove');
+            Route::get('/{order:uuid}/friends', [OrderFriendController::class, 'getFriends'])->name('friends.list');
         });
     });
 
@@ -165,6 +325,7 @@ Route::middleware([
                 Route::resource('products', AdminProductController::class);
                 Route::resource('categories', AdminCategoryController::class);
                 Route::get('/products/inventory/status', [AdminProductController::class, 'inventory'])->name('products.inventory');
+                Route::delete('/products/{product}/inventory/{inventory}', [AdminProductController::class, 'deleteInventory'])->name('products.inventory.delete');
             });
 
             // Coupons & Discounts Management
@@ -221,6 +382,7 @@ Route::middleware([
             Route::middleware(['permission:manage products'])->group(function () {
                 Route::resource('products', AdminProductController::class);
                 Route::resource('categories', AdminCategoryController::class);
+                Route::delete('/products/{product}/inventory/{inventory}', [AdminProductController::class, 'deleteInventory'])->name('products.inventory.delete');
             });
 
             // Coupons & Discounts Management
@@ -336,6 +498,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/cart/items/{cartItem}', [CartController::class, 'updateItem'])->name('cart.items.update');
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeItem'])->name('cart.items.remove');
     Route::get('/cart/count', [CartController::class, 'getCartCount'])->name('cart.count');
+    Route::post('/check-inventory', [ProductController::class, 'checkInventory'])->name('check.inventory');
 });
 
 Route::get('/policy', [PolicyController::class, 'index'])->name('policy');
