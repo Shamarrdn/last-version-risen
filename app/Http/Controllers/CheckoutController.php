@@ -30,7 +30,7 @@ class CheckoutController extends Controller
         ->with('error', 'يجب تسجيل الدخول لإتمام عملية الشراء');
     }
 
-    $cart = Cart::with(['items.product'])
+    $cart = Cart::with(['items.product', 'items.colorOption', 'items.sizeOption'])
       ->where('user_id', Auth::id())
       ->first();
 
@@ -69,7 +69,7 @@ class CheckoutController extends Controller
       ]);
     }
 
-    $cart = Cart::with(['items.product'])
+    $cart = Cart::with(['items.product', 'items.colorOption', 'items.sizeOption'])
       ->where('user_id', Auth::id())
       ->first();
 

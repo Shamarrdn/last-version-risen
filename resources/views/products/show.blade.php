@@ -1525,16 +1525,43 @@
 
         // دالة لتحديث المخزون محلياً بعد الإضافة للسلة
         function updateLocalStock(colorId, sizeId, quantity) {
-            if (!colorId || !sizeId) return;
+            if (!colorId || !sizeId) {
+                console.warn('Color ID or Size ID missing for local stock update');
+                return;
+            }
             
             const key = `${colorId}_${sizeId}`;
-            localInventoryReduction[key] = (localInventoryReduction[key] || 0) + quantity;
+            const previousValue = localInventoryReduction[key] || 0;
+            localInventoryReduction[key] = previousValue + quantity;
             
-            // حفظ في Local Storage
+            // حفظ في Local Storage فوراً
             saveLocalInventory();
             
-            console.log('Local inventory updated:', key, 'reduced by:', quantity);
-            console.log('Current local reductions:', localInventoryReduction);
+            console.log(`Local inventory updated for ${key}:`, {
+                'previous': previousValue,
+                'added': quantity,
+                'total_reduction': localInventoryReduction[key]
+            });
+            
+            // التحقق من نجاح الحفظ
+            setTimeout(() => {
+                const productId = {{ $product->id }};
+                const storageKey = `inventory_reduction_${productId}`;
+                const savedData = localStorage.getItem(storageKey);
+                
+                if (savedData) {
+                    try {
+                        const parsedData = JSON.parse(savedData);
+                        if (parsedData[key] === localInventoryReduction[key]) {
+                            console.log('Local inventory successfully saved to localStorage');
+                        } else {
+                            console.warn('Local inventory save verification failed');
+                        }
+                    } catch (e) {
+                        console.error('Error verifying saved inventory data:', e);
+                    }
+                }
+            }, 100);
         }
 
         // دالة لحساب المخزون الكلي للمقاس (بعد خصم ما تم إضافته محلياً)
@@ -1829,6 +1856,12 @@
                     if (targetProductId == {{ $product->id }}) {
                         localInventoryReduction = {};
                         console.log('تم مسح بيانات المخزون المحلي للمنتج الحالي');
+                        
+                        // تحديث العرض لإظهار المخزون الصحيح بعد إتمام الطلب
+                        setTimeout(() => {
+                            updateSizeDisplay();
+                            refreshInventoryDisplay();
+                        }, 100);
                     }
                 };
 

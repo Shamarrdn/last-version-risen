@@ -257,8 +257,8 @@ class ProductController extends Controller
             'quantity' => 'required|integer|min:1',
             'color' => 'nullable|string|max:50',
             'size' => 'nullable|string|max:50',
-            'color_id' => 'nullable|integer|exists:product_colors,id',
-            'size_id' => 'nullable|integer|exists:product_sizes,id'
+            'color_id' => 'nullable|integer|exists:color_options,id',
+            'size_id' => 'nullable|integer|exists:size_options,id'
         ]);
 
         $result = $this->cartService->addToCart($request);

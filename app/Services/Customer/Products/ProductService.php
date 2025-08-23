@@ -228,7 +228,8 @@ class ProductService
                 }),
                 'image' => $product->image_url,
                 'all_images' => $product->all_images,
-                'price_range' => $product->getPriceRange(),
+                'price_range' => $product->getCurrentPriceRange(),
+                'base_price' => $product->base_price,
                 'rating' => 4.5,
                 'reviews' => mt_rand(10, 100),
                 'url' => route('products.show', $product->slug),
@@ -248,7 +249,7 @@ class ProductService
                     ];
                 })->values()->toArray();
 
-                $priceRange = $product->getPriceRange();
+                $priceRange = $product->getCurrentPriceRange();
 
                 // Get both primary category and associated categories
                 $allCategories = collect([$product->category])->filter()->merge($product->categories);

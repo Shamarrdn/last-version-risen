@@ -44,6 +44,44 @@
             padding: 5px 0;
             margin: 5px 0;
         }
+
+        .product-attributes {
+            display: flex;
+            gap: 8px;
+            margin: 6px 0;
+            flex-wrap: wrap;
+        }
+
+        .product-attributes span {
+            background-color: #f8f9fa;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .product-color {
+            background-color: #e3f2fd !important;
+            border-color: #90caf9 !important;
+            color: #1565c0 !important;
+        }
+
+        .product-size {
+            background-color: #fff8e1 !important;
+            border-color: #ffcc02 !important;
+            color: #ef6c00 !important;
+        }
+
+        .product-details h4 {
+            margin-bottom: 8px;
+        }
+
+        .product-details p {
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body class="checkout-container">
@@ -96,6 +134,21 @@
                                             </div>
                                             <div class="product-details">
                                                 <h4>{{ $item->product->name }}</h4>
+                                                @if($item->color || $item->size || $item->colorOption || $item->sizeOption)
+                                                <div class="product-attributes">
+                                                    @if($item->colorOption)
+                                                    <span class="product-color">اللون: {{ $item->colorOption->name }}</span>
+                                                    @elseif($item->color)
+                                                    <span class="product-color">اللون: {{ $item->color }}</span>
+                                                    @endif
+                                                    
+                                                    @if($item->sizeOption)
+                                                    <span class="product-size">المقاس: {{ $item->sizeOption->name }}</span>
+                                                    @elseif($item->size)
+                                                    <span class="product-size">المقاس: {{ $item->size }}</span>
+                                                    @endif
+                                                </div>
+                                                @endif
                                                 <p>الكمية: {{ $item->quantity }}</p>
                                             </div>
                                         </div>
@@ -121,6 +174,7 @@
                                             </div>
                                             <div class="product-details">
                                                 <h4>{{ $product->name }}</h4>
+                                                {{-- Note: Session cart for guests doesn't typically store color/size info --}}
                                                 <p>الكمية: {{ $sessionCart[$product->id] }}</p>
                                             </div>
                                         </div>

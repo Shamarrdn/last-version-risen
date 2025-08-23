@@ -817,14 +817,19 @@ function safeOldArray($key, $default = []) {
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">المخزون</label>
+                                <label class="form-label">المخزون المتاح</label>
                                 <input type="number"
                                        class="form-control"
                                        name="inventories[${rowId}][stock]"
-                                       value="${inventory.stock || 0}"
-                                       placeholder="50"
+                                       value="${inventory.available_stock !== undefined ? inventory.available_stock : (inventory.stock - (inventory.consumed || 0))}"
+                                       placeholder="المخزون المتاح"
                                        min="0"
                                        required>
+                                <small class="text-muted">
+                                    <strong style="color: #28a745;">متاح: ${inventory.available_stock !== undefined ? inventory.available_stock : (inventory.stock - (inventory.consumed || 0))}</strong> | 
+                                    <span style="color: #dc3545;">مُستهلك: ${inventory.consumed || 0}</span> | 
+                                    <span style="color: #007bff;">الإجمالي: ${inventory.stock || 0}</span>
+                                </small>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">السعر (ر.س)</label>

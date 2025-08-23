@@ -16,10 +16,10 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // تحقق من أن المستخدم لديه دور admin فقط (وليس superadmin)
+        // تحقق من أن المستخدم لديه دور admin أو superadmin
         $user = auth()->user();
         
-        if (!$user->hasRole('admin') || $user->hasRole('superadmin')) {
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
             return redirect('/dashboard');
         }
         
@@ -57,6 +57,13 @@ class DashboardController extends Controller
                 'on_the_way_orders' => Order::where('order_status', Order::ORDER_STATUS_ON_THE_WAY)->count(),
                 'delivered_orders' => Order::where('order_status', Order::ORDER_STATUS_DELIVERED)->count(),
                 'returned_orders' => Order::where('order_status', Order::ORDER_STATUS_RETURNED)->count(),
+                
+                // إحصائيات التخصيص
+                'assigned_orders' => Order::whereNotNull('assigned_admin_id')->count(),
+                'unassigned_orders' => Order::whereNull('assigned_admin_id')->count(),
+                'my_assigned_orders' => Order::where('assigned_admin_id', auth()->id())->count(),
+                'others_assigned_orders' => Order::where('assigned_admin_id', '!=', auth()->id())->whereNotNull('assigned_admin_id')->count(),
+                
                 'today_orders' => Order::whereDate('created_at', Carbon::today())->count(),
                 'today_revenue' => Order::where('payment_status', Order::PAYMENT_STATUS_PAID)
                     ->whereDate('created_at', Carbon::today())

@@ -56,7 +56,9 @@ class Product extends Model
 
   protected $appends = [
     'image_url',
-    'all_images'
+    'all_images',
+    'current_min_price',
+    'current_max_price'
   ];
 
   public function getRouteKeyName()
@@ -238,7 +240,9 @@ class Product extends Model
   {
     $minPrice = $this->inventory()
       ->where('is_available', true)
-      ->where('stock', '>', 0)
+      ->whereRaw('(stock - consumed_stock) > 0')
+      ->whereNotNull('price')
+      ->where('price', '>', 0)
       ->min('price');
 
     return $minPrice ?? $this->base_price ?? 0;
@@ -251,7 +255,9 @@ class Product extends Model
   {
     $maxPrice = $this->inventory()
       ->where('is_available', true)
-      ->where('stock', '>', 0)
+      ->whereRaw('(stock - consumed_stock) > 0')
+      ->whereNotNull('price')
+      ->where('price', '>', 0)
       ->max('price');
 
     return $maxPrice ?? $this->base_price ?? 0;
@@ -484,5 +490,52 @@ class Product extends Model
     }
     
     return $hasStock;
+  }
+
+  /**
+   * الحصول على السعر الحالي الأدنى (من النظام الجديد أولاً)
+   */
+  public function getCurrentMinPriceAttribute()
+  {
+    $priceRange = $this->getCurrentPriceRange();
+    return $priceRange['min'];
+  }
+
+  /**
+   * الحصول على السعر الحالي الأقصى (من النظام الجديد أولاً)
+   */
+  public function getCurrentMaxPriceAttribute()
+  {
+    $priceRange = $this->getCurrentPriceRange();
+    return $priceRange['max'];
+  }
+
+  /**
+   * الحصول على range الأسعار الحالي
+   */
+  public function getCurrentPriceRange()
+  {
+    // الحصول على الأسعار الفعلية فقط من الـ inventory المتاح
+    $inventoryPrices = $this->inventory()
+      ->where('is_available', true)
+      ->whereRaw('(stock - consumed_stock) > 0')
+      ->whereNotNull('price')
+      ->where('price', '>', 0)
+      ->pluck('price')
+      ->unique();
+
+    if ($inventoryPrices->isNotEmpty()) {
+      return [
+        'min' => $inventoryPrices->min(),
+        'max' => $inventoryPrices->max()
+      ];
+    }
+
+    // إذا لم يوجد مخزون، استخدم base_price
+    $basePrice = $this->base_price ?? 0;
+    return [
+      'min' => $basePrice,
+      'max' => $basePrice
+    ];
   }
 }

@@ -119,7 +119,9 @@
                         onclick="updateQuantity({{ $item->id }}, 1)"
                         data-product-id="{{ $item->product_id }}"
                         data-size="{{ $item->size ?? '' }}"
-                        data-color="{{ $item->color ?? '' }}">
+                        data-color="{{ $item->color ?? '' }}"
+                        data-size-id="{{ $item->size_id ?? '' }}"
+                        data-color-id="{{ $item->color_id ?? '' }}">
                   <i class="bi bi-plus"></i>
                 </button>
               </div>
@@ -286,8 +288,14 @@ async function proceedWithQuantityUpdate(itemId, quantity) {
             const productId = increaseBtn.getAttribute('data-product-id');
             const size = increaseBtn.getAttribute('data-size');
             const color = increaseBtn.getAttribute('data-color');
+            const sizeId = increaseBtn.getAttribute('data-size-id');
+            const colorId = increaseBtn.getAttribute('data-color-id');
             
-            updateProductLocalInventory(productId, size, color, quantity - oldQuantity);
+            // استخدم الـ IDs إذا كانت متوفرة، وإلا استخدم الأسماء
+            const useColorId = colorId || color;
+            const useSizeId = sizeId || size;
+            
+            updateProductLocalInventory(productId, useSizeId, useColorId, quantity - oldQuantity);
 
             showAlert('تم تحديث الكمية بنجاح');
         } else {
@@ -325,16 +333,31 @@ function updateProductLocalInventory(productId, size, color, quantityChange) {
     let keyToUse = null;
     
     if (size && color) {
-        const possibleKeys = [
-            `${color}_${size}`,
-            `${size}_${color}`,
-            // أنماط أخرى محتملة (مع تنظيف الأسماء)
-            `${color.trim().toLowerCase()}_${size.trim().toLowerCase()}`,
-            `${size.trim().toLowerCase()}_${color.trim().toLowerCase()}`,
-            // تنسيقات محتملة أخرى
-            `${color.replace(/\s+/g, '')}_${size.replace(/\s+/g, '')}`,
-            `${size.replace(/\s+/g, '')}_${color.replace(/\s+/g, '')}`
-        ];
+        // إذا كانت القيم أرقام (IDs)، استخدمها مباشرة
+        const isNumericColor = !isNaN(color) && color !== '';
+        const isNumericSize = !isNaN(size) && size !== '';
+        
+        let possibleKeys = [];
+        
+        if (isNumericColor && isNumericSize) {
+            // استخدم الـ IDs مباشرة (التنسيق المفضل)
+            possibleKeys = [
+                `${color}_${size}`,
+                `${size}_${color}`
+            ];
+        } else {
+            // استخدم الأسماء مع تنظيفها
+            possibleKeys = [
+                `${color}_${size}`,
+                `${size}_${color}`,
+                // أنماط أخرى محتملة (مع تنظيف الأسماء)
+                `${color.toString().trim().toLowerCase()}_${size.toString().trim().toLowerCase()}`,
+                `${size.toString().trim().toLowerCase()}_${color.toString().trim().toLowerCase()}`,
+                // تنسيقات محتملة أخرى
+                `${color.toString().replace(/\s+/g, '')}_${size.toString().replace(/\s+/g, '')}`,
+                `${size.toString().replace(/\s+/g, '')}_${color.toString().replace(/\s+/g, '')}`
+            ];
+        }
         
         // ابحث عن مفتاح موجود
         for (const key of possibleKeys) {
@@ -419,8 +442,14 @@ async function updateQuantity(itemId, change, newValue = null) {
             const productId = increaseBtn.getAttribute('data-product-id');
             const size = increaseBtn.getAttribute('data-size');
             const color = increaseBtn.getAttribute('data-color');
+            const sizeId = increaseBtn.getAttribute('data-size-id');
+            const colorId = increaseBtn.getAttribute('data-color-id');
             
-            updateProductLocalInventory(productId, size, color, quantity - currentValue);
+            // استخدم الـ IDs إذا كانت متوفرة، وإلا استخدم الأسماء
+            const useColorId = colorId || color;
+            const useSizeId = sizeId || size;
+            
+            updateProductLocalInventory(productId, useSizeId, useColorId, quantity - currentValue);
 
             showAlert('تم تحديث الكمية بنجاح');
         } else {
@@ -450,6 +479,8 @@ async function removeCartItem(itemId) {
     const productId = increaseBtn ? increaseBtn.getAttribute('data-product-id') : null;
     const size = increaseBtn ? increaseBtn.getAttribute('data-size') : null;
     const color = increaseBtn ? increaseBtn.getAttribute('data-color') : null;
+    const sizeId = increaseBtn ? increaseBtn.getAttribute('data-size-id') : null;
+    const colorId = increaseBtn ? increaseBtn.getAttribute('data-color-id') : null;
     const currentQuantity = parseInt(document.querySelector(`[data-item-id="${itemId}"] .quantity-input`).value) || 0;
     
     cartItem.style.opacity = '0.5';
@@ -467,8 +498,22 @@ async function removeCartItem(itemId) {
         
         if (data.success) {
             // إرجاع الكمية للمخزون المحلي (نقص التخفيض المحلي)
-            if (productId && size && color && currentQuantity > 0) {
-                updateProductLocalInventory(productId, size, color, -currentQuantity);
+            if (productId && currentQuantity > 0) {
+                // استخدم الـ IDs إذا كانت متوفرة، وإلا استخدم الأسماء
+                const useColorId = colorId || color;
+                const useSizeId = sizeId || size;
+                
+                if (useColorId && useSizeId) {
+                    updateProductLocalInventory(productId, useSizeId, useColorId, -currentQuantity);
+                    console.log('تم استعادة المخزون المحلي:', {
+                        productId, 
+                        colorId: useColorId, 
+                        sizeId: useSizeId, 
+                        quantity: currentQuantity
+                    });
+                } else {
+                    console.warn('Missing color or size data for inventory restoration');
+                }
             }
             
             cartItem.style.transform = 'translateX(100px)';

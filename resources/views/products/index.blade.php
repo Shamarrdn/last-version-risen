@@ -202,10 +202,10 @@
                                     <div class="stars" style="--rating: {{ $product['rating'] }}"></div>
                                 </div>
                                 <p class="product-price">
-                                    @if($product->min_price == $product->max_price)
-                                        {{ number_format($product->min_price, 2) }} ر.س
+                                    @if($product->current_min_price == $product->current_max_price)
+                                        {{ number_format($product->current_min_price, 2) }} ر.س
                                     @else
-                                        {{ number_format($product->min_price, 2) }} - {{ number_format($product->max_price, 2) }} ر.س
+                                        {{ number_format($product->current_min_price, 2) }} - {{ number_format($product->current_max_price, 2) }} ر.س
                                     @endif
                                 </p>
                                 <div class="product-actions">

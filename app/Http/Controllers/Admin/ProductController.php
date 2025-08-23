@@ -290,7 +290,7 @@ class ProductController extends Controller
                         $priceData[$sizeId] = [];
                     }
 
-                    $stockData[$sizeId][$colorId] = $inventory->stock;
+                    $stockData[$sizeId][$colorId] = $inventory->available_stock;
                     $priceData[$sizeId][$colorId] = $inventory->price;
                 }
             }
@@ -302,15 +302,16 @@ class ProductController extends Controller
             })
             ->map(function ($row) {
                 return [
-                    'id'           => $row->id,
-                    'size_id'      => $row->size_id,
-                    'color_id'     => $row->color_id,
-                    'stock'        => $row->stock,
-                    'consumed'     => $row->consumed_stock ?? 0,
-                    'price'        => $row->price,
-                    'is_available' => $row->is_available,
-                    'size_name'    => $row->size ? $row->size->name : null,
-                    'color_name'   => $row->color ? $row->color->name : null,
+                    'id'              => $row->id,
+                    'size_id'         => $row->size_id,
+                    'color_id'        => $row->color_id,
+                    'stock'           => $row->stock,
+                    'consumed'        => $row->consumed_stock ?? 0,
+                    'available_stock' => $row->available_stock,
+                    'price'           => $row->price,
+                    'is_available'    => $row->is_available,
+                    'size_name'       => $row->size ? $row->size->name : null,
+                    'color_name'      => $row->color ? $row->color->name : null,
                 ];
             })->values();
 
@@ -438,6 +439,17 @@ class ProductController extends Controller
                         }
 
                         try {
+                            // البحث عن العنصر الموجود أولاً للحصول على consumed_stock
+                            $existingInventory = \App\Models\ProductSizeColorInventory::where([
+                                'product_id' => $product->id,
+                                'size_id'    => $actualSizeId,
+                                'color_id'   => $actualColorId,
+                            ])->first();
+                            
+                            // إذا كان موجود، نحسب المخزون الإجمالي الجديد
+                            $consumedStock = $existingInventory ? $existingInventory->consumed_stock : 0;
+                            $newTotalStock = $stock + $consumedStock; // المتاح + المستهلك = الإجمالي
+                            
                             \App\Models\ProductSizeColorInventory::updateOrCreate(
                                 [
                                     'product_id' => $product->id,
@@ -445,7 +457,7 @@ class ProductController extends Controller
                                     'color_id'   => $actualColorId,
                                 ],
                                 [
-                                    'stock'        => $stock,
+                                    'stock'        => $newTotalStock, // المخزون الإجمالي الجديد
                                     'price'        => $price,
                                     'is_available' => 1,
                                 ]
@@ -455,7 +467,9 @@ class ProductController extends Controller
                                 'product_id' => $product->id,
                                 'size_id' => $actualSizeId,
                                 'color_id' => $actualColorId,
-                                'stock' => $stock,
+                                'input_available_stock' => $stock,
+                                'consumed_stock' => $consumedStock,
+                                'calculated_total_stock' => $newTotalStock,
                                 'price' => $price
                             ]);
                         } catch (\Exception $e) {

@@ -116,6 +116,14 @@ function applyFilters() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
     const token = csrfToken ? csrfToken.content : '';
 
+    // التحقق من وجود appConfig أولاً
+    if (!window.appConfig || !window.appConfig.routes || !window.appConfig.routes.products || !window.appConfig.routes.products.filter) {
+        console.error('appConfig غير محمل بشكل صحيح:', window.appConfig);
+        showNotification('حدث خطأ في تكوين التطبيق', 'error');
+        productGrid.style.opacity = '1';
+        return;
+    }
+
     fetch(window.appConfig.routes.products.filter, {
         method: 'POST',
         headers: {
@@ -151,7 +159,11 @@ function applyFilters() {
         }
     })
     .catch(error => {
-        showNotification(error.message || 'حدث خطأ أثناء تحديث المنتجات', 'error');
+        console.error('خطأ في تحديث المنتجات:', error);
+        const errorMessage = error.message.includes('404') ? 
+            'الرابط المطلوب غير موجود. يرجى إعادة تحميل الصفحة.' : 
+            (error.message || 'حدث خطأ أثناء تحديث المنتجات');
+        showNotification(errorMessage, 'error');
         updateProductGrid([]);
     })
     .finally(() => {
@@ -218,7 +230,7 @@ function updateProductGrid(products) {
                             product.price_range.min === product.price_range.max ?
                             `${product.price_range.min.toLocaleString()} ر.س` :
                             `${product.price_range.min.toLocaleString()} - ${product.price_range.max.toLocaleString()} ر.س`
-                        ) : '0 ر.س'
+                        ) : (product.base_price ? `${product.base_price.toLocaleString()} ر.س` : '0 ر.س')
                     )}</p>
                     <div class="product-actions">
                         <a href="/products/${product.slug}" class="order-product-btn">

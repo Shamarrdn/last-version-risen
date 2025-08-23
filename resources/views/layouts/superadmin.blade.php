@@ -148,9 +148,21 @@
                 <div class="nav-section">
                     <div class="nav-section-title">الطلبات</div>
                     <div class="nav-item">
-                        <a href="{{ route('superadmin.orders.index') }}" class="nav-link {{ request()->routeIs('superadmin.orders.*') ? 'active' : '' }}">
+                        <a href="{{ route('superadmin.orders.index') }}" class="nav-link {{ request()->routeIs('superadmin.orders.index') ? 'active' : '' }}">
                             <i class="fas fa-shopping-cart"></i>
-                            <span class="nav-title">الطلبات</span>
+                            <span class="nav-title">جميع الطلبات</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('admin.orders.assigned') }}" class="nav-link {{ request()->routeIs('admin.orders.assigned') ? 'active' : '' }}">
+                            <i class="fas fa-user-check"></i>
+                            <span class="nav-title">الطلبات المخصصة</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('admin.orders.unassigned') }}" class="nav-link {{ request()->routeIs('admin.orders.unassigned') ? 'active' : '' }}">
+                            <i class="fas fa-user-times"></i>
+                            <span class="nav-title">الطلبات غير المخصصة</span>
                         </a>
                     </div>
                     <div class="nav-item">
@@ -259,6 +271,9 @@
             document.write('<script src="{{ asset("js/jquery-3.6.0.min.js") }}"><\/script>');
         }
     </script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

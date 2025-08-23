@@ -99,6 +99,61 @@
             </div>
         </div>
     </div>
+
+    <!-- Assigned Orders Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100 p-3 bg-white rounded-3 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="icon-wrapper bg-secondary me-3">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value h4 mb-1">{{ $stats['assigned_orders'] ?? 0 }}</div>
+                    <div class="stat-title text-muted">الطلبات المخصصة</div>
+                    <div class="trend small mt-2">
+                        <span class="me-2 text-success">مخصصة لي: {{ $stats['my_assigned_orders'] ?? 0 }}</span>
+                        <span class="text-info">للآخرين: {{ $stats['others_assigned_orders'] ?? 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unassigned Orders Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100 p-3 bg-white rounded-3 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="icon-wrapper bg-danger me-3">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value h4 mb-1">{{ $stats['unassigned_orders'] ?? 0 }}</div>
+                    <div class="stat-title text-muted">الطلبات غير المخصصة</div>
+                    <div class="trend small mt-2">
+                        <span class="text-danger">تحتاج تخصيص</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Card -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100 p-3 bg-white rounded-3 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="icon-wrapper bg-dark me-3">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value h4 mb-1">{{ $stats['products'] ?? 0 }}</div>
+                    <div class="stat-title text-muted">إجمالي المنتجات</div>
+                    <div class="trend small mt-2">
+                        <span>المنتجات المتاحة</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Quick Actions -->

@@ -109,13 +109,18 @@ window.addInventoryRow = function() {
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">المخزون</label>
+                        <label class="form-label">المخزون المتاح</label>
                         <input type="number"
                                class="form-control"
                                name="inventories[${rowId}][stock]"
-                               placeholder="50"
+                               placeholder="المخزون المتاح"
                                min="0"
                                required>
+                        <small class="text-muted">
+                            <strong style="color: #28a745;">متاح: 0</strong> | 
+                            <span style="color: #dc3545;">مُستهلك: 0</span> | 
+                            <span style="color: #007bff;">الإجمالي: 0</span>
+                        </small>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">السعر (ر.س)</label>
@@ -1051,6 +1056,22 @@ function setupEditForm() {
         const formData = new FormData(form);
 
         formData.append('_method', 'PUT');
+        
+        // التأكد من وجود CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (csrfToken) {
+            formData.append('_token', csrfToken);
+        } else {
+            console.error('❌ CSRF token not found in meta tag');
+        }
+
+        // تشخيص تفصيلي قبل الإرسال
+        console.log('📋 Form submission details:', {
+            action: form.action,
+            method: form.method,
+            hasToken: !!document.querySelector('meta[name="csrf-token"]'),
+            tokenValue: document.querySelector('meta[name="csrf-token"]')?.content?.substring(0, 10) + '...'
+        });
 
         fetch(form.action, {
             method: 'POST',
@@ -1062,11 +1083,24 @@ function setupEditForm() {
             credentials: 'same-origin'
         })
         .then(response => {
+            console.log('📡 Response details:', {
+                status: response.status,
+                statusText: response.statusText,
+                url: response.url,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+
             if (!response.ok) {
                 if (response.status === 422) {
                     return response.json().then(data => {
                         throw new Error(Object.values(data.errors).flat().join('\n'));
                     });
+                } else if (response.status === 404) {
+                    throw new Error('الصفحة المطلوبة غير موجودة. تأكد من صحة رابط التحديث أو اتصل بالدعم الفني.');
+                } else if (response.status === 403) {
+                    throw new Error('ليس لديك صلاحية لتنفيذ هذا الإجراء.');
+                } else if (response.status === 419) {
+                    throw new Error('انتهت صلاحية الجلسة. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.');
                 }
                 throw new Error('حدث خطأ أثناء حفظ البيانات (رمز الخطأ: ' + response.status + ')');
             }
